@@ -61,10 +61,10 @@ typedef enum UIStatus {
 } UIStatus;
 
 const QColor bg_colors [] = {
-  [STATUS_DISENGAGED] =  QColor(0x17, 0x33, 0x49, 0xc8),
-  [STATUS_ENGAGED] = QColor(0x17, 0x86, 0x44, 0xf1),
-  [STATUS_WARNING] = QColor(0xDA, 0x6F, 0x25, 0xf1),
-  [STATUS_ALERT] = QColor(0xC9, 0x22, 0x31, 0xf1),
+  [STATUS_DISENGAGED] =  QColor(0x0, 0x0, 0x0, 0xb4),
+  [STATUS_ENGAGED] = QColor(0x01, 0x50, 0x01, 0xb4),
+  [STATUS_WARNING] = QColor(0xDA, 0x6F, 0x25, 0xb4),
+  [STATUS_ALERT] = QColor(0xC9, 0x22, 0x31, 0xb4),
 };
 
 typedef struct {
@@ -81,6 +81,9 @@ typedef struct UIScene {
   mat3 view_from_calib;
   bool world_objects_visible;
 
+  bool headlightON;
+  bool parkingLightON;
+  bool meterDimmed;
   cereal::PandaState::PandaType pandaType;
 
   // modelV2
@@ -174,7 +177,6 @@ private:
   float accel_prev = 0;
   float gyro_prev = 0;
   float last_brightness = 0;
-  FirstOrderFilter brightness_filter;
 
   QTimer *timer;
 

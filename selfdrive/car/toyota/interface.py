@@ -13,6 +13,8 @@ class CarInterface(CarInterfaceBase):
   def compute_gb(accel, speed):
     return float(accel) / CarControllerParams.ACCEL_SCALE
 
+    self.init_cruise_speed = 0.
+
   @staticmethod
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), car_fw=[]):  # pylint: disable=dangerous-default-value
     ret = CarInterfaceBase.get_std_params(candidate, fingerprint)
@@ -315,10 +317,17 @@ class CarInterface(CarInterfaceBase):
     # intercepting the DSU is a community feature since it requires unofficial hardware
     ret.communityFeature = ret.enableGasInterceptor or ret.enableDsu or smartDsu
 
-    if ret.enableGasInterceptor:
+    if candidate in [CAR.PRIUS] and ret.enableGasInterceptor:
+      ret.gasMaxBP = [0., 3.]
+      ret.gasMaxV = [0.3, 0.5]
+      ret.longitudinalTuning.kpBP = [0., 3., 5., 35.]
+      ret.longitudinalTuning.kpV = [1.2, 0.96, 2.4, 1.5]
+      ret.longitudinalTuning.kiBP = [0., 3., 5., 35.]
+      ret.longitudinalTuning.kiV = [0.18, 153/875, 18/35, 0.36]
+    elif ret.enableGasInterceptor and not candidate in [CAR.PRIUS]:
       # Transitions from original pedal tuning at MIN_ACC_SPEED to default tuning at MIN_ACC_SPEED + hysteresis gap
-      ret.gasMaxBP = [0., MIN_ACC_SPEED]
-      ret.gasMaxV = [0.2, 0.5]
+      ret.gasMaxBP = [0., 3.]
+      ret.gasMaxV = [0.3, 0.5]
       ret.longitudinalTuning.kpBP = [0., 5., MIN_ACC_SPEED, MIN_ACC_SPEED + PEDAL_HYST_GAP, 35.]
       ret.longitudinalTuning.kpV = [1.2, 0.8, 0.765, 2.255, 1.5]
       ret.longitudinalTuning.kiBP = [0., MIN_ACC_SPEED, MIN_ACC_SPEED + PEDAL_HYST_GAP, 35.]
@@ -351,7 +360,20 @@ class CarInterface(CarInterfaceBase):
     self.cp.update_strings(can_strings)
     self.cp_cam.update_strings(can_strings)
 
+    self.cruise_speed_override = True # change this to False if you want to disable this
+
     ret = self.CS.update(self.cp, self.cp_cam)
+
+    if ret.cruiseState.enabled and ret.cruiseState.speed < 12 and self.CP.openpilotLongitudinalControl:
+      if self.cruise_speed_override:
+        if self.init_cruise_speed == 0.:
+          ret.cruiseState.speed = self.init_cruise_speed = max(100/9, ret.vEgo)
+        else:
+          ret.cruiseState.speed = self.init_cruise_speed
+      else:
+        ret.cruiseState.speed = 100/9
+    else:
+      self.init_cruise_speed = 0.
 
     ret.canValid = self.cp.can_valid and self.cp_cam.can_valid
     ret.steeringRateLimited = self.CC.steer_rate_limited if self.CC is not None else False

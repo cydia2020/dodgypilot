@@ -153,6 +153,7 @@ struct CarState {
   # brake pedal, 0.0-1.0
   brake @5 :Float32;      # this is user pedal only
   brakePressed @6 :Bool;  # this is user pedal only
+  brakeLights @19 :Bool;  # comma removed this for no reason
 
   # steering wheel
   steeringAngleDeg @7 :Float32;
@@ -193,6 +194,10 @@ struct CarState {
   # blindspot sensors
   leftBlindspot @33 :Bool; # Is there something blocking the left lane change
   rightBlindspot @34 :Bool; # Is there something blocking the right lane change
+  engineRPM @37 :Float32; # Engine RPM
+  parkingLightON @38 :Bool; # Parking Light ON
+  headlightON @39 :Bool; # Low Beam ON
+  meterDimmed @40 :Bool; # Combination Metre Dimmer ON
 
   struct WheelSpeeds {
     # optional wheel speeds
@@ -246,7 +251,6 @@ struct CarState {
   }
 
   errorsDEPRECATED @0 :List(CarEvent.EventName);
-  brakeLightsDEPRECATED @19 :Bool;
 }
 
 # ******* radar state @ 20hz *******

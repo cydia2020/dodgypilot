@@ -31,6 +31,7 @@ class CarState(CarStateBase):
     ret.seatbeltUnlatched = cp.vl["SEATS_DOORS"]["SEATBELT_DRIVER_UNLATCHED"] != 0
 
     ret.brakePressed = cp.vl["BRAKE_MODULE"]["BRAKE_PRESSED"] != 0
+    ret.brakeLights = bool(cp.vl["ESP_CONTROL"]['BRAKE_LIGHTS_ACC'] or cp.vl["BRAKE_MODULE"]["BRAKE_PRESSED"] != 0)
     if self.CP.enableGasInterceptor:
       ret.gas = (cp.vl["GAS_SENSOR"]["INTERCEPTOR_GAS"] + cp.vl["GAS_SENSOR"]["INTERCEPTOR_GAS2"]) / 2.
       ret.gasPressed = ret.gas > 15
@@ -70,6 +71,10 @@ class CarState(CarStateBase):
 
     ret.steeringTorque = cp.vl["STEER_TORQUE_SENSOR"]["STEER_TORQUE_DRIVER"]
     ret.steeringTorqueEps = cp.vl["STEER_TORQUE_SENSOR"]["STEER_TORQUE_EPS"]
+    ret.parkingLightON = cp.vl["LIGHT_STALK"]['PARKING_LIGHT'] == 1
+    ret.headlightON = cp.vl["LIGHT_STALK"]['LOW_BEAM'] == 1
+    ret.engineRPM = cp.vl["ENGINE_RPM"]['RPM']
+    ret.meterDimmed = cp.vl["SEATS_DOORS"]['METER_DIMMED'] == 1
     # we could use the override bit from dbc, but it's triggered at too high torque values
     ret.steeringPressed = abs(ret.steeringTorque) > STEER_THRESHOLD
     ret.steerWarning = cp.vl["EPS_STATUS"]["LKA_STATE"] not in [1, 5]
@@ -128,6 +133,8 @@ class CarState(CarStateBase):
       ("WHEEL_SPEED_FR", "WHEEL_SPEEDS", 0),
       ("WHEEL_SPEED_RL", "WHEEL_SPEEDS", 0),
       ("WHEEL_SPEED_RR", "WHEEL_SPEEDS", 0),
+      ("RPM", "ENGINE_RPM", 0),
+      ("METER_DIMMED", "SEATS_DOORS", 1),
       ("DOOR_OPEN_FL", "SEATS_DOORS", 1),
       ("DOOR_OPEN_FR", "SEATS_DOORS", 1),
       ("DOOR_OPEN_RL", "SEATS_DOORS", 1),
@@ -144,6 +151,9 @@ class CarState(CarStateBase):
       ("STEER_ANGLE", "STEER_TORQUE_SENSOR", 0),
       ("TURN_SIGNALS", "STEERING_LEVERS", 3),   # 3 is no blinkers
       ("LKA_STATE", "EPS_STATUS", 0),
+      ("BRAKE_LIGHTS_ACC", "ESP_CONTROL", 0),
+      ("PARKING_LIGHT", "LIGHT_STALK", 0),
+      ("LOW_BEAM", "LIGHT_STALK", 0),
       ("AUTO_HIGH_BEAM", "LIGHT_STALK", 0),
     ]
 
@@ -160,6 +170,7 @@ class CarState(CarStateBase):
       ("STEER_ANGLE_SENSOR", 80),
       ("PCM_CRUISE", 33),
       ("STEER_TORQUE_SENSOR", 50),
+      ("ENGINE_RPM", 100),
     ]
 
     if CP.carFingerprint == CAR.LEXUS_IS:

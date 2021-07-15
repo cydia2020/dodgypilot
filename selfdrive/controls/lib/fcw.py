@@ -72,6 +72,6 @@ class FCWChecker():
       if future_fcw and (self.last_fcw_time + 5.0 < cur_time):
         self.last_fcw_time = cur_time
         self.last_fcw_a = self.last_min_a
-        return True
+        return False
 
     return False

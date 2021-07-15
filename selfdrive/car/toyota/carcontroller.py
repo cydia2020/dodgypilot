@@ -47,11 +47,23 @@ class CarController():
     interceptor_gas_cmd = 0.
     pcm_accel_cmd = actuators.gas - actuators.brake
 
-    if CS.CP.enableGasInterceptor:
+    if CS.CP.enableGasInterceptor and not CS.CP.carFingerprint == CAR.PRIUS:
       # handle hysteresis when around the minimum acc speed
       if CS.out.vEgo < MIN_ACC_SPEED:
         self.use_interceptor = True
       elif CS.out.vEgo > MIN_ACC_SPEED + PEDAL_HYST_GAP:
+        self.use_interceptor = False
+
+      if self.use_interceptor and enabled:
+        # only send negative accel when using interceptor. gas handles acceleration
+        # +0.06 offset to reduce ABS pump usage when OP is engaged
+        interceptor_gas_cmd = clip(actuators.gas, 0., 1.)
+        pcm_accel_cmd = 0.06 - actuators.brake
+    elif CS.CP.enableGasInterceptor and CS.CP.carFingerprint == CAR.PRIUS:
+      # handle hysteresis when around the minimum acc speed
+      if CS.out.vEgo < 3:
+        self.use_interceptor = True
+      elif CS.out.vEgo > 5:
         self.use_interceptor = False
 
       if self.use_interceptor and enabled:

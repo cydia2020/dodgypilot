@@ -147,9 +147,9 @@ private:
 
 std::unordered_map<std::string, uint32_t> keys = {
     {"AccessToken", CLEAR_ON_MANAGER_START},
-    {"ApiCache_DriveStats", PERSISTENT},
-    {"ApiCache_Device", PERSISTENT},
-    {"ApiCache_Owner", PERSISTENT},
+    {"ApiCache_DriveStats", CLEAR_ON_MANAGER_START | CLEAR_ON_IGNITION_ON},
+    {"ApiCache_Device", CLEAR_ON_MANAGER_START | CLEAR_ON_IGNITION_ON},
+    {"ApiCache_Owner", CLEAR_ON_MANAGER_START | CLEAR_ON_IGNITION_ON},
     {"ApiCache_NavDestinations", PERSISTENT},
     {"AthenadPid", PERSISTENT},
     {"CalibrationParams", PERSISTENT},
