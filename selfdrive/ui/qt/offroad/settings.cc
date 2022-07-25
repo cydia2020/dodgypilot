@@ -173,9 +173,25 @@ DodgypilotPanel::DodgypilotPanel(SettingsWindow *parent) : ListWidget(parent) {
     // screen off timer
     {
       "ScreenOffTimer",
-      "Device: Turn Off Display After 30 Seconds",
+      "UI: Turn Off Display After 30 Seconds",
       "Turn off the device's display after going 'onroad' for 30 seconds.",
       "../assets/offroad/icon_display_off.png",
+    },
+
+    // enable sound
+    {
+      "EnableOpenpilotSounds",
+      "UI: Enable openpilot Sounds",
+      "Turn on openpilot sounds.",
+      "../assets/offroad/icon_speaker.png",
+    },
+
+    // display radar lead readings
+    {
+      "DisplayRadarInfo",
+      "UI: Display RADAR Data",
+      "Display RADAR interface information on the onroad HUD.",
+      "../assets/offroad/icon_radar.png",
     },
 
     // allow openpilot activation in 
@@ -210,14 +226,6 @@ DodgypilotPanel::DodgypilotPanel(SettingsWindow *parent) : ListWidget(parent) {
       "Lat: Use Torque Controller",
       "Experimental: use the new torque controller, please turn this off if you experience ping-pongs.",
       "../assets/offroad/icon_torque_controller.png",
-    },
-
-    // display radar lead readings
-    {
-      "DisplayRadarInfo",
-      "Long: Display RADAR Data",
-      "Display RADAR interface information on the onroad HUD.",
-      "../assets/offroad/icon_radar.png",
     },
 
     // cruise speed rewrite, stolen from dragonpilot
