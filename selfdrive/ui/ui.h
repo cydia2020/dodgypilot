@@ -104,6 +104,9 @@ typedef struct UIScene {
   bool enable_radar_state;
   bool screen_off_timer;
 
+  // UI settings
+  bool enable_sound;
+
   // follow distance
   bool followDistanceFar;
   bool followDistanceMid;

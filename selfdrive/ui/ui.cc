@@ -218,6 +218,7 @@ void ui_update_params(UIState *s) {
   s->scene.headlight_brightness_control = Params().getBool("CarBrightnessControl");
   s->scene.enable_radar_state = Params().getBool("DisplayRadarInfo");
   s->scene.screen_off_timer = Params().getBool("ScreenOffTimer");
+  s->scene.enable_sound = Params().getBool("EnableOpenpilotSounds");
 }
 
 void UIState::updateStatus() {

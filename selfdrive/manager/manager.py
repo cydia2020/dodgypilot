@@ -45,6 +45,7 @@ def manager_init() -> None:
     ("EnableZss", "1"),
     ("CarModel", ""),
     ("EnableTorqueController", "1"),
+    ("EnableOpenpilotSounds", "0"),
   ]
   if not PC:
     default_params.append(("LastUpdateTime", datetime.datetime.utcnow().isoformat().encode('utf8')))
