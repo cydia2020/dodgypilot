@@ -170,11 +170,19 @@ DodgypilotPanel::DodgypilotPanel(SettingsWindow *parent) : ListWidget(parent) {
 
   // param, title, desc, icon
   std::vector<std::tuple<QString, QString, QString, QString>> toggles{
+    // screen off timer
+    {
+      "ScreenOffTimer",
+      "Device: Turn Off Display After 30 Seconds",
+      "Turn off the device's display after going 'onroad' for 30 seconds.",
+      "../assets/offroad/icon_display_off.png",
+    },
+
     // allow openpilot activation in 
     // non-adaptive cruise control mode
     {
       "AllowNonAdaptiveCruise",
-      "Allow Normal Cruise Control",
+      "Toyota: Allow Non-Adaptive Cruise Control",
       "Allow steering wheel control in Non-Adaptive Cruise Control mode. To use this feature, hold the cruise control ON/OFF button for approximately 3 seconds.",
       "../assets/offroad/icon_speed_limit.png",
     },
@@ -183,7 +191,7 @@ DodgypilotPanel::DodgypilotPanel(SettingsWindow *parent) : ListWidget(parent) {
     // should be universal on Toyota/Lexus vehicles
     {
       "CarBrightnessControl",
-      "Use Linked Brightness",
+      "Toyota: Use Linked Brightness",
       "Use the car's headlight state for brightness control.",
       "../assets/offroad/icon_brightness.png",
     },
@@ -191,15 +199,23 @@ DodgypilotPanel::DodgypilotPanel(SettingsWindow *parent) : ListWidget(parent) {
     // ZSS support toggle
     {
       "EnableZss",
-      "ZSS Support",
+      "Lat: ZSS Support",
       "Enable support for the high precision angle sensor developed by zorrobyte.",
       "../assets/offroad/icon_angle_sensor.png",
+    },
+
+    // torque controller toggle
+    {
+      "EnableTorqueController",
+      "Lat: Use Torque Controller",
+      "Experimental: use the new torque controller, please turn this off if you experience ping-pongs.",
+      "../assets/offroad/icon_torque_controller.png",
     },
 
     // display radar lead readings
     {
       "DisplayRadarInfo",
-      "OP Long: Display RADAR Data",
+      "Long: Display RADAR Data",
       "Display RADAR interface information on the onroad HUD.",
       "../assets/offroad/icon_radar.png",
     },
@@ -207,17 +223,9 @@ DodgypilotPanel::DodgypilotPanel(SettingsWindow *parent) : ListWidget(parent) {
     // cruise speed rewrite, stolen from dragonpilot
     {
       "CruiseSpeedRewrite",
-      "OP Long: Cruise Speed Override",
+      "Long: Cruise Speed Override",
       "Allow openpilot's set speed to be set below the vehicle's minimum cruise speed. To use this feature, when the vehicle is travelling below its minimum set speed, pull the cruise control lever down (or click the cruise control SET button) once, openpilot will set its maximum speed to the vehicle's current speed.",
       "../assets/offroad/icon_cruise_speed_rewrite.png",
-    },
-
-    // screen off timer
-    {
-      "ScreenOffTimer",
-      "Turn Off Display After 30 Seconds",
-      "Turn off the device's display after going 'onroad' for 30 seconds.",
-      "../assets/offroad/icon_display_off.png",
     },
   };
 
