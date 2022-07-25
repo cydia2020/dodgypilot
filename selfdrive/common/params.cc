@@ -189,6 +189,7 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"CruiseSpeedRewrite", PERSISTENT},
     {"EnableZss", PERSISTENT},
     {"ScreenOffTimer", PERSISTENT},
+    {"EnableOpenpilotSounds", PERSISTENT},
 };
 
 } // namespace

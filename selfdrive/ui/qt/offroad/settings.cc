@@ -219,6 +219,14 @@ DodgypilotPanel::DodgypilotPanel(SettingsWindow *parent) : ListWidget(parent) {
       "Turn off the device's display after going 'onroad' for 30 seconds.",
       "../assets/offroad/icon_display_off.png",
     },
+
+    // enable sound
+    {
+      "EnableOpenpilotSounds",
+      "Enable openpilot Sounds",
+      "Turn on openpilot sounds.",
+      "../assets/offroad/icon_speaker.png",
+    },
   };
 
   // use the toggled param itself as a condition to allow the toggle to be turned 
