@@ -198,7 +198,7 @@ DodgypilotPanel::DodgypilotPanel(SettingsWindow *parent) : ListWidget(parent) {
     // non-adaptive cruise control mode
     {
       "AllowNonAdaptiveCruise",
-      "Toyota: Allow Non-Adaptive Cruise Control",
+      "Toyota: Allow Non-Adaptive Cruise",
       "Allow steering wheel control in Non-Adaptive Cruise Control mode. To use this feature, hold the cruise control ON/OFF button for approximately 3 seconds.",
       "../assets/offroad/icon_speed_limit.png",
     },
