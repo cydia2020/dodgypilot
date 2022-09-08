@@ -65,9 +65,11 @@ void Sidebar::updateState(const UIState &s) {
   setProperty("connectStatus", QVariant::fromValue(connectStatus));
 
   // temperature display
-  float temp_multiplication_factor = (float)deviceState.getAmbientTempC() * (s.scene.is_metric ? 1 : (9/5));
-  float temp_addition = (s.scene.is_metric ? 0 : 32);
-  QString temp_disp = QString("TEMP\n") + (QString::number(std::nearbyint(temp_multiplication_factor + temp_addition)) + (s.scene.is_metric ? "°C" : "°F"));
+  float temp_multiplication = (float)deviceState.getAmbientTempC() * (s.scene.is_metric ? 1 : (9/5));
+  int temp_addition = s.scene.is_metric ? 0 : 32;
+  int final_temp = std::nearbyint(temp_multiplication + temp_addition);
+  QString temp_disp = QString("TEMP\n") + QSting::number(final_temp) + (s.scene.is_metric ? QString("°C") : QString("°F"));
+
   ItemStatus tempStatus = {"temp_disp", danger_color};
   auto ts = deviceState.getThermalStatus();
   if (ts == cereal::DeviceState::ThermalStatus::GREEN) {
