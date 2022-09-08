@@ -68,7 +68,8 @@ void Sidebar::updateState(const UIState &s) {
   float temp_multiplication = (float)deviceState.getAmbientTempC() * (s.scene.is_metric ? 1 : (9/5));
   int temp_addition = s.scene.is_metric ? 0 : 32;
   int final_temp = std::nearbyint(temp_multiplication + temp_addition);
-  QString temp_disp = QString("TEMP\n") + QSting::number(final_temp) + (s.scene.is_metric ? QString("°C") : QString("°F"));
+  QString tempUnit = s.scene.is_metric ? "°C" : "°F";
+  QString temp_disp = QString("TEMP\n") + QSting::number(final_temp) + tempUnit;
 
   ItemStatus tempStatus = {"temp_disp", danger_color};
   auto ts = deviceState.getThermalStatus();
