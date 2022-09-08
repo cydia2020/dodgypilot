@@ -1,5 +1,6 @@
 #include "selfdrive/ui/qt/sidebar.h"
 
+#include <cmath>
 #include <QMouseEvent>
 
 #include "selfdrive/ui/qt/util.h"
