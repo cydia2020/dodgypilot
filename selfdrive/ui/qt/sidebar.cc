@@ -70,12 +70,12 @@ void Sidebar::updateState(const UIState &s) {
   int final_temp = std::nearbyint(temp_multiplication + temp_addition);
   QString temp_disp = "TEMP\n" + QString::number(final_temp) + (s.scene.is_metric ? "°C" : "°F");
 
-  ItemStatus tempStatus = {"temp_disp", danger_color};
+  ItemStatus tempStatus = {temp_disp, danger_color};
   auto ts = deviceState.getThermalStatus();
   if (ts == cereal::DeviceState::ThermalStatus::GREEN) {
-    tempStatus = {"temp_disp", good_color};
+    tempStatus = {temp_disp, good_color};
   } else if (ts == cereal::DeviceState::ThermalStatus::YELLOW) {
-    tempStatus = {"temp_disp", warning_color};
+    tempStatus = {temp_disp, warning_color};
   }
   setProperty("tempStatus", QVariant::fromValue(tempStatus));
 
