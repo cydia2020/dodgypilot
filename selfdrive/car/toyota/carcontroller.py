@@ -95,16 +95,9 @@ class CarController:
 
     # release_standstill always 0 on radar_acc_tss1 cars
     if self.CP.carFingerprint in RADAR_ACC_CAR_TSS1:
-      #self.standstill_req = True
-      # test tss2 standstill
       if CS.pcm_acc_status != 8:
         # pcm entered standstill or it's disabled
         self.standstill_req = False
-
-      # TODO: verify this
-      # Gear state * auto hold state * acc state * lead state
-      #if CS.out.standstill:
-      #  pcm_accel_cmd = -0.5
     else:
       # cydia2020 - mimic stock behaviour, send standstill if the lead vehicle is stopped, else release
       # Don't go into standstill when using e2e long
