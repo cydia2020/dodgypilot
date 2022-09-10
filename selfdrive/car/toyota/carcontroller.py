@@ -6,7 +6,7 @@ from selfdrive.car import apply_toyota_steer_torque_limits, create_gas_intercept
 from selfdrive.car.toyota.toyotacan import create_steer_command, create_ui_command, \
                                            create_accel_command, create_acc_cancel_command, \
                                            create_fcw_command, create_lta_steer_command
-from selfdrive.car.toyota.values import CAR, STATIC_DSU_MSGS, NO_STOP_TIMER_CAR, TSS2_CAR, FULL_SPEED_DRCC_CAR, \
+from selfdrive.car.toyota.values import CAR, STATIC_DSU_MSGS, NO_STOP_TIMER_CAR, TSS2_CAR, FULL_SPEED_DRCC_CAR, RADAR_ACC_CAR_TSS1, \
                                         MIN_ACC_SPEED, PEDAL_TRANSITION, CarControllerParams
 from opendbc.can.packer import CANPacker
 
@@ -93,12 +93,25 @@ class CarController:
     # Lead is never stopped and openpilot is ready to be resumed when using e2e long
     lead_vehicle_stopped = (hud_control.leadVelocity < 0.5 and hud_control.leadVisible) and not self.e2e_long
 
-    # cydia2020 - mimic stock behaviour, send standstill if the lead vehicle is stopped, else release
-    # Don't go into standstill when using e2e long
-    if CS.out.standstill and lead_vehicle_stopped and self.CP.carFingerprint not in NO_STOP_TIMER_CAR:
-      self.standstill_req = True
+    # release_standstill always 0 on radar_acc_tss1 cars
+    if self.CP.carFingerprint in RADAR_ACC_CAR_TSS1:
+      #self.standstill_req = True
+      # test tss2 standstill
+      if CS.pcm_acc_status != 8:
+        # pcm entered standstill or it's disabled
+        self.standstill_req = False
+
+      # TODO: verify this
+      # Gear state * auto hold state * acc state * lead state
+      #if CS.out.standstill:
+      #  pcm_accel_cmd = -0.5
     else:
-      self.standstill_req = False
+      # cydia2020 - mimic stock behaviour, send standstill if the lead vehicle is stopped, else release
+      # Don't go into standstill when using e2e long
+      if CS.out.standstill and lead_vehicle_stopped and self.CP.carFingerprint not in NO_STOP_TIMER_CAR:
+        self.standstill_req = True
+      else:
+        self.standstill_req = False
 
     self.last_steer = apply_steer
     self.last_standstill = CS.out.standstill
@@ -140,14 +153,16 @@ class CarController:
       lead = hud_control.leadVisible or CS.out.vEgo < 12. # at low speed we always assume the lead is present so ACC can be engaged
       adjust_distance = CS.distance_btn == 1
 
+      # Send ACC_CONTROL_SAFE if RADAR Interceptor is detected, else send 0x343
+      acc_msg = 'ACC_CONTROL_SAFE' if self.CP.carFingerprint in RADAR_ACC_CAR_TSS1 else 'ACC_CONTROL'
       # Lexus IS uses a different cancellation message
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
         can_sends.append(create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, self.permit_braking, lead_vehicle_stopped))
+        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, self.permit_braking, lead_vehicle_stopped, acc_msg))
         self.accel = pcm_accel_cmd
       else:
-        can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, adjust_distance, False, False, False))
+        can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, adjust_distance, False, False, False, acc_msg))
 
     if self.frame % 2 == 0 and self.CP.enableGasInterceptor:
       # send exactly zero if gas cmd is zero. Interceptor will send the max between read value and gas cmd.

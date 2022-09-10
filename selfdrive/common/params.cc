@@ -195,6 +195,8 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"EnableOpenpilotSounds", PERSISTENT},
     {"IsDMEnabled", PERSISTENT},
     {"IsChargerFaultIgnored", PERSISTENT},
+    // Smartype's RADAR Interface Param
+    {"ToyotaRadarACCTSS1_ObjectMode", PERSISTENT},
 };
 
 } // namespace
