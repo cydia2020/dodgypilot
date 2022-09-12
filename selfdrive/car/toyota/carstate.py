@@ -26,7 +26,6 @@ class CarState(CarStateBase):
     self.has_zss = CP.hasZss
     self.cruise_active_prev = False
     self.allow_distance_adjustment = False if params.get_bool('EndToEndLong') else True
-    self.chr_bsm = params.get_bool('chrBsm')
 
     self.low_speed_lockout = False
     self.acc_type = 1
@@ -158,7 +157,7 @@ class CarState(CarStateBase):
       ret.leftBlindspot = (cp.vl["BSM"]["L_ADJACENT"] == 1) or (cp.vl["BSM"]["L_APPROACHING"] == 1)
       ret.rightBlindspot = (cp.vl["BSM"]["R_ADJACENT"] == 1) or (cp.vl["BSM"]["R_APPROACHING"] == 1)
 
-    if self.chr_bsm:
+    if self.CP.flags & ToyotaFlags.CHR_BSM:
       ret.rightBlindspot = (cp.vl["BSM"]["L_ADJACENT"] == 1) or (cp.vl["BSM"]["L_APPROACHING"] == 1)
       ret.leftBlindspot = (cp.vl["BSM"]["R_ADJACENT"] == 1) or (cp.vl["BSM"]["R_APPROACHING"] == 1)
 
@@ -288,7 +287,7 @@ class CarState(CarStateBase):
       signals.append(("RELEASE_STANDSTILL", "ACC_CONTROL"))
       checks.append(("ACC_CONTROL", 33))
 
-    if CP.enableBsm or CP.carFingerprint in (CAR.CHR, CAR.CHRH):
+    if CP.enableBsm or (CP.flags & ToyotaFlags.CHR_BSM):
       signals += [
         ("L_ADJACENT", "BSM"),
         ("L_APPROACHING", "BSM"),
