@@ -255,6 +255,14 @@ DodgypilotPanel::DodgypilotPanel(SettingsWindow *parent) : ListWidget(parent) {
       "Allow openpilot's set speed to be set below the vehicle's minimum cruise speed. To use this feature, when the vehicle is travelling below its minimum set speed, pull the cruise control lever down (or click the cruise control SET button) once, openpilot will set its maximum speed to the vehicle's current speed.",
       "../assets/offroad/icon_cruise_speed_rewrite.png",
     },
+
+    // toyota c-hr bsm
+    {
+      "chrBsm",
+      "Misc: Enable BSM for Toyota C-HR",
+      "Use Blind Spot Monitor to determine whether a lane change is safe on Toyota C-HR.",
+      "../assets/offroad/icon_bsm.png",
+    },
   };
 
   // use the toggled param itself as a condition to allow the toggle to be turned 

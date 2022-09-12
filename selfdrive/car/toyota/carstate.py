@@ -26,6 +26,7 @@ class CarState(CarStateBase):
     self.has_zss = CP.hasZss
     self.cruise_active_prev = False
     self.allow_distance_adjustment = False if params.get_bool('EndToEndLong') else True
+    self.chr_bsm = params.get_bool('chrBsm')
 
     self.low_speed_lockout = False
     self.acc_type = 1
@@ -156,6 +157,10 @@ class CarState(CarStateBase):
     if self.CP.enableBsm:
       ret.leftBlindspot = (cp.vl["BSM"]["L_ADJACENT"] == 1) or (cp.vl["BSM"]["L_APPROACHING"] == 1)
       ret.rightBlindspot = (cp.vl["BSM"]["R_ADJACENT"] == 1) or (cp.vl["BSM"]["R_APPROACHING"] == 1)
+
+    if self.chr_bsm:
+      ret.rightBlindspot = (cp.vl["BSM"]["L_ADJACENT"] == 1) or (cp.vl["BSM"]["L_APPROACHING"] == 1)
+      ret.leftBlindspot = (cp.vl["BSM"]["R_ADJACENT"] == 1) or (cp.vl["BSM"]["R_APPROACHING"] == 1)
 
     # LKAS_HUD is on a different address on the Prius V, don't send to avoid problems
     if self.CP.carFingerprint != CAR.PRIUS_V:
