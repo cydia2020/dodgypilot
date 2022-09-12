@@ -288,7 +288,7 @@ class CarState(CarStateBase):
       signals.append(("RELEASE_STANDSTILL", "ACC_CONTROL"))
       checks.append(("ACC_CONTROL", 33))
 
-    if CP.enableBsm:
+    if CP.enableBsm or CP.carFingerprint in (CAR.CHR, CAR.CHRH):
       signals += [
         ("L_ADJACENT", "BSM"),
         ("L_APPROACHING", "BSM"),
