@@ -7,7 +7,7 @@ from common.realtime import DT_CTRL
 from opendbc.can.can_define import CANDefine
 from opendbc.can.parser import CANParser
 from selfdrive.car.interfaces import CarStateBase
-from selfdrive.car.toyota.values import ToyotaFlags, CAR, DBC, STEER_THRESHOLD, NO_STOP_TIMER_CAR, TSS2_CAR, EPS_SCALE
+from selfdrive.car.toyota.values import ToyotaFlags, CAR, DBC, STEER_THRESHOLD, NO_STOP_TIMER_CAR, TSS2_CAR, EPS_SCALE, RADAR_ACC_CAR_TSS1
 
 
 class CarState(CarStateBase):
@@ -122,6 +122,8 @@ class CarState(CarStateBase):
       self.distance_btn = 2 if (cp_cam.vl["ACC_CONTROL"]["DISTANCE"] == 1 and not self.allow_distance_adjustment) else 1 if (cp_cam.vl["ACC_CONTROL"]["DISTANCE"] == 1 and self.allow_distance_adjustment) else 0
     elif self.CP.smartDsu:
       self.distance_btn = 2 if (cp.vl["SDSU"]["FD_BUTTON"] == 1 and not self.allow_distance_adjustment) else 1 if (cp.vl["SDSU"]["FD_BUTTON"] == 1 and self.allow_distance_adjustment) else 0
+    elif self.CP.carFingerprint in RADAR_ACC_CAR_TSS1:
+      self.distance_btn = 2 if (cp.vl["ACC_CONTROL_COPY"]["DISTANCE"] == 1 and not self.allow_distance_adjustment) else 1 if (cp.vl["ACC_CONTROL_COPY"]["DISTANCE"] == 1 and self.allow_distance_adjustment) else 0
     else:
       self.distance_btn = 0
 
@@ -264,6 +266,11 @@ class CarState(CarStateBase):
     if CP.hasZss:
       signals.append(("ZORRO_STEER", "SECONDARY_STEER_ANGLE", 0))
       checks.append(("SECONDARY_STEER_ANGLE", 0))
+
+    # checks for TSS-P RADAR ACC cars
+    if CP.carFingerprint in RADAR_ACC_CAR_TSS1:
+      signals.append(("DISTANCE", "ACC_CONTROL_COPY"))
+      checks.append(("ACC_CONTROL_COPY", 33))
 
     # add gas interceptor reading if we are using it
     if CP.enableGasInterceptor:
