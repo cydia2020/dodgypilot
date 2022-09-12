@@ -320,7 +320,7 @@ class CarInterface(CarInterfaceBase):
     elif candidate in TSS2_CAR:
       set_long_tune(ret.longitudinalTuning, LongTunes.TSS2)
       ret.stoppingDecelRate = 0.3  # reach stopping target smoothly
-    elif params.get_bool("EndToEndLong") and candidate not in TSS2_CAR:
+    elif candidate in RADAR_ACC_CAR_TSS1 or (params.get_bool("EndToEndLong") and candidate not in TSS2_CAR):
       set_long_tune(ret.longitudinalTuning, LongTunes.TSSStock)
     else:
       set_long_tune(ret.longitudinalTuning, LongTunes.TSSBetter)
