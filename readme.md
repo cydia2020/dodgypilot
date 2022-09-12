@@ -13,12 +13,16 @@ No feature backports once comma has determined a version to be ready for release
 Old versions are left for future references, and should not be used by the end-user.
 
 ## What about the comma three?
-The maintainer of this fork does not currently own a comma three and is not planning on getting one for the foreseeable future. This fork will be stuck on 0.8.14 for the time being. Feel free to adopt the changes to your own fork.
+The maintainer of this fork does not currently own a comma three and is not planning on getting one for the foreseeable future. This fork will be stuck on 0.8.14 for the time being. The "commatwo_master" branch does work on the comma three, you may lose some features that are in comma's master branch. Feel free to adopt the changes to your own fork.
 
 ## Installation
-Dodgypilot can only be installed after you have enabled ssh on your device.
+For comma two users:
+Choose "Custom Software" when setting up your comma device, and type "https://installer.comma.ai/cydia2020/release2-staging" in the input box.
 
-To install this fork, simply ssh into your comma device, `cd /data/openpilot`, `git remote add cydia2020 https://github.com/cydia2020/dodgypilot`, then `git checkout cydia2020/release2-staging`.
+For comma three users:
+Choose "Custom Software" when setting up your comma device, and type "https://installer.comma.ai/cydia2020/commatwo_master" in the input box. (No that's not a typo.)
+
+Alternatively, ssh into your comma device, run `cd /data/openpilot`, `git remote add cydia2020 https://github.com/cydia2020/dodgypilot`, and `git checkout cydia2020/release2-staging`.
 
 ## Preparing Your Vehicle
 ‼️ READ THIS BEFORE INSTALLING ‼️
