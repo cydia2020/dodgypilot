@@ -1,4 +1,4 @@
-![icon partially thanks to FallOutGirl9001 on DeviantArt.](/dodgy_logo.png)
+<img src="/dodgy_logo.png"  width=50% height=50%>
 # Welcome to dodgypilot
 
 ## What is this?
