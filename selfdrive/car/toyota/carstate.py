@@ -122,7 +122,7 @@ class CarState(CarStateBase):
       self.distance_btn = 2 if (cp_cam.vl["ACC_CONTROL"]["DISTANCE"] == 1 and not self.allow_distance_adjustment) else 1 if (cp_cam.vl["ACC_CONTROL"]["DISTANCE"] == 1 and self.allow_distance_adjustment) else 0
     elif self.CP.smartDsu:
       self.distance_btn = 2 if (cp.vl["SDSU"]["FD_BUTTON"] == 1 and not self.allow_distance_adjustment) else 1 if (cp.vl["SDSU"]["FD_BUTTON"] == 1 and self.allow_distance_adjustment) else 0
-    elif self.CP.carFingerprint in RADAR_ACC_CAR_TSS1:
+    elif self.CP.carFingerprint in RADAR_ACC_CAR_TSS1 and self.CP.radarInterceptor:
       self.distance_btn = 2 if (cp.vl["ACC_CONTROL_COPY"]["DISTANCE"] == 1 and not self.allow_distance_adjustment) else 1 if (cp.vl["ACC_CONTROL_COPY"]["DISTANCE"] == 1 and self.allow_distance_adjustment) else 0
     else:
       self.distance_btn = 0
@@ -268,7 +268,7 @@ class CarState(CarStateBase):
       checks.append(("SECONDARY_STEER_ANGLE", 0))
 
     # checks for TSS-P RADAR ACC cars
-    if CP.carFingerprint in RADAR_ACC_CAR_TSS1:
+    if CP.carFingerprint in RADAR_ACC_CAR_TSS1 and CP.radarInterceptor:
       signals.append(("DISTANCE", "ACC_CONTROL_COPY"))
       checks.append(("ACC_CONTROL_COPY", 33))
 

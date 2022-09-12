@@ -291,7 +291,7 @@ class CarInterface(CarInterfaceBase):
     ret.enableBsm = 0x3F6 in fingerprint[0] and (candidate in TSS2_CAR or candidate in RADAR_ACC_CAR_TSS1)
     # Detect smartDSU, which intercepts ACC_CMD from the DSU allowing openpilot to send it
     ret.smartDsu = 0x2FF in fingerprint[0]
-    radarInterceptor = candidate in RADAR_ACC_CAR_TSS1 and 0x2AA in fingerprint[0]
+    ret.radarInterceptor = candidate in RADAR_ACC_CAR_TSS1 and 0x2AA in fingerprint[0]
     if ret.smartDsu:
       params.put_bool("ToyotaLongToggle_Allow", True)
     # In TSS2 cars the camera does long control
@@ -299,8 +299,8 @@ class CarInterface(CarInterfaceBase):
     ret.enableDsu = (len(found_ecus) > 0) and (Ecu.dsu not in found_ecus) and (candidate not in NO_DSU_CAR) and (not ret.smartDsu)
     ret.enableGasInterceptor = 0x201 in fingerprint[0]
     # if the smartDSU is detected, openpilot can send ACC_CMD (and the smartDSU will block it from the DSU) or not (the DSU is "connected")
-    ret.openpilotLongitudinalControl = (ret.smartDsu or ret.enableDsu or candidate in TSS2_CAR or radarInterceptor) and not params.get_bool("SmartDSULongToggle")
-    if radarInterceptor:
+    ret.openpilotLongitudinalControl = (ret.smartDsu or ret.enableDsu or candidate in TSS2_CAR or ret.radarInterceptor) and not params.get_bool("SmartDSULongToggle")
+    if ret.radarInterceptor:
       if Params().get_bool("ToyotaRadarACCTSS1_ObjectMode"):
         ret.radarTimeStep = 1.0 / 15.0
       else:
