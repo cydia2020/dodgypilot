@@ -63,6 +63,7 @@ This fork:
 17. Allows the device's display to be turned off after 60 seconds of inactivity (no touch input). (Stolen from @sunnyhaibin)
 18. Includes a vehicle selection feature, allows users without access to a comma power to set the car model manually. (stolen from @sunnypilot) (Settings -> Fingerprint)
 19. Able to utilise the comma pedal to enable stop-and-go with stock longitudinal on TSS-P cars.
+20. Supports using [@Smartype](https://github.com/Smartype)'s [CAN Filter](https://github.com/Smartype/canfilter) to enable openpilot Longitudinal Control on TSS-P Camry and C-HR.
 
 ## Support dodgypilot
 Thank you for using dodgypilot, if you would like to buy me a coffee, please use the link below.
