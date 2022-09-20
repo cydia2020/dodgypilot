@@ -3,7 +3,6 @@ from cereal import car
 from common.params import Params
 from common.conversions import Conversions as CV
 from selfdrive.car.toyota.tunes import LatTunes, LongTunes, set_long_tune, set_lat_tune
-from selfdrive.controls.lib.latcontrol_torque import set_torque_tune
 from selfdrive.car.toyota.values import Ecu, CAR, ToyotaFlags, TSS2_CAR, NO_DSU_CAR, MIN_ACC_SPEED, EPS_SCALE, EV_HYBRID_CAR, FULL_SPEED_DRCC_CAR, CarControllerParams, RADAR_ACC_CAR_TSS1
 from selfdrive.car import STD_CARGO_KG, scale_rot_inertia, scale_tire_stiffness, gen_empty_fingerprint, get_safety_config
 from selfdrive.car.interfaces import CarInterfaceBase
@@ -37,8 +36,8 @@ class CarInterface(CarInterfaceBase):
     enableTorqueController = params.get_bool("EnableTorqueController")
 
     stop_and_go = False
-    torque_params = CarInterfaceBase.get_torque_params(candidate)
     steering_angle_deadzone_deg = 0.0
+    CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
 
     if candidate == CAR.PRIUS:
       stop_and_go = True
@@ -47,12 +46,12 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.6371   # hand-tune
       ret.mass = 3045. * CV.LB_TO_KG + STD_CARGO_KG
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
         # Only give steer angle deadzone to for bad angle sensor prius
         for fw in car_fw:
           if fw.ecu == "eps" and not fw.fwVersion == b'8965B47060\x00\x00\x00\x00\x00\x00' or not ret.hasZss:
             steering_angle_deadzone_deg = 1.0
-            set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+            CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.INDI_PRIUS)
 
@@ -66,7 +65,7 @@ class CarInterface(CarInterfaceBase):
         # TODO override until there is enough data
         ret.maxLateralAccel = 1.8
         torque_params = CarInterfaceBase.get_torque_params(CAR.PRIUS)
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.LQR_RAV4)
 
@@ -78,7 +77,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.5533
       ret.mass = 3650. * CV.LB_TO_KG + STD_CARGO_KG  # mean between normal and hybrid
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.LQR_RAV4)
 
@@ -88,7 +87,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.444  # not optimized yet
       ret.mass = 2860. * CV.LB_TO_KG + STD_CARGO_KG  # mean between normal and hybrid
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_A)
 
@@ -100,7 +99,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.5533
       ret.mass = 4481. * CV.LB_TO_KG + STD_CARGO_KG  # mean between min and max
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_C)
 
@@ -111,7 +110,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.7933
       ret.mass = 3300. * CV.LB_TO_KG + STD_CARGO_KG
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_F)
 
@@ -122,7 +121,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.7933
       ret.mass = 3400. * CV.LB_TO_KG + STD_CARGO_KG  # mean between normal and hybrid
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_C)
 
@@ -133,7 +132,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.8
       ret.mass = 4700. * CV.LB_TO_KG + STD_CARGO_KG  # 4260 + 4-5 people
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_G)
 
@@ -144,7 +143,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.8
       ret.mass = 4607. * CV.LB_TO_KG + STD_CARGO_KG  # mean between normal and hybrid limited
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_G)
 
@@ -157,7 +156,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.7983
       ret.mass = 3505. * CV.LB_TO_KG + STD_CARGO_KG  # mean between normal and hybrid
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_H)
 
@@ -168,7 +167,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.7933
       ret.mass = 3585. * CV.LB_TO_KG + STD_CARGO_KG  # Average between ICE and Hybrid
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_D)
         # 2019+ Rav4 TSS2 uses two different steering racks and specific tuning seems to be necessary.
@@ -185,7 +184,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.444  # not optimized yet
       ret.mass = 3060. * CV.LB_TO_KG + STD_CARGO_KG
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_D)
 
@@ -196,7 +195,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.444  # not optimized yet
       ret.mass = 3677. * CV.LB_TO_KG + STD_CARGO_KG  # mean between min and max
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_D)
 
@@ -207,7 +206,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.444
       ret.mass = 4590. * CV.LB_TO_KG + STD_CARGO_KG
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_J)
 
@@ -217,7 +216,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.444
       ret.mass = 3736.8 * CV.LB_TO_KG + STD_CARGO_KG
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_L)
 
@@ -228,7 +227,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.517
       ret.mass = 3108 * CV.LB_TO_KG + STD_CARGO_KG  # mean between min and max
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_M)
 
@@ -239,7 +238,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.444  # not optimized yet
       ret.mass = 4070 * CV.LB_TO_KG + STD_CARGO_KG
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_C)
 
@@ -250,7 +249,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.6371   # hand-tune
       ret.mass = 3115. * CV.LB_TO_KG + STD_CARGO_KG
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_N)
 
@@ -261,7 +260,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.8
       ret.mass = 4300. * CV.LB_TO_KG + STD_CARGO_KG
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_C)
 
@@ -272,7 +271,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.444
       ret.mass = 4305. * CV.LB_TO_KG + STD_CARGO_KG
       if enableTorqueController:
-        set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
+        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
       else:
         set_lat_tune(ret.lateralTuning, LatTunes.PID_J)
 
