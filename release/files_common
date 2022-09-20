@@ -300,6 +300,7 @@ selfdrive/locationd/models/constants.py
 selfdrive/locationd/models/live_kf.h
 selfdrive/locationd/models/live_kf.cc
 
+selfdrive/locationd/torqued.py
 selfdrive/locationd/calibrationd.py
 
 selfdrive/logcatd/SConscript

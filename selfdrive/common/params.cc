@@ -138,6 +138,8 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"LastUpdateException", PERSISTENT},
     {"LastUpdateTime", PERSISTENT},
     {"LiveParameters", PERSISTENT},
+    {"LiveTorqueCarParams", PERSISTENT},
+    {"LiveTorqueParameters", PERSISTENT | DONT_LOG},
     {"NavDestination", CLEAR_ON_MANAGER_START | CLEAR_ON_IGNITION_OFF},
     {"NavSettingTime24h", PERSISTENT},
     {"NavdRender", PERSISTENT},
