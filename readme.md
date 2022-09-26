@@ -53,7 +53,6 @@ This fork:
 8. Improves screen brightness handling by linking it with your headlights. To use this feature, go to settings, and turn on `Use Linked Brightness`.
 9. Allows openpilot to be engaged even if adaptive cruise control is disabled. To use this feature, go to settings, and turn on `Allow Normal Cruise Control`.
 10. Allows switching between openpilot Long and stock ACC, requires SmartDSU. To use this, go to settings, and turn on `Use Stock ACC`.
-11. Does not clear car parameters on startup, this improves startup speed and helps with params faults on startup. To reset car parameters, go to settings, and press `RESET CAR RECOGNITION`.
 12. Improves Toyota/Lexus lateral control with the new torque controller. (please open an issue if your car doesn't work well with this. Torque controller can be disabled by a toggle in your comma device's settings.)
 13. Improves stop-and-go performance, reduce acceleration oscillation.
 14. Allows low cruise speed override (stolen from DragonPilot). To use this, ensure that you have a vehicle that's capable of openpilot longitudinal control, go to settings, and enable `Cruise Speed Override`. When engaging under approximately 43.2km/h (45-46 km/h on the HUD), dodgypilot will set its cruise speed to the vehicle's current travel speed.
