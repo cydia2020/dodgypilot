@@ -41,7 +41,7 @@ def set_long_tune(tune, name):
   elif name == LongTunes.TSSBetter:
     tune.kpBP = [0., 5., 35.]
     tune.kiBP = [0., 35.]
-    tune.kpV = [1.6, 1.4, 1.2]
+    tune.kpV = [1.6, 1.5, 0.7]
     tune.kiV = [0.54, 0.36]
   elif name == LongTunes.TSSStock:
     tune.kpBP = [0., 5., 35.]
