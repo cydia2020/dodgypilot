@@ -39,10 +39,11 @@ def set_long_tune(tune, name):
     tune.kiV = [.35, .23, .20, .17, .1]
   # Default longitudinal tune
   elif name == LongTunes.TSSBetter:
-    tune.kpBP = [0., 5., 35.]
-    tune.kiBP = [0., 35.]
-    tune.kpV = [1.5, 1.5, 1.0]
-    tune.kiV = [0.54, 0.36]
+    tune.kpBP = [0.]
+    tune.kiBP = [0.]
+    tune.kpV = [0.]
+    tune.kiV = [0.]
+    tune.kd = [0.]
   elif name == LongTunes.TSSStock:
     tune.kpBP = [0., 5., 35.]
     tune.kiBP = [0., 35.]
