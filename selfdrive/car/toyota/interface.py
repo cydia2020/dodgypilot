@@ -317,16 +317,17 @@ class CarInterface(CarInterfaceBase):
     # to a negative value, so it won't matter.
     ret.minEnableSpeed = -1. if (stop_and_go or ret.enableGasInterceptor) else MIN_ACC_SPEED
 
-    if ret.enableGasInterceptor and not candidate in FULL_SPEED_DRCC_CAR:
-      set_long_tune(ret.longitudinalTuning, LongTunes.PEDAL)
-    elif candidate in TSS2_CAR or candidate == CAR.CAMRYH:
-      set_long_tune(ret.longitudinalTuning, LongTunes.TSS2)
-      ret.stoppingDecelRate = 0.3  # reach stopping target smoothly
-    elif candidate in (RADAR_ACC_CAR_TSS1 - RADAR_ACC_CAR_TSS1_NEW_TUNE) \
-         or (params.get_bool("EndToEndLong") and candidate not in TSS2_CAR):
-      set_long_tune(ret.longitudinalTuning, LongTunes.TSSStock)
+    # Longitudinal Tunes
+    ret.stoppingDecelRate = 0.3  # reach stopping target smoothly
+
+    if candidate == CAR.PRIUS:
+      set_long_tune(ret.longitudinalTuning, LongTunes.TSSPPrius) # TSS-P Toyota Prius has a special tune
+    elif candidate in (CAR.CAMRY, CAR.CAMRYH):
+      set_long_tune(ret.longitudinalTuning, LongTunes.TSSPCamry) # TSS-P Toyota Camry / Camry H have a special tune
+    elif (candidate in TSS2_CAR) or (ret.enableGasInterceptor and not candidate in FULL_SPEED_DRCC_CAR):
+      set_long_tune(ret.longitudinalTuning, LongTunes.TSS2) # Use TSS 2.0 tune for both pedal and TSS 2.0 cars
     else:
-      set_long_tune(ret.longitudinalTuning, LongTunes.TSSBetter)
+      set_long_tune(ret.longitudinalTuning, LongTunes.TSSStock) # Use stock TSS-P tune for all other cars
 
     return ret
 
