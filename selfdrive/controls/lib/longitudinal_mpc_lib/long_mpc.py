@@ -285,7 +285,7 @@ class LongitudinalMpc:
     cost_mulitpliers = self.get_cost_multipliers(v_lead0, v_lead1)
     if self.mode == 'acc':
       a_change_cost = A_CHANGE_COST if prev_accel_constraint else 0
-      cost_weights = [X_EGO_OBSTACLE_COST, X_EGO_COST, V_EGO_COST, A_EGO_COST, a_change_cost * cost_mulitpliers[0], J_EGO_COST]
+      cost_weights = [X_EGO_OBSTACLE_COST, X_EGO_COST, V_EGO_COST, A_EGO_COST, a_change_cost * self.jerk_factor * cost_mulitpliers[0],  self.jerk_factor * J_EGO_COST]
       constraint_cost_weights = [LIMIT_COST, LIMIT_COST, LIMIT_COST, DANGER_ZONE_COST]
     elif self.mode == 'blended':
       cost_weights = [0., 0.2, 0.25, 1.0, 0.0, 1.0]
@@ -344,18 +344,22 @@ class LongitudinalMpc:
     if carstate.pcmFollowDistance == 3:
       self.desired_TF = T_FOLLOW - 0.35
       self.desired_stop_distance = STOP_DISTANCE
+      self.jerk_factor = 0.5
 
     elif carstate.pcmFollowDistance == 2:
       self.desired_TF = T_FOLLOW
       self.desired_stop_distance = STOP_DISTANCE
+      self.jerk_factor = 0.75
 
     elif carstate.pcmFollowDistance == 1:
       self.desired_TF = T_FOLLOW + 0.35
       self.desired_stop_distance = STOP_DISTANCE
+      self.jerk_factor = 1.0
 
     else:
       self.desired_TF = T_FOLLOW
       self.desired_stop_distance = STOP_DISTANCE
+      self.jerk_factor = 1.0
 
   def update(self, carstate, radarstate, v_cruise, prev_accel_constraint, x, v, a, j):
     v_ego = self.x0[1]
