@@ -4,8 +4,8 @@ from common.params import Params
 from selfdrive.car import apply_toyota_steer_torque_limits, create_gas_interceptor_command, make_can_msg
 from selfdrive.car.toyota.toyotacan import create_steer_command, create_ui_command, \
                                            create_accel_command, create_acc_cancel_command, \
-                                           create_fcw_command, create_lta_steer_command
-from selfdrive.car.toyota.values import CAR, STATIC_DSU_MSGS, NO_STOP_TIMER_CAR, TSS2_CAR, FULL_SPEED_DRCC_CAR, RADAR_ACC_CAR_TSS1, \
+                                           create_fcw_command, create_lta_steer_command, create_ipas_steer_command
+from selfdrive.car.toyota.values import CAR, STATIC_DSU_MSGS, STATIC_APGS_MSGS, NO_STOP_TIMER_CAR, TSS2_CAR, FULL_SPEED_DRCC_CAR, RADAR_ACC_CAR_TSS1, \
                                         MIN_ACC_SPEED, PEDAL_TRANSITION, CarControllerParams
 from opendbc.can.packer import CANPacker
 
@@ -118,6 +118,9 @@ class CarController:
     # toyota can trace shows this message at 42Hz, with counter adding alternatively 1 and 2;
     can_sends.append(create_steer_command(self.packer, apply_steer, apply_steer_req, self.frame))
 
+    # dodgy TSS-P angle steering, do not use
+    can_sends.append(create_ipas_steer_command(self.packer, actuators.steeringAngleDeg, CC.enabled, self.CP.enableApgs))
+
     if self.frame % 2 == 0 and self.CP.carFingerprint in TSS2_CAR:
       can_sends.append(create_lta_steer_command(self.packer, 0, 0, self.frame // 2))
 
@@ -184,6 +187,10 @@ class CarController:
     # *** static msgs ***
     for addr, cars, bus, fr_step, vl in STATIC_DSU_MSGS:
       if self.frame % fr_step == 0 and self.CP.enableDsu and self.CP.carFingerprint in cars:
+        can_sends.append(make_can_msg(addr, vl, bus))
+
+    for addr, cars, bus, fr_step, vl in STATIC_APGS_MSGS:
+      if self.frame % fr_step == 0 and self.CP.enableApgs and self.CP.carFingerprint in cars:
         can_sends.append(make_can_msg(addr, vl, bus))
 
     new_actuators = actuators.copy()
