@@ -30,6 +30,7 @@ class CarController:
     self.last_off_frame = 0
     self.permit_braking = True
     self.e2e_long = params.get_bool("EndToEndLong")
+    self.ipas_steer = params.get_bool("EnableIpasSteer")
     self.steer_rate_counter = 0
 
     self.packer = CANPacker(dbc_name)
@@ -118,8 +119,9 @@ class CarController:
     # toyota can trace shows this message at 42Hz, with counter adding alternatively 1 and 2;
     can_sends.append(create_steer_command(self.packer, apply_steer, apply_steer_req, self.frame))
 
-    # dodgy TSS-P angle steering, do not use
-    can_sends.append(create_ipas_steer_command(self.packer, actuators.steeringAngleDeg, CC.enabled, self.CP.enableApgs))
+    # dodgy TSS-P angle steering, send this at 50Hz
+    if self.frame % 2 == 0 and self.ipas_steer:
+      can_sends.append(create_ipas_steer_command(self.packer, actuators.steeringAngleDeg, CC.enabled, self.CP.enableApgs))
 
     if self.frame % 2 == 0 and self.CP.carFingerprint in TSS2_CAR:
       can_sends.append(create_lta_steer_command(self.packer, 0, 0, self.frame // 2))

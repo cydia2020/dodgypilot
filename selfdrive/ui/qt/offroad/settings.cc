@@ -226,6 +226,22 @@ DodgypilotPanel::DodgypilotPanel(SettingsWindow *parent) : ListWidget(parent) {
       "../assets/offroad/icon_brightness.png",
     },
 
+    // Fake APGS ECU
+    {
+      "EnableFakeApgs",
+      "Danger: Enable Fake APGS",
+      "Danger: Will cause irreversible changes to the vehicle. Enable A Fake APGS ECU to allow IPAS Steering on cars that weren't equipped with one.",
+      "../assets/offroad/icon_ipas_ecu_fake.png",
+    },
+
+    // IPAS Steer
+    {
+      "EnableIpasSteer",
+      "Danger: Use IPAS Steering",
+      "Send IPAS Steer commands in addition to the normal LKAS commands. Requires additional speed interceptor between the EPS and the CAN Network.",
+      "../assets/offroad/icon_ipas_steer.png",
+    },
+
     // ZSS support toggle
     {
       "EnableZss",
