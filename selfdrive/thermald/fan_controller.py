@@ -44,7 +44,8 @@ class EonFanController(BaseFanController):
     if self.fan_speed != speed:
       # FIXME: this is such an ugly hack to get the right index
       val = speed // 16384
-
+      
+      bus = SMBus(7, force=True)
       if self.is_oneplus:
         bus.write_byte_data(0x21, 0x04, 0x2)
         bus.write_byte_data(0x21, 0x03, (val*2)+1)
