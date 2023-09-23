@@ -29,8 +29,8 @@ def get_startup_event(car_recognized, controller_available, fw_seen):
       event = EventName.startupNoFw
   elif car_recognized and not controller_available:
     event = EventName.startupNoControl
-  elif EON and "letv" not in open("/proc/cmdline").read():
-    event = EventName.startupOneplus
+#  elif EON and "letv" not in open("/proc/cmdline").read():
+#    event = EventName.startupOneplus
   return event
 
 
