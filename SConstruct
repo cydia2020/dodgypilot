@@ -401,36 +401,36 @@ if arch not in ["aarch64", "larch64"]:
   })
 
 Export('rednose_config')
-SConscript(['rednose/SConscript'])
+# SConscript(['rednose/SConscript'])
 
 # Build openpilot
 
-SConscript(['cereal/SConscript'])
-SConscript(['panda/board/SConscript'])
-SConscript(['opendbc/can/SConscript'])
+# SConscript(['cereal/SConscript'])
+# SConscript(['panda/board/SConscript'])
+# SConscript(['opendbc/can/SConscript'])
 
-SConscript(['third_party/SConscript'])
+# SConscript(['third_party/SConscript'])
 
-SConscript(['common/SConscript'])
-SConscript(['common/kalman/SConscript'])
-SConscript(['common/transformations/SConscript'])
+# SConscript(['common/SConscript'])
+# SConscript(['common/kalman/SConscript'])
+# SConscript(['common/transformations/SConscript'])
 
 SConscript(['selfdrive/camerad/SConscript'])
-SConscript(['selfdrive/modeld/SConscript'])
+# SConscript(['selfdrive/modeld/SConscript'])
 
-SConscript(['selfdrive/controls/lib/cluster/SConscript'])
-SConscript(['selfdrive/controls/lib/lateral_mpc_lib/SConscript'])
-SConscript(['selfdrive/controls/lib/longitudinal_mpc_lib/SConscript'])
+# SConscript(['selfdrive/controls/lib/cluster/SConscript'])
+# SConscript(['selfdrive/controls/lib/lateral_mpc_lib/SConscript'])
+# SConscript(['selfdrive/controls/lib/longitudinal_mpc_lib/SConscript'])
 
-SConscript(['selfdrive/boardd/SConscript'])
-SConscript(['selfdrive/proclogd/SConscript'])
-SConscript(['selfdrive/clocksd/SConscript'])
+# SConscript(['selfdrive/boardd/SConscript'])
+# SConscript(['selfdrive/proclogd/SConscript'])
+# SConscript(['selfdrive/clocksd/SConscript'])
 
-SConscript(['selfdrive/loggerd/SConscript'])
+# SConscript(['selfdrive/loggerd/SConscript'])
 
-SConscript(['selfdrive/locationd/SConscript'])
-SConscript(['selfdrive/sensord/SConscript'])
-SConscript(['selfdrive/ui/SConscript'])
+# SConscript(['selfdrive/locationd/SConscript'])
+# SConscript(['selfdrive/sensord/SConscript'])
+# SConscript(['selfdrive/ui/SConscript'])
 
 if arch != "Darwin":
   SConscript(['selfdrive/logcatd/SConscript'])
