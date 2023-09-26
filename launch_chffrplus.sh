@@ -107,6 +107,64 @@ function two_init {
 
   # wifi scan
   wpa_cli IFNAME=wlan0 SCAN
+  
+  # install missing libs
+  LIB_PATH="/data/openpilot/selfdrive/hardware/eon/libs"
+  PY_LIB_DEST="/system/comma/usr/lib/python3.8/site-packages"
+  mount -o remount,rw /system
+  # mapd
+  if [ ! -f "/system/comma/usr/lib/libgfortran.so.5.0.0" ]; then
+    echo "Installing libgfortran..."
+    tar -zxvf "$LIB_PATH/libgfortran.tar.gz" -C /system/comma/usr/lib/
+  fi
+  # mapd
+  MODULE="opspline"
+  if [ ! -d "$PY_LIB_DEST/$MODULE" ]; then
+    echo "Installing $MODULE..."
+    tar -zxvf "$LIB_PATH/$MODULE.tar.gz" -C "$PY_LIB_DEST/"
+  fi
+  MODULE="overpy"
+  if [ ! -d "$PY_LIB_DEST/$MODULE" ]; then
+    echo "Installing $MODULE..."
+    tar -zxvf "$LIB_PATH/$MODULE.tar.gz" -C "$PY_LIB_DEST/"
+  fi
+  # laika
+  MODULE="hatanaka"
+  if [ ! -d "$PY_LIB_DEST/$MODULE" ]; then
+    echo "Installing $MODULE..."
+    tar -zxvf "$LIB_PATH/$MODULE.tar.gz" -C "$PY_LIB_DEST/"
+  fi
+  if [ ! -f "$PY_LIB_DEST/ncompress.cpython-38.so" ]; then
+    echo "Installing ncompress.cpython-38.so..."
+    cp -f "$LIB_PATH/ncompress.cpython-38.so" "$PY_LIB_DEST/"
+  fi
+  MODULE="importlib_resources"
+  if [ ! -d "$PY_LIB_DEST/$MODULE" ]; then
+    echo "Installing $MODULE..."
+    tar -zxvf "$LIB_PATH/$MODULE.tar.gz" -C "$PY_LIB_DEST/"
+  fi
+  if [ ! -f "$PY_LIB_DEST/zipp.py" ]; then
+    echo "Installing zipp.py..."
+    cp -f "$LIB_PATH/zipp.py" "$PY_LIB_DEST/"
+  fi
+  # updated
+  MODULE="markdown_it"
+  if [ ! -d "$PY_LIB_DEST/$MODULE" ]; then
+    echo "Installing $MODULE..."
+    tar -zxvf "$LIB_PATH/$MODULE.tar.gz" -C "$PY_LIB_DEST/"
+  fi
+  MODULE="mdurl"
+  if [ ! -d "$PY_LIB_DEST/$MODULE" ]; then
+    echo "Installing $MODULE..."
+    tar -zxvf "$LIB_PATH/$MODULE.tar.gz" -C "$PY_LIB_DEST/"
+  fi
+  # panda
+  if [ ! -f "$PY_LIB_DEST/spidev.cpython-38.so" ]; then
+    echo "Installing spidev.cpython-38.so..."
+    cp -f "$LIB_PATH/spidev.cpython-38.so" "$PY_LIB_DEST/"
+  fi
+  mount -o remount,r /system
+  
 
   # Check for NEOS update
   if [ -f /LEECO ] && [ $(< /VERSION) != "$REQUIRED_NEOS_VERSION" ]; then
