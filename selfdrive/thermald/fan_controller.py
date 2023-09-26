@@ -24,6 +24,7 @@ class EonFanController(BaseFanController):
 
   def __init__(self) -> None:
     super().__init__()
+    self.is_oneplus = os.path.isfile('/ONEPLUS')
     cloudlog.info("Setting up EON fan handler")
 
     self.fan_speed = -1
@@ -31,23 +32,34 @@ class EonFanController(BaseFanController):
 
   def setup_eon_fan(self) -> None:
     os.system("echo 2 > /sys/module/dwc3_msm/parameters/otg_switch")
+    if self.is_oneplus:
+      bus = SMBus(7, force=True)
+      bus.write_byte_data(0x21, 0x10, 0xf)   # mask all interrupts
+      bus.write_byte_data(0x21, 0x03, 0x1)   # set drive current and global interrupt disable
+      bus.write_byte_data(0x21, 0x02, 0x2)   # needed?
+      bus.write_byte_data(0x21, 0x04, 0x4)   # manual override source
+
 
   def set_eon_fan(self, speed: int) -> None:
     if self.fan_speed != speed:
       # FIXME: this is such an ugly hack to get the right index
       val = speed // 16384
 
-      bus = SMBus(7, force=True)
-      try:
-        i = [0x1, 0x3 | 0, 0x3 | 0x08, 0x3 | 0x10][val]
-        bus.write_i2c_block_data(0x3d, 0, [i])
-      except OSError:
-        # tusb320
-        if val == 0:
-          bus.write_i2c_block_data(0x67, 0xa, [0])
-        else:
-          bus.write_i2c_block_data(0x67, 0xa, [0x20])
-          bus.write_i2c_block_data(0x67, 0x8, [(val - 1) << 6])
+      if self.is_oneplus:
+        bus.write_byte_data(0x21, 0x04, 0x2)
+        bus.write_byte_data(0x21, 0x03, (val*2)+1)
+        bus.write_byte_data(0x21, 0x04, 0x4)
+      else:
+        try:
+          i = [0x1, 0x3 | 0, 0x3 | 0x08, 0x3 | 0x10][val]
+          bus.write_i2c_block_data(0x3d, 0, [i])
+        except OSError:
+          # tusb320
+          if val == 0:
+            bus.write_i2c_block_data(0x67, 0xa, [0])
+          else:
+            bus.write_i2c_block_data(0x67, 0xa, [0x20])
+            bus.write_i2c_block_data(0x67, 0x8, [(val - 1) << 6])
       bus.close()
       self.fan_speed = speed
 
