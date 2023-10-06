@@ -205,6 +205,7 @@ std::unordered_map<std::string, uint32_t> keys = {
     // IPAS Steer Related Stuff
     {"EnableFakeApgs", PERSISTENT},
     {"EnableIpasSteer", PERSISTENT},
+    {"EnableIpasSteerInterceptor", PERSISTENT},
 };
 
 } // namespace

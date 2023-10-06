@@ -242,6 +242,14 @@ DodgypilotPanel::DodgypilotPanel(SettingsWindow *parent) : ListWidget(parent) {
       "../assets/offroad/icon_ipas_steer.png",
     },
 
+    // IPAS Send to Interceptor
+    {
+      "EnableIpasSteerInterceptor",
+      "Danger: Use IPAS Interceptor",
+      "Send IPAS Steering commands to STEERING_IPAS_COMMA. Only turn on if you are using an interceptor at the gateway to forward IPAS Steering messages when openpilot is not engaged.",
+      "../assets/offroad/icon_ipas_steer_interceptor.png",
+    },
+
     // ZSS support toggle
     {
       "EnableZss",

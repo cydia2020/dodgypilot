@@ -31,6 +31,7 @@ class CarController:
     self.permit_braking = True
     self.e2e_long = params.get_bool("EndToEndLong")
     self.ipas_steer = params.get_bool("EnableIpasSteer")
+    self.ipas_steer_interceptor = params.get_bool("EnableIpasSteerInterceptor")
     self.steer_rate_counter = 0
 
     self.packer = CANPacker(dbc_name)
@@ -121,7 +122,7 @@ class CarController:
 
     # dodgy TSS-P angle steering, send this at 50Hz
     if self.frame % 2 == 0 and self.ipas_steer:
-      can_sends.append(create_ipas_steer_command(self.packer, actuators.steeringAngleDeg, CC.enabled, self.CP.enableApgs))
+      can_sends.append(create_ipas_steer_command(self.packer, actuators.steeringAngleDeg, CC.enabled, self.ipas_steer_interceptor))
 
     if self.frame % 2 == 0 and self.CP.carFingerprint in TSS2_CAR:
       can_sends.append(create_lta_steer_command(self.packer, 0, 0, self.frame // 2))

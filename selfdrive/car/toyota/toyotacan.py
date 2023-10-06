@@ -1,4 +1,4 @@
-def create_ipas_steer_command(packer, steer, enabled, apgs_enabled):
+def create_ipas_steer_command(packer, steer, enabled, steer_interceptor_enabled):
   """Creates a CAN message for the Toyota Steer Command."""
   if steer < 0:
     direction = 3
@@ -16,10 +16,10 @@ def create_ipas_steer_command(packer, steer, enabled, apgs_enabled):
     "SET_ME_X10": 0x10,
     "SET_ME_X40": 0x40
   }
-  if apgs_enabled:
-    return packer.make_can_msg("STEERING_IPAS", 0, values)
-  else:
+  if steer_interceptor_enabled:
     return packer.make_can_msg("STEERING_IPAS_COMMA", 0, values)
+  else:
+    return packer.make_can_msg("STEERING_IPAS", 0, values)
 
 def create_steer_command(packer, steer, steer_req, raw_cnt):
   """Creates a CAN message for the Toyota Steer Command."""
