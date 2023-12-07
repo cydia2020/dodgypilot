@@ -1,6 +1,7 @@
 from cereal import car
 from common.numpy_fast import clip, interp
 from common.params import Params
+from common.realtime import DT_CTRL
 from selfdrive.car import apply_toyota_steer_torque_limits, create_gas_interceptor_command, make_can_msg
 from selfdrive.car.toyota.toyotacan import create_steer_command, create_ui_command, \
                                            create_accel_command, create_acc_cancel_command, \
@@ -66,13 +67,23 @@ class CarController:
     else:
       interceptor_gas_cmd = 0.
 
+    # calculate acceleration from drive forces, F=ma
+    driver_accel = CS.real_drive_force / self.CP.mass
+
     # accel offset logic
     accel_offset = 0.
     if CC.longActive:
       accel_offset = CS.pcm_neutral_force / self.CP.mass
 
-    # calculate pcm accel command
-    pcm_accel_cmd = clip(actuators.accel + accel_offset, CarControllerParams.ACCEL_MIN, _accel_max)
+    accel_transition_time = 0.5
+    # calculated offset'd accel
+    target_pcm_accel = clip(actuators.accel + accel_offset, CarControllerParams.ACCEL_MIN, _accel_max)
+    # transition from driver accel to openpilot request over accel_transition_time
+    accel_increment = (target_pcm_accel - driver_accel) / (accel_transition_time / DT_CTRL)
+    for step in range(accel_transition_time / DT_CTRL):
+        interpolated_accel = driver_accel + accel_increment * step
+        pcm_accel_cmd = clip(interpolated_accel, CarControllerParams.ACCEL_MIN, _accel_max)
+
     if not CC.longActive:
       pcm_accel_cmd = 0.
 
