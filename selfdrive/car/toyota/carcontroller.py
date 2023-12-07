@@ -55,6 +55,15 @@ class CarController:
 
       return final_interpolated_force
 
+    def perform_low_speed_force_transition(start_force_stopping, end_force_stopping, speed, stopping_speed_threshold):
+      if speed > stopping_speed_threshold:
+        force_reduction_factor = 1.0 - (speed - stopping_speed_threshold) / (3.0 - stopping_speed_threshold)
+        stopping_force = start_force_stopping + (end_force_stopping - start_force_stopping) * force_reduction_factor
+
+        return stopping_force
+      else:
+        return end_force_stopping
+
     # gas and brake
     # Default interceptor logic
     if self.CP.enableGasInterceptor and CC.longActive and self.CP.openpilotLongitudinalControl and self.CP.carFingerprint not in FULL_SPEED_DRCC_CAR:
@@ -97,10 +106,18 @@ class CarController:
     else:
       final_interpolated_force = CS.pcm_neutral_force
 
+    # smooth in a force used for offset based on vehicle speed and stopping state
+    stopping_speed_threshold = 1. # 3.6 km/h
+
+    # only use when stopping
+    stopping_offset_force = 0.
+    if _stopping:
+      stopping_offset_force = perform_low_speed_force_transition(final_interpolated_force, 0., CS.out.vEgo, stopping_speed_threshold)
+
     # accel offset logic
     accel_offset = 0.
     if CC.longActive:
-      accel_offset = final_interpolated_force / self.CP.mass
+      accel_offset = (final_interpolated_force + stopping_offset_force) / self.CP.mass
 
     # calculate and clip pcm_accel_cmd
     pcm_accel_cmd = clip(actuators.accel + accel_offset, CarControllerParams.ACCEL_MIN, _accel_max)
