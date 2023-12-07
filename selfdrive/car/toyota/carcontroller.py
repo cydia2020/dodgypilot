@@ -48,7 +48,7 @@ class CarController:
     _accel_max = CarControllerParams.ACCEL_MAX_CAMRY if self.CP.carFingerprint == CAR.CAMRY else CarControllerParams.ACCEL_MAX
 
     # function for interpolating force
-    def perform_force_transition(start_force, end_force, force_transition_frames):
+    def perform_enablement_force_transition(start_force, end_force, force_transition_frames):
       force_increment = (end_force - start_force) / force_transition_frames
       for f_frames in range(force_transition_frames):
         final_interpolated_force = start_force + force_increment * f_frames
@@ -93,7 +93,7 @@ class CarController:
     # only use the interpolated force 0.5 seconds after gas press or enabling
     if (self.frame - self.last_gas_pressed_frame) < force_transition_frames or \
       (self.frame - self.last_off_frame) < force_transition_frames:
-      final_interpolated_force = perform_force_transition(start_force, end_force, force_transition_frames)
+      final_interpolated_force = perform_enablement_force_transition(start_force, end_force, force_transition_frames)
     else:
       final_interpolated_force = CS.pcm_neutral_force
 
