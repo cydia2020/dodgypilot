@@ -93,7 +93,7 @@ class CarController:
     if not CS.out.gasPressed:
       self.last_gas_pressed_frame = self.frame
 
-    # smooth in a forced used for offset based on current drive force
+    # smooth in a force used for offset based on current drive force
     force_transition_time = 0.5 # seconds to go from start to end force
     force_transition_frames = int(force_transition_time / DT_CTRL)
     start_force = 0. # start with 0
