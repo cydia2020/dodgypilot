@@ -57,7 +57,7 @@ class CarController:
 
     def perform_low_speed_force_transition(start_force_stopping, end_force_stopping, speed, stopping_speed_threshold):
       if speed > stopping_speed_threshold:
-        force_reduction_factor = 1.0 - (speed - stopping_speed_threshold) / (3.0 - stopping_speed_threshold)
+        force_reduction_factor = 1. - (speed - stopping_speed_threshold) / (1.0 - stopping_speed_threshold)
         stopping_force = start_force_stopping + (end_force_stopping - start_force_stopping) * force_reduction_factor
 
         return stopping_force
