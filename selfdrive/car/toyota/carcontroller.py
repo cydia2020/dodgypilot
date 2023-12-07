@@ -106,13 +106,14 @@ class CarController:
     else:
       final_interpolated_force = CS.pcm_neutral_force
 
-    # smooth in a force used for offset based on vehicle speed and stopping state
+    # smooth in a 0.3 m/s^2 decel offset based on vehicle speed and stopping state
     stopping_speed_threshold = 1. # 3.6 km/h
+    end_force_stopping = -0.3 * self.CP.mass # F=ma, for prius, this is -0.3*1381=-414.3N
 
     # only use when stopping
     stopping_offset_force = 0.
     if _stopping:
-      stopping_offset_force = perform_low_speed_force_transition(final_interpolated_force, 0., CS.out.vEgo, stopping_speed_threshold)
+      stopping_offset_force = perform_low_speed_force_transition(final_interpolated_force, end_force_stopping, CS.out.vEgo, stopping_speed_threshold)
 
     # accel offset logic
     accel_offset = 0.
