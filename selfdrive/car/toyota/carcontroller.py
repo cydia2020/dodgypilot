@@ -108,7 +108,9 @@ class CarController:
 
     # smooth in a 0.3 m/s^2 decel offset based on vehicle speed and stopping state
     stopping_speed_threshold = 1. # 3.6 km/h
-    end_force_stopping = -0.3 * self.CP.mass # F=ma, for prius, this is -0.3*1381=-414.3N
+    neutral_stopping_decel = -0.3
+    pitch_compensated_stopping_accel = (CS.out.kinematicsPitch, [-8.5, 0.0, 8.5], [neutral_stopping_decel - 0.1, neutral_stopping_decel, neutral_stopping_decel - 0.3])
+    end_force_stopping = pitch_compensated_stopping_accel * self.CP.mass # F=ma, for prius, this is -0.3*1381=-414.3N
 
     # only use when stopping
     stopping_offset_force = 0.
