@@ -31,6 +31,7 @@ class CarController:
     self.standstill_req = False
     self.steer_rate_limited = False
     self.last_off_frame = 0
+    self.last_gas_pressed_frame = 0
     self.permit_braking = True
     self.e2e_long = params.get_bool("EndToEndLong")
     self.steer_rate_counter = 0
@@ -45,6 +46,14 @@ class CarController:
     pcm_cancel_cmd = CC.cruiseControl.cancel or (not CC.enabled and CS.pcm_acc_status)
 
     _accel_max = CarControllerParams.ACCEL_MAX_CAMRY if self.CP.carFingerprint == CAR.CAMRY else CarControllerParams.ACCEL_MAX
+
+    # function for interpolating force
+    def perform_force_transition(start_force, end_force, force_transition_steps):
+      force_increment = (end_force - start_force) / force_transition_steps
+      for step in range(force_transition_steps):
+        final_interpolated_force = start_force + force_increment * step
+
+      return final_interpolated_force
 
     # gas and brake
     # Default interceptor logic
@@ -69,26 +78,37 @@ class CarController:
     else:
       interceptor_gas_cmd = 0.
 
+    # record frames
+    if not CC.enabled:
+      self.last_off_frame = self.frame
+    if not CS.out.gasPressed:
+      self.last_gas_pressed_frame = self.frame
+
+    pitch_compensation = 0.
     # pitch compensation
     if CS.out.vEgo > 1 and CC.longActive:
-      self.pitch_compensation = ACCELERATION_DUE_TO_GRAVITY * math.sin(CS.out.kinematicsPitch)
+      pitch_compensation = ACCELERATION_DUE_TO_GRAVITY * math.sin(CS.out.kinematicsPitch)
+
+    # smooth in a forced used for offset based on current drive force
+    force_transition_time = 0.5 # seconds to go from start to end force
+    force_transition_steps = int(force_transition_time / DT_CTRL)
+    start_force = CS.real_drive_force # start with what we have right now
+    end_force = CS.pcm_neutral_force # end with what we want to go to
+
+    # only use the interpolated force 0.5 seconds after gas press or enabling
+    if (self.frame - self.last_gas_pressed_frame) > force_transition_steps or \
+      (self.frame - self.last_off_frame) > force_transition_steps:
+      final_interpolated_force = perform_force_transition(start_force, end_force, force_transition_steps)
+    else:
+      final_interpolated_force = CS.pcm_neutral_force
 
     # accel offset logic
     accel_offset = 0.
-
-    force_transition_time = 0.5
-    force_transition_steps = int(force_transition_time / DT_CTRL)
-    start_force = CS.real_drive_force
-    end_force = CS.pcm_neutral_force if CC.latActive or CS.out.gasPressed else start_force
-    force_increment = (end_force - start_force) / force_transition_steps
-
     if CC.longActive:
-      for step in range(force_transition_steps):
-          # Calculate the interpolated force for the current step
-          interpolated_force = start_force + force_increment * step
-          accel_offset = interpolated_force / self.CP.mass
+      accel_offset = final_interpolated_force / self.CP.mass
 
-    pcm_accel_cmd = clip(actuators.accel + accel_offset + self.pitch_compensation, CarControllerParams.ACCEL_MIN, _accel_max)
+    # calculate and clip pcm_accel_cmd
+    pcm_accel_cmd = clip(actuators.accel + accel_offset + pitch_compensation, CarControllerParams.ACCEL_MIN, _accel_max)
     if not CC.longActive:
       pcm_accel_cmd = 0.
 
@@ -154,10 +174,6 @@ class CarController:
     alert_prompt = hud_control.audibleAlert in (AudibleAlert.promptDistracted, AudibleAlert.prompt)
     alert_prompt_repeat = hud_control.audibleAlert in (AudibleAlert.promptRepeat, AudibleAlert.warningSoft)
     alert_immediate = hud_control.audibleAlert == AudibleAlert.warningImmediate
-
-    # record frames
-    if not CC.enabled:
-      self.last_off_frame = self.frame
 
     # cydia2020 - PERMIT_BRAKING commands the PCM to allow openpilot to engage the friction brakes
     # and engine brake on your vehicle, it does not affect regen braking as far as I can tell
