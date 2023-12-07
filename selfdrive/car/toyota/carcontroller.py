@@ -72,7 +72,7 @@ class CarController:
       accel_offset = CS.pcm_neutral_force / self.CP.mass
 
     # calculate pcm accel command
-    pcm_accel_cmd = clip(actuators.accel + accel_offset, CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX)
+    pcm_accel_cmd = clip(actuators.accel + accel_offset, CarControllerParams.ACCEL_MIN, _accel_max)
     if not CC.longActive:
       pcm_accel_cmd = 0.
 
