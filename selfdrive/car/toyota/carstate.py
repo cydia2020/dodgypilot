@@ -267,7 +267,7 @@ class CarState(CarStateBase):
       ("KINEMATICS", 80),
       ("STEER_TORQUE_SENSOR", 50),
       ("ENGINE_RPM", 50),
-      ("DRIVETRAIN_FORCE", 50), # assuming this is 50hz
+      ("DRIVETRAIN_FORCE", 0),
     ]
 
     if CP.flags & ToyotaFlags.HYBRID:
