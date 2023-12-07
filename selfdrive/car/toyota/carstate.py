@@ -104,7 +104,7 @@ class CarState(CarStateBase):
     ret.meterDimmed = cp.vl["BODY_CONTROL_STATE"]['METER_DIMMED'] == 1
     ret.meterLowBrightness = cp.vl["BODY_CONTROL_STATE_2"]["METER_SLIDER_LOW_BRIGHTNESS"] == 1
     ret.brakeLights = bool(cp.vl["ESP_CONTROL"]['BRAKE_LIGHTS_ACC'] or cp.vl["BRAKE_MODULE"]["BRAKE_PRESSED"] != 0)
-    ret.engineRpm = cp.vl["ENGINE_RPM"]["RPM"]
+    self.engineRpm = cp.vl["ENGINE_RPM"]["RPM"]
     self.pcm_neutral_force = cp.vl["PCM_CRUISE"]["NEUTRAL_FORCE"]
 
     if self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
