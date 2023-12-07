@@ -1,3 +1,4 @@
+import math
 from cereal import car
 from common.numpy_fast import clip, interp
 from common.params import Params
@@ -8,6 +9,7 @@ from selfdrive.car.toyota.toyotacan import create_steer_command, create_ui_comma
                                            create_fcw_command, create_lta_steer_command
 from selfdrive.car.toyota.values import CAR, STATIC_DSU_MSGS, NO_STOP_TIMER_CAR, TSS2_CAR, FULL_SPEED_DRCC_CAR, RADAR_ACC_CAR_TSS1, \
                                         MIN_ACC_SPEED, PEDAL_TRANSITION, CarControllerParams
+from selfdrive.controls.lib.vehicle_model import ACCELERATION_DUE_TO_GRAVITY
 from opendbc.can.packer import CANPacker
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
@@ -67,23 +69,26 @@ class CarController:
     else:
       interceptor_gas_cmd = 0.
 
+    # pitch compensation
+    if CS.out.vEgo > 1 and CC.longActive:
+      self.pitch_compensation = ACCELERATION_DUE_TO_GRAVITY * math.sin(CS.out.kinematicsPitch)
+
     # accel offset logic
     accel_offset = 0.
 
     force_transition_time = 0.5
     force_transition_steps = int(force_transition_time / DT_CTRL)
-
     start_force = CS.real_drive_force
     end_force = CS.pcm_neutral_force if CC.latActive or CS.out.gasPressed else start_force
-
     force_increment = (end_force - start_force) / force_transition_steps
-    if CC.longActive:
-        for step in range(force_transition_steps):
-            # Calculate the interpolated force for the current step
-            interpolated_force = start_force + force_increment * step
-            accel_offset = interpolated_force / self.CP.mass
 
-    pcm_accel_cmd = clip(actuators.accel + accel_offset, CarControllerParams.ACCEL_MIN, _accel_max)
+    if CC.longActive:
+      for step in range(force_transition_steps):
+          # Calculate the interpolated force for the current step
+          interpolated_force = start_force + force_increment * step
+          accel_offset = interpolated_force / self.CP.mass
+
+    pcm_accel_cmd = clip(actuators.accel + accel_offset + self.pitch_compensation, CarControllerParams.ACCEL_MIN, _accel_max)
     if not CC.longActive:
       pcm_accel_cmd = 0.
 
