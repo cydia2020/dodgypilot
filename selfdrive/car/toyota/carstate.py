@@ -104,6 +104,8 @@ class CarState(CarStateBase):
     ret.meterDimmed = cp.vl["BODY_CONTROL_STATE"]['METER_DIMMED'] == 1
     ret.meterLowBrightness = cp.vl["BODY_CONTROL_STATE_2"]["METER_SLIDER_LOW_BRIGHTNESS"] == 1
     ret.brakeLights = bool(cp.vl["ESP_CONTROL"]['BRAKE_LIGHTS_ACC'] or cp.vl["BRAKE_MODULE"]["BRAKE_PRESSED"] != 0)
+    ret.engineRpm = cp.vl["ENGINE_RPM"]["RPM"]
+    self.pcm_neutral_force = cp.vl["PCM_CRUISE"]["NEUTRAL_FORCE"]
 
     if self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
       ret.cruiseState.available = cp.vl["DSU_CRUISE"]["MAIN_ON"] != 0
@@ -242,6 +244,8 @@ class CarState(CarStateBase):
       ("ACCEL_Y", "KINEMATICS"),
       ("ACCEL_X", "KINEMATICS"),
       ("YAW_RATE", "KINEMATICS"),
+      ("RPM", "ENGINE_RPM"),
+      ("NEUTRAL_FORCE","PCM_CRUISE"),
     ]
 
     checks = [
@@ -258,6 +262,7 @@ class CarState(CarStateBase):
       ("PCM_CRUISE", 33),
       ("KINEMATICS", 80),
       ("STEER_TORQUE_SENSOR", 50),
+      ("ENGINE_RPM", 50),
     ]
 
     if CP.flags & ToyotaFlags.HYBRID:

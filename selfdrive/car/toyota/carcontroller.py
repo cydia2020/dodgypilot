@@ -66,8 +66,15 @@ class CarController:
     else:
       interceptor_gas_cmd = 0.
 
-    # PCM acceleration command, vehicle only responds to this when the "no accel below" speed has been reached
-    pcm_accel_cmd = clip(actuators.accel, CarControllerParams.ACCEL_MIN, _accel_max)
+    accel_offset = 0
+
+    # PCM behaves differently when engine is off on hybrid, try some things
+    if abs(CS.out.engineRpm) < 1e-3:
+      accel_offset = CS.pcm_neutral_force / self.CP.mass
+    pcm_accel_cmd = clip(actuators.accel + accel_offset,
+                         CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX)
+    if not CC.longActive:
+      pcm_accel_cmd = 0.
 
     # steer torque
     new_steer = int(round(actuators.steer * CarControllerParams.STEER_MAX))
