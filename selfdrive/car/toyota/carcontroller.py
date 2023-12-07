@@ -9,7 +9,6 @@ from selfdrive.car.toyota.toyotacan import create_steer_command, create_ui_comma
                                            create_fcw_command, create_lta_steer_command
 from selfdrive.car.toyota.values import CAR, STATIC_DSU_MSGS, NO_STOP_TIMER_CAR, TSS2_CAR, FULL_SPEED_DRCC_CAR, RADAR_ACC_CAR_TSS1, \
                                         MIN_ACC_SPEED, PEDAL_TRANSITION, CarControllerParams
-from selfdrive.controls.lib.vehicle_model import ACCELERATION_DUE_TO_GRAVITY
 from opendbc.can.packer import CANPacker
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
@@ -32,7 +31,6 @@ class CarController:
     self.steer_rate_limited = False
     self.last_off_frame = 0
     self.last_gas_pressed_frame = 0
-    self.permit_braking = True
     self.e2e_long = params.get_bool("EndToEndLong")
     self.steer_rate_counter = 0
 
@@ -84,11 +82,6 @@ class CarController:
     if not CS.out.gasPressed:
       self.last_gas_pressed_frame = self.frame
 
-    pitch_compensation = 0.
-    # pitch compensation
-    if CS.out.vEgo > 1 and CC.longActive:
-      pitch_compensation = ACCELERATION_DUE_TO_GRAVITY * math.sin(CS.out.kinematicsPitch)
-
     # smooth in a forced used for offset based on current drive force
     force_transition_time = 0.5 # seconds to go from start to end force
     force_transition_frames = int(force_transition_time / DT_CTRL)
@@ -108,7 +101,7 @@ class CarController:
       accel_offset = final_interpolated_force / self.CP.mass
 
     # calculate and clip pcm_accel_cmd
-    pcm_accel_cmd = clip(actuators.accel + accel_offset + pitch_compensation, CarControllerParams.ACCEL_MIN, _accel_max)
+    pcm_accel_cmd = clip(actuators.accel + accel_offset, CarControllerParams.ACCEL_MIN, _accel_max)
     if not CC.longActive:
       pcm_accel_cmd = 0.
 
