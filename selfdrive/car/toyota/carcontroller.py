@@ -67,23 +67,23 @@ class CarController:
     else:
       interceptor_gas_cmd = 0.
 
-    # calculate acceleration from drive forces, F=ma
-    driver_accel = CS.real_drive_force / self.CP.mass
-
     # accel offset logic
     accel_offset = 0.
+
+    force_transition_time = 0.5
+    force_transition_steps = int(force_transition_time / DT_CTRL)
+
+    start_force = CS.real_drive_force
+    end_force = CS.pcm_neutral_force if CC.latActive or CS.out.gasPressed else start_force
+
+    force_increment = (end_force - start_force) / force_transition_steps
     if CC.longActive:
-      accel_offset = CS.pcm_neutral_force / self.CP.mass
+        for step in range(force_transition_steps):
+            # Calculate the interpolated force for the current step
+            interpolated_force = start_force + force_increment * step
+            accel_offset = interpolated_force / self.CP.mass
 
-    accel_transition_time = 0.5
-    # calculated offset'd accel
-    target_pcm_accel = clip(actuators.accel + accel_offset, CarControllerParams.ACCEL_MIN, _accel_max)
-    # transition from driver accel to openpilot request over accel_transition_time
-    accel_increment = (target_pcm_accel - driver_accel) / (accel_transition_time / DT_CTRL)
-    for step in range(accel_transition_time / DT_CTRL):
-        interpolated_accel = driver_accel + accel_increment * step
-        pcm_accel_cmd = clip(interpolated_accel, CarControllerParams.ACCEL_MIN, _accel_max)
-
+    pcm_accel_cmd = clip(actuators.accel + accel_offset, CarControllerParams.ACCEL_MIN, _accel_max)
     if not CC.longActive:
       pcm_accel_cmd = 0.
 
