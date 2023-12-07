@@ -66,9 +66,15 @@ class CarController:
     else:
       interceptor_gas_cmd = 0.
 
-    accel_offset = CS.pcm_neutral_force / self.CP.mass
-    pcm_accel_cmd = clip(actuators.accel + accel_offset,
-                         CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX)
+    # accel offset logic
+    accel_offset = 0.
+    if CC.longActive:
+      accel_offset = CS.pcm_neutral_force / self.CP.mass
+
+    # calculate pcm accel command
+    pcm_accel_cmd = clip(actuators.accel + accel_offset, CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX)
+    if not CC.longActive:
+      pcm_accel_cmd = 0.
 
     # steer torque
     new_steer = int(round(actuators.steer * CarControllerParams.STEER_MAX))
@@ -141,12 +147,14 @@ class CarController:
     # and engine brake on your vehicle, it does not affect regen braking as far as I can tell
     # setting PERMIT_BRAKING to 1 prevents the vehicle from coasting at low speed with low accel
     # allow the vehicle to coast when the speed is below 6m/s for improved SnG smoothness
-    permit_braking_accel = interp(CS.out.vEgo, [0.0, 6., 10.], [0., 0.0, 0.35])
+    # permit_braking_accel = interp(CS.out.vEgo, [0.0, 6., 10.], [0., 0.0, 0.35])
     # Handle permit braking logic
-    if (actuators.accel > permit_braking_accel) or not CC.enabled:
-      self.permit_braking = False
-    else:
-      self.permit_braking = True
+    #if (actuators.accel > permit_braking_accel) or not CC.enabled:
+    #  self.permit_braking = False
+    #else:
+    #  self.permit_braking = True
+
+    self.permit_braking = CC.longActive
 
     # we can spam can to cancel the system even if we are using lat only control
     if (self.frame % 3 == 0 and self.CP.openpilotLongitudinalControl) or pcm_cancel_cmd:
