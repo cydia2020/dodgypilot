@@ -48,10 +48,10 @@ class CarController:
     _accel_max = CarControllerParams.ACCEL_MAX_CAMRY if self.CP.carFingerprint == CAR.CAMRY else CarControllerParams.ACCEL_MAX
 
     # function for interpolating force
-    def perform_force_transition(start_force, end_force, force_transition_steps):
-      force_increment = (end_force - start_force) / force_transition_steps
-      for step in range(force_transition_steps):
-        final_interpolated_force = start_force + force_increment * step
+    def perform_force_transition(start_force, end_force, force_transition_frames):
+      force_increment = (end_force - start_force) / force_transition_frames
+      for f_frames in range(force_transition_frames):
+        final_interpolated_force = start_force + force_increment * f_frames
 
       return final_interpolated_force
 
@@ -91,14 +91,14 @@ class CarController:
 
     # smooth in a forced used for offset based on current drive force
     force_transition_time = 0.5 # seconds to go from start to end force
-    force_transition_steps = int(force_transition_time / DT_CTRL)
+    force_transition_frames = int(force_transition_time / DT_CTRL)
     start_force = CS.real_drive_force # start with what we have right now
     end_force = CS.pcm_neutral_force # end with what we want to go to
 
     # only use the interpolated force 0.5 seconds after gas press or enabling
-    if (self.frame - self.last_gas_pressed_frame) > force_transition_steps or \
-      (self.frame - self.last_off_frame) > force_transition_steps:
-      final_interpolated_force = perform_force_transition(start_force, end_force, force_transition_steps)
+    if (self.frame - self.last_gas_pressed_frame) < force_transition_frames or \
+      (self.frame - self.last_off_frame) < force_transition_frames:
+      final_interpolated_force = perform_force_transition(start_force, end_force, force_transition_frames)
     else:
       final_interpolated_force = CS.pcm_neutral_force
 
