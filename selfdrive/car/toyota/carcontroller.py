@@ -96,7 +96,7 @@ class CarController:
     # smooth in a force used for offset based on current drive force
     force_transition_time = 0.5 # seconds to go from start to end force
     force_transition_frames = int(force_transition_time / DT_CTRL)
-    start_force = 0. # start with 0
+    start_force = clip(0, CS.real_drive_force, _accel_max * self.CP.mass)
     end_force = CS.pcm_neutral_force # end with what we want to go to
 
     # only use the interpolated force 0.5 seconds after gas press or enabling
