@@ -175,19 +175,6 @@ class CarController:
     alert_prompt_repeat = hud_control.audibleAlert in (AudibleAlert.promptRepeat, AudibleAlert.warningSoft)
     alert_immediate = hud_control.audibleAlert == AudibleAlert.warningImmediate
 
-    # cydia2020 - PERMIT_BRAKING commands the PCM to allow openpilot to engage the friction brakes
-    # and engine brake on your vehicle, it does not affect regen braking as far as I can tell
-    # setting PERMIT_BRAKING to 1 prevents the vehicle from coasting at low speed with low accel
-    # allow the vehicle to coast when the speed is below 6m/s for improved SnG smoothness
-    # permit_braking_accel = interp(CS.out.vEgo, [0.0, 6., 10.], [0., 0.0, 0.35])
-    # Handle permit braking logic
-    #if (actuators.accel > permit_braking_accel) or not CC.enabled:
-    #  self.permit_braking = False
-    #else:
-    #  self.permit_braking = True
-
-    self.permit_braking = CC.longActive
-
     # we can spam can to cancel the system even if we are using lat only control
     if (self.frame % 3 == 0 and self.CP.openpilotLongitudinalControl) or pcm_cancel_cmd:
       lead = hud_control.leadVisible or CS.out.vEgo < 12. # at low speed we always assume the lead is present so ACC can be engaged
@@ -199,7 +186,7 @@ class CarController:
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
         can_sends.append(create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, self.permit_braking, lead_vehicle_stopped, acc_msg))
+        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, CC.longActive, lead_vehicle_stopped, acc_msg))
         self.accel = pcm_accel_cmd
       else:
         can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, adjust_distance, False, False, False, acc_msg))
