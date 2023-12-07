@@ -55,14 +55,14 @@ class CarController:
 
       return final_interpolated_force
 
-    def perform_low_speed_force_transition(start_force_stopping, end_force_stopping, speed, stopping_speed_threshold):
-      if speed > stopping_speed_threshold:
-        force_reduction_factor = 1. - (speed - stopping_speed_threshold) / (1.0 - stopping_speed_threshold)
+    def perform_low_speed_force_transition(start_force_stopping, end_force_stopping, v_ego, stopping_speed_threshold):
+      if v_ego > stopping_speed_threshold and v_ego > 1e3:
+        force_reduction_factor = 1. - (v_ego - stopping_speed_threshold)
         stopping_force = start_force_stopping + (end_force_stopping - start_force_stopping) * force_reduction_factor
 
         return stopping_force
       else:
-        return end_force_stopping
+        return end_force_stopping # return 0 if stopped or high speed
 
     # gas and brake
     # Default interceptor logic
