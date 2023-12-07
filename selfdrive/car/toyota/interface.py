@@ -322,7 +322,7 @@ class CarInterface(CarInterfaceBase):
     ret.stoppingDecelRate = 0.3  # reach stopping target smoothly
 
     if candidate == CAR.PRIUS:
-      set_long_tune(ret.longitudinalTuning, LongTunes.TSSPPrius) # TSS-P Toyota Prius has a special tune
+      set_long_tune(ret.longitudinalTuning, LongTunes.TSSStock) # TSS-P Toyota Prius has a special tune
     elif candidate in (CAR.CAMRY, CAR.CAMRYH):
       set_long_tune(ret.longitudinalTuning, LongTunes.TSSPCamry) # TSS-P Toyota Camry / Camry H have a special tune
     elif (candidate in TSS2_CAR) or (ret.enableGasInterceptor and not candidate in FULL_SPEED_DRCC_CAR):
