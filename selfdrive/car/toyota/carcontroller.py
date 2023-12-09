@@ -94,9 +94,9 @@ class CarController:
       self.last_gas_pressed_frame = self.frame
 
     # smooth in a force used for offset based on current drive force
-    force_transition_time = 0.5 # seconds to go from start to end force
+    force_transition_time = 1. # seconds to trans. from calc. to neut. 
     force_transition_frames = int(force_transition_time / DT_CTRL)
-    start_force = clip(CS.real_drive_force, 0, _accel_max * self.CP.mass) # when coasting, drive force is negative, clip to 0 to prevent braking
+    start_force = actuators.accel * self.CP.mass
     end_force = CS.pcm_neutral_force # end with what we want to go to
 
     # only use the interpolated force 0.5 seconds after gas press or enabling
@@ -124,8 +124,6 @@ class CarController:
 
     # calculate and clip pcm_accel_cmd
     pcm_accel_cmd = clip(actuators.accel + accel_offset, CarControllerParams.ACCEL_MIN, _accel_max)
-    if not CC.longActive:
-      pcm_accel_cmd = 0.
 
     # steer torque
     new_steer = int(round(actuators.steer * CarControllerParams.STEER_MAX))
