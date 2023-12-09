@@ -172,10 +172,6 @@ class CarState(CarStateBase):
     ret.kinematicsYaw = math.radians(cp.vl["KINEMATICS"]["YAW_RATE"]) * (ret.vEgoRaw / 3.6)
     ret.kinematicsRoll = math.atan2(cp.vl["KINEMATICS"]["ACCEL_X"], math.sqrt(cp.vl["KINEMATICS"]["ACCEL_Y"]**2 + ACCELERATION_DUE_TO_GRAVITY**2))
 
-    # print signals
-    self.accstbk = cp.vl["PCM_CRUISE"]["ACCSTBK"]
-    self.accstat = cp.vl["PCM_CRUISE"]["ACCSTAT"]
-
     # LKAS_HUD is on a different address on the Prius V, don't send to avoid problems
     if self.CP.carFingerprint != CAR.PRIUS_V:
       self.sws_toggle = (cp_cam.vl["LKAS_HUD"]["LANE_SWAY_TOGGLE"])

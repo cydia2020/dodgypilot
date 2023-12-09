@@ -192,8 +192,6 @@ class CarController:
 
     # we can spam can to cancel the system even if we are using lat only control
     if (self.frame % 3 == 0 and self.CP.openpilotLongitudinalControl) or pcm_cancel_cmd:
-      print(CS.accstbk)
-      print(CS.accstat)
       lead = hud_control.leadVisible or CS.out.vEgo < 12. # at low speed we always assume the lead is present so ACC can be engaged
       adjust_distance = CS.distance_btn == 1
 
