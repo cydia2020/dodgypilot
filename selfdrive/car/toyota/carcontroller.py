@@ -106,11 +106,11 @@ class CarController:
     else:
       enabling_force = CS.pcm_neutral_force
 
-    # smooth in a 0.3 m/s^2 decel offset based on vehicle speed and stopping state
-    stopping_speed_threshold = self.CP.vEgoStopping
-    neutral_stopping_decel = -0.3
-    pitch_compensated_stopping_accel = interp(CS.out.kinematicsPitch, [-8.5, 0.0, 8.5], [neutral_stopping_decel - 0.1, neutral_stopping_decel, neutral_stopping_decel - 0.3])
-    end_force_stopping = pitch_compensated_stopping_accel * self.CP.mass # F=ma, for prius, this is -0.3*1381=-414.3N
+    # smooth in a 0.3 m/s^2 decel + slope offset based on vehicle speed and stopping state
+    stopping_speed_threshold = self.CP.vEgoStopping # match this to prevent a race condition
+    neutral_stopping_decel = -0.2
+    pitch_compensated_stopping_accel = interp(CS.out.kinematicsPitch, [-5.5, 0.0, 8.5], [neutral_stopping_decel + 0.1, neutral_stopping_decel, neutral_stopping_decel - 0.4])
+    end_force_stopping = pitch_compensated_stopping_accel * self.CP.mass # F=ma, for prius on unpitched roads, this is -0.2 * 1381 = -276.2 N
 
     # only use when stopping
     stopping_offset_force = 0.
