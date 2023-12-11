@@ -321,6 +321,7 @@ class CarInterface(CarInterfaceBase):
     # Longitudinal Tunes
     ret.stoppingDecelRate = 0.3  # reach stopping target smoothly
     ret.vEgoStopping = 0.8
+    ret.stopAccel = -2.5 # stock Toyota has this value
 
     if candidate == CAR.PRIUS:
       set_long_tune(ret.longitudinalTuning, LongTunes.TSSPPrius) # TSS-P Toyota Prius has a special tune
