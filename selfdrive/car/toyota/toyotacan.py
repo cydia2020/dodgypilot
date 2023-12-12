@@ -28,7 +28,7 @@ def create_lta_steer_command(packer, steer, steer_req, raw_cnt):
   return packer.make_can_msg("STEERING_LTA", 0, values)
 
 
-def create_accel_command(packer, accel, pcm_cancel, standstill_req, lead, acc_type, distance_button, fcw_alert, permit_braking, lead_vehicle_stopped, msg='ACC_CONTROL'):
+def create_accel_command(packer, accel, pcm_cancel, standstill_req, lead, acc_type, distance_button, fcw_alert, permit_braking, lead_vehicle_stopped, at_raw, msg='ACC_CONTROL'):
   # TODO: find the exact canceling bit that does not create a chime
   values = {
     "ACCEL_CMD": accel,
@@ -40,7 +40,7 @@ def create_accel_command(packer, accel, pcm_cancel, standstill_req, lead, acc_ty
     "CANCEL_REQ": pcm_cancel,
     "ALLOW_LONG_PRESS": 1,
     "ACC_CUT_IN": fcw_alert,
-    "ACCEL_CMD_ALT": accel,
+    "ACCEL_CMD_ALT": at_raw,
     "LEAD_STANDSTILL": lead_vehicle_stopped,
   }
   return packer.make_can_msg(msg, 0, values)
@@ -70,7 +70,7 @@ def create_fcw_command(packer, fcw):
   return packer.make_can_msg("ACC_HUD", 0, values)
 
 
-def create_ui_command(packer, alert_prompt, alert_prompt_repeat, alert_immediate, left_line, right_line, sws_toggle, 
+def create_ui_command(packer, alert_prompt, alert_prompt_repeat, alert_immediate, left_line, right_line, sws_toggle,
                       sws_sensitivity, sws_buzzer, sws_fld, sws_warning, lda_left_lane, lda_right_lane, lda_sa_toggle,
                       lkas_status, lda_speed_too_low, lda_on_message, lda_sensitivity, ldw_exist, enabled, sws_beeps,
                       lda_take_control, lda_adjusting_camera, lda_unavailable_quiet, lda_unavailable, lda_malfunction,

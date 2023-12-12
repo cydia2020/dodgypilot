@@ -43,12 +43,12 @@ def set_long_tune(tune, name):
     tune.kiBP = [0.,   6.,  8.,  11., 30., 33., 40.]
     tune.kiV = [.001, .07,  .15, .2,  .2,  .01, .0001]
   elif name == LongTunes.TSSPPrius:
-    tune.deadzoneBP = [0., 8.05]
-    tune.deadzoneV = [.0, .14]
-    tune.kpBP = [0., 5., 20., 30.]
-    tune.kpV = [1.3, 1.0, 0.7, 0.5]
-    tune.kiBP = [0.,   6.,  8.,  11., 30., 33., 40.]
-    tune.kiV = [.001, .07,  .15, .2,  .2,  .1, .07]
+    #tune.deadzoneBP = [0., 8.05]
+    #tune.deadzoneV = [.0, .14]
+    tune.kpBP = [0.] #, 5., 20., 30.]
+    tune.kpV = [1.] #3, 1.0, 0.7, 0.5]
+    tune.kiBP = [0., 6.] #,   6.,  8.,  11., 30., 33., 40.]
+    tune.kiV = [0.1, 1.] # 0.001, .07,  .15, .2,  .2,  .1, .07]
   # Default longitudinal tune
   elif name == LongTunes.TSSStock:
     tune.deadzoneBP = [0., 9.]

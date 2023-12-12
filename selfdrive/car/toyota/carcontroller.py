@@ -94,7 +94,7 @@ class CarController:
       self.last_gas_pressed_frame = self.frame
 
     # smooth in a force used for offset based on current drive force
-    force_transition_time = 1. # seconds to trans. from calc. to neut. 
+    force_transition_time = 1. # seconds to trans. from calc. to neut.
     force_transition_frames = int(force_transition_time / DT_CTRL) # frames to trans. from calc. to neut. in this case this is 100 frames.
     start_force = actuators.accel * self.CP.mass # start with desired accel as PCM compensates too much
     end_force = CS.pcm_neutral_force # end with what we want to go to
@@ -122,8 +122,12 @@ class CarController:
     if CC.longActive:
       accel_offset = (enabling_force + stopping_offset_force) / self.CP.mass
 
+    # pcm neutral force
+    pcm_neutral_force = 0.
+    if CC.longActive:
+      pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass
     # calculate and clip pcm_accel_cmd
-    pcm_accel_cmd = clip(actuators.accel + accel_offset, CarControllerParams.ACCEL_MIN, _accel_max)
+    pcm_accel_cmd = clip(actuators.accel + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max)
 
     # steer torque
     new_steer = int(round(actuators.steer * CarControllerParams.STEER_MAX))
@@ -199,10 +203,10 @@ class CarController:
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
         can_sends.append(create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, CC.longActive, lead_vehicle_stopped, acc_msg))
+        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, CC.longActive, lead_vehicle_stopped, actuators.accel, acc_msg))
         self.accel = pcm_accel_cmd
       else:
-        can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, adjust_distance, False, False, False, acc_msg))
+        can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, adjust_distance, False, False, False, actuators.accel, acc_msg))
 
     if self.frame % 2 == 0 and self.CP.enableGasInterceptor:
       # send exactly zero if gas cmd is zero. Interceptor will send the max between read value and gas cmd.
@@ -213,10 +217,10 @@ class CarController:
     if self.CP.carFingerprint != CAR.PRIUS_V:
       if self.frame % 10 == 0:
         can_sends.append(create_ui_command(self.packer, alert_prompt, alert_prompt_repeat, alert_immediate, hud_control.leftLaneVisible,
-                                           hud_control.rightLaneVisible, CS.sws_toggle, CS.sws_sensitivity, CS.sws_buzzer, CS.sws_fld, 
+                                           hud_control.rightLaneVisible, CS.sws_toggle, CS.sws_sensitivity, CS.sws_buzzer, CS.sws_fld,
                                            CS.sws_warning, CS.lda_left_lane, CS.lda_right_lane, CS.lda_sa_toggle, CS.lkas_status,
                                            CS.lda_speed_too_low, CS.lda_on_message, CS.lda_sensitivity, CS.ldw_exist, CC.enabled, CS.sws_beeps,
-                                           CS.lda_take_control, CS.lda_adjusting_camera, CS.lda_unavailable_quiet, CS.lda_unavailable, 
+                                           CS.lda_take_control, CS.lda_adjusting_camera, CS.lda_unavailable_quiet, CS.lda_unavailable,
                                            CS.lda_malfunction, CS.lda_fcb))
 
       if self.frame % 10 == 0 and self.CP.enableDsu:
