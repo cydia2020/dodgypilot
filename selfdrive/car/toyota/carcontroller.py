@@ -31,7 +31,6 @@ class CarController:
     self.standstill_req = False
     self.steer_rate_limited = False
     self.last_off_frame = 0
-    self.last_gas_pressed_frame = 0
     self.e2e_long = params.get_bool("EndToEndLong")
     self.steer_rate_counter = 0
 
@@ -44,7 +43,6 @@ class CarController:
     hud_control = CC.hudControl
     pcm_cancel_cmd = CC.cruiseControl.cancel or (not CC.enabled and CS.pcm_acc_status)
     _accel_max = CarControllerParams.ACCEL_MAX_CAMRY if self.CP.carFingerprint == CAR.CAMRY else CarControllerParams.ACCEL_MAX
-
     # gas and brake
     # Default interceptor logic
     if self.CP.enableGasInterceptor and CC.longActive and self.CP.openpilotLongitudinalControl and self.CP.carFingerprint not in FULL_SPEED_DRCC_CAR:
