@@ -1,7 +1,6 @@
 from cereal import car
 from common.numpy_fast import clip, interp
 from common.params import Params
-from common.realtime import DT_CTRL
 from selfdrive.car import apply_toyota_steer_torque_limits, create_gas_interceptor_command, make_can_msg
 from selfdrive.car.toyota.toyotacan import create_steer_command, create_ui_command, \
                                            create_accel_command, create_acc_cancel_command, \
@@ -12,7 +11,6 @@ from opendbc.can.packer import CANPacker
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 AudibleAlert = car.CarControl.HUDControl.AudibleAlert
-LongCtrlState = car.CarControl.Actuators.LongControlState
 
 # constants for fault workaround
 MAX_STEER_RATE = 100  # deg/s
@@ -42,7 +40,10 @@ class CarController:
     actuators = CC.actuators
     hud_control = CC.hudControl
     pcm_cancel_cmd = CC.cruiseControl.cancel or (not CC.enabled and CS.pcm_acc_status)
+
+    # maximum position acceleration based on vehicle model
     _accel_max = CarControllerParams.ACCEL_MAX_CAMRY if self.CP.carFingerprint == CAR.CAMRY else CarControllerParams.ACCEL_MAX
+
     # gas and brake
     # Default interceptor logic
     if self.CP.enableGasInterceptor and CC.longActive and self.CP.openpilotLongitudinalControl and self.CP.carFingerprint not in FULL_SPEED_DRCC_CAR:
