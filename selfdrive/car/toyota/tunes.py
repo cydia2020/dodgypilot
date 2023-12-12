@@ -28,8 +28,8 @@ def set_long_tune(tune, name):
   if name == LongTunes.Toyota:
     tune.kpBP = [0.]
     tune.kpV = [1.]
-    tune.kiBP = [0., 3.]
-    tune.kiV = [0.3, 1.]
+    tune.kiBP = [0.]
+    tune.kiV = [1.]
   else:
     raise NotImplementedError('This longitudinal tune does not exist')
 
