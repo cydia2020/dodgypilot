@@ -319,8 +319,8 @@ class CarInterface(CarInterfaceBase):
     ret.minEnableSpeed = -1. if (stop_and_go or ret.enableGasInterceptor) else MIN_ACC_SPEED
 
     # Longitudinal Tunes
-    ret.stoppingDecelRate = 0.3  # reach stopping target smoothly
-    ret.vEgoStopping = 0.4
+    ret.stoppingDecelRate = 0.5  # reach stopping target smoothly
+    ret.vEgoStopping = 0.5
     ret.stopAccel = -2.5 # stock Toyota has this value
 
     if candidate == CAR.PRIUS:
