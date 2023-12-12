@@ -11,7 +11,6 @@ from opendbc.can.packer import CANPacker
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 AudibleAlert = car.CarControl.HUDControl.AudibleAlert
-
 # constants for fault workaround
 MAX_STEER_RATE = 100  # deg/s
 MAX_STEER_RATE_FRAMES = 19
