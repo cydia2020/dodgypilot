@@ -2,10 +2,7 @@
 from enum import Enum
 
 class LongTunes(Enum):
-  TSS2 = 0
-  TSSPPrius = 1
-  TSSStock = 2
-  TSSPCamry = 3
+  Toyota = 0
 
 class LatTunes(Enum):
   INDI_PRIUS = 0
@@ -28,42 +25,11 @@ class LatTunes(Enum):
 
 ###### LONG ######
 def set_long_tune(tune, name):
-  # Improved longitudinal tune
-  if name == LongTunes.TSS2:
-    tune.deadzoneBP = [0., 8.05]
-    tune.deadzoneV = [.0, .14]
-    tune.kpBP = [0., 5., 20., 30.]
-    tune.kpV = [1.3, 1.0, 0.7, 0.1]
-    #really smooth (make it toggleable)
-    #tune.kiBP = [0., 0.07, 5, 8, 11., 18., 20., 24., 33.]
-    #tune.kiV = [.001, .01, .1, .18, .21, .22, .23, .22, .001]
-    #okay ish
-    #tune.kiBP = [0., 11., 17., 20., 24., 30., 33., 40.]
-    #tune.kiV = [.001, .21, .22, .23, .22, .1, .001, .0001]
-    tune.kiBP = [0.,   6.,  8.,  11., 30., 33., 40.]
-    tune.kiV = [.001, .07,  .15, .2,  .2,  .01, .0001]
-  elif name == LongTunes.TSSPPrius:
-    #tune.deadzoneBP = [0., 8.05]
-    #tune.deadzoneV = [.0, .14]
-    tune.kpBP = [0.] #, 5., 20., 30.]
-    tune.kpV = [1.] #3, 1.0, 0.7, 0.5]
-    tune.kiBP = [0., 6.] #,   6.,  8.,  11., 30., 33., 40.]
-    tune.kiV = [0.1, 1.] # 0.001, .07,  .15, .2,  .2,  .1, .07]
-  # Default longitudinal tune
-  elif name == LongTunes.TSSStock:
-    tune.deadzoneBP = [0., 9.]
-    tune.deadzoneV = [.0, .15]
-    tune.kpBP = [0., 5., 35.]
-    tune.kiBP = [0., 35.]
-    tune.kpV = [3.6, 2.4, 1.5]
-    tune.kiV = [0.54, 0.36]
-  elif name == LongTunes.TSSPCamry:
-    tune.deadzoneBP = [0., 9.]
-    tune.deadzoneV = [.0, .15]
-    tune.kpBP = [0., 9., 35.]
-    tune.kiBP = [0., 9., 35.]
-    tune.kpV = [2.0, 1.2, 1.0]
-    tune.kiV = [0.60, 0.54, 0.35]
+  if name == LongTunes.Toyota:
+    tune.kpBP = [0.]
+    tune.kpV = [1.]
+    tune.kiBP = [0., 3.]
+    tune.kiV = [0.3, 1.]
   else:
     raise NotImplementedError('This longitudinal tune does not exist')
 

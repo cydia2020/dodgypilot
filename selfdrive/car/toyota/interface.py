@@ -323,14 +323,8 @@ class CarInterface(CarInterfaceBase):
     ret.vEgoStopping = 0.8
     ret.stopAccel = -2.5 # stock Toyota has this value
 
-    if candidate == CAR.PRIUS:
-      set_long_tune(ret.longitudinalTuning, LongTunes.TSSPPrius) # TSS-P Toyota Prius has a special tune
-    elif candidate in (CAR.CAMRY, CAR.CAMRYH):
-      set_long_tune(ret.longitudinalTuning, LongTunes.TSSPCamry) # TSS-P Toyota Camry / Camry H have a special tune
-    elif (candidate in TSS2_CAR) or (ret.enableGasInterceptor and not candidate in FULL_SPEED_DRCC_CAR):
-      set_long_tune(ret.longitudinalTuning, LongTunes.TSS2) # Use TSS 2.0 tune for both pedal and TSS 2.0 cars
-    else:
-      set_long_tune(ret.longitudinalTuning, LongTunes.TSSStock) # Use stock TSS-P tune for all other cars
+    # unified tuning
+    set_long_tune(ret.longitudinalTuning, LongTunes.Toyota)
 
     return ret
 
