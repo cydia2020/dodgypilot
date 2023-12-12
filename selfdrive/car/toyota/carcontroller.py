@@ -1,4 +1,3 @@
-import math
 from cereal import car
 from common.numpy_fast import clip, interp
 from common.params import Params
@@ -44,25 +43,7 @@ class CarController:
     actuators = CC.actuators
     hud_control = CC.hudControl
     pcm_cancel_cmd = CC.cruiseControl.cancel or (not CC.enabled and CS.pcm_acc_status)
-    _stopping = actuators.longControlState == LongCtrlState.stopping
     _accel_max = CarControllerParams.ACCEL_MAX_CAMRY if self.CP.carFingerprint == CAR.CAMRY else CarControllerParams.ACCEL_MAX
-
-    # function for interpolating force
-    def perform_enablement_force_transition(start_force, end_force, force_transition_frames):
-      force_increment = (end_force - start_force) / force_transition_frames
-      for f_frames in range(force_transition_frames):
-        enabling_force = start_force + force_increment * f_frames
-
-      return enabling_force
-
-    def perform_low_speed_force_transition(start_force_stopping, end_force_stopping, v_ego, stopping_speed_threshold):
-      if v_ego > stopping_speed_threshold and v_ego > 1e3:
-        force_reduction_factor = 1. - (v_ego - stopping_speed_threshold)
-        stopping_force = start_force_stopping + (end_force_stopping - start_force_stopping) * force_reduction_factor
-
-        return stopping_force
-      else:
-        return end_force_stopping # return 0 if stopped or high speed
 
     # gas and brake
     # Default interceptor logic
@@ -86,41 +67,6 @@ class CarController:
       interceptor_gas_cmd = 0.14
     else:
       interceptor_gas_cmd = 0.
-
-    # record frames
-    if not CC.enabled:
-      self.last_off_frame = self.frame
-    if not CS.out.gasPressed:
-      self.last_gas_pressed_frame = self.frame
-
-    # smooth in a force used for offset based on current drive force
-    force_transition_time = 1. # seconds to trans. from calc. to neut.
-    force_transition_frames = int(force_transition_time / DT_CTRL) # frames to trans. from calc. to neut. in this case this is 100 frames.
-    start_force = actuators.accel * self.CP.mass # start with desired accel as PCM compensates too much
-    end_force = CS.pcm_neutral_force # end with what we want to go to
-
-    # only use the interpolated force 0.5 seconds after gas press or enabling
-    if (self.frame - self.last_gas_pressed_frame) < force_transition_frames or \
-      (self.frame - self.last_off_frame) < force_transition_frames:
-      enabling_force = perform_enablement_force_transition(start_force, end_force, force_transition_frames)
-    else:
-      enabling_force = CS.pcm_neutral_force
-
-    # smooth in a 0.3 m/s^2 decel + slope offset based on vehicle speed and stopping state
-    stopping_speed_threshold = self.CP.vEgoStopping # match this to prevent a race condition
-    neutral_stopping_decel = -0.2
-    pitch_compensated_stopping_accel = interp(CS.out.kinematicsPitch, [-5.5, 0.0, 8.5], [neutral_stopping_decel + 0.1, neutral_stopping_decel, neutral_stopping_decel - 0.4])
-    end_force_stopping = pitch_compensated_stopping_accel * self.CP.mass # F=ma, for prius on unpitched roads, this is -0.2 * 1381 = -276.2 N
-
-    # only use when stopping
-    stopping_offset_force = 0.
-    if _stopping:
-      stopping_offset_force = perform_low_speed_force_transition(enabling_force, end_force_stopping, CS.out.vEgo, stopping_speed_threshold)
-
-    # accel offset logic
-    accel_offset = 0.
-    if CC.longActive:
-      accel_offset = (enabling_force + stopping_offset_force) / self.CP.mass
 
     # pcm neutral force
     pcm_neutral_force = 0.
