@@ -17,10 +17,9 @@ from selfdrive.swaglog import cloudlog
 
 LON_MPC_STEP = 0.2  # first step is 0.2s
 AWARENESS_DECEL = -0.2  # car smoothly decel at .2m/s^2 when user is distracted
+A_CRUISE_MIN = -1.2
 A_CRUISE_MAX_VALS = [2.0, 1.5, 0.8, 0.6]
 A_CRUISE_MAX_BP = [0., 15., 25., 40.]
-A_CRUISE_MIN_VALS = [-0.5, -0.5, -0.2, -0.3, -0.4, -1.2] # mimick stock, slightly release brakes when stopping
-A_CRUISE_MIN_BP =   [0., 0.3, 0.35, 3., 6., 20.]
 
 # Lookup table for turns
 _A_TOTAL_MAX_V = [1.7, 3.2]
@@ -30,8 +29,6 @@ _A_TOTAL_MAX_BP = [20., 40.]
 def get_max_accel(v_ego):
   return interp(v_ego, A_CRUISE_MAX_BP, A_CRUISE_MAX_VALS)
 
-def get_min_accel(v_ego):
-  return interp(v_ego, A_CRUISE_MIN_BP, A_CRUISE_MIN_VALS)
 
 def limit_accel_in_turns(v_ego, angle_steers, a_target, CP):
   """
@@ -108,7 +105,7 @@ class Planner:
     # Prevent divergence, smooth in current v_ego
     self.v_desired_filter.x = max(0.0, self.v_desired_filter.update(v_ego))
 
-    accel_limits = [get_min_accel(v_ego), get_max_accel(v_ego)]
+    accel_limits = [A_CRUISE_MIN, get_max_accel(v_ego)]
     accel_limits_turns = limit_accel_in_turns(v_ego, 0, accel_limits, self.CP)
     if force_slow_decel:
       # if required so, force a smooth deceleration
