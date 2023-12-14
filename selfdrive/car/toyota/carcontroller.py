@@ -80,12 +80,6 @@ class CarController:
     # calculate and clip pcm_accel_cmd
     pcm_accel_cmd = clip(actuators.accel + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max)
 
-    permit_braking = True
-    permit_braking_accel = interp(CS.out.vEgo, [0.0, 6., 10.], [0., 0.0, 0.35])
-    # Handle permit braking logic
-    if (pcm_accel_cmd > permit_braking_accel) or not CC.enabled:
-      permit_braking = False
-
     # steer torque
     new_steer = int(round(actuators.steer * CarControllerParams.STEER_MAX))
     apply_steer = apply_toyota_steer_torque_limits(new_steer, self.last_steer, CS.out.steeringTorqueEps, self.torque_rate_limits)
@@ -160,7 +154,7 @@ class CarController:
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
         can_sends.append(create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, permit_braking, lead_vehicle_stopped, actuators.accel, should_compensate, acc_msg))
+        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, CC.longActive, lead_vehicle_stopped, actuators.accel, should_compensate, acc_msg))
         self.accel = pcm_accel_cmd
       else:
         can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, adjust_distance, False, False, False, 0, False, acc_msg))
