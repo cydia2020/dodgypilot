@@ -74,11 +74,10 @@ class CarController:
     if self.CP.carFingerprint in NO_STOP_TIMER_CAR and ((CS.out.vEgo <  1e-3 and actuators.accel < 1e-3) or stopping):
       should_compensate = False
     # pcm neutral force
-    pcm_neutral_force = 0.
-    if CC.longActive and should_compensate:
-      pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass
+    pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass if (CC.longActive and should_compensate) else 0. 
     # calculate and clip pcm_accel_cmd
-    pcm_accel_cmd = clip(actuators.accel + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max)
+    pcm_accel_cmd = clip(actuators.accel + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max) if CC.longActive else CS.out.aEgo
+    pcm_raw_accel = clip(actuators.accel, CarControllerParams.ACCEL_MIN, _accel_max) if CC.longActive else CS.out.aEgo
 
     # steer torque
     new_steer = int(round(actuators.steer * CarControllerParams.STEER_MAX))
@@ -154,7 +153,7 @@ class CarController:
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
         can_sends.append(create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, CC.longActive, lead_vehicle_stopped, actuators.accel, should_compensate, acc_msg))
+        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, CC.longActive, lead_vehicle_stopped, pcm_raw_accel, should_compensate, acc_msg))
         self.accel = pcm_accel_cmd
       else:
         can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, adjust_distance, False, False, False, 0, False, acc_msg))
