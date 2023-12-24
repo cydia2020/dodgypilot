@@ -26,7 +26,6 @@ class CarController:
     self.frame = 0
     self.last_steer = 0
     self.alert_active = False
-    self.last_standstill = False
     self.standstill_req = False
     self.steer_rate_limited = False
     self.last_off_frame = 0
@@ -74,10 +73,16 @@ class CarController:
     if self.CP.carFingerprint in NO_STOP_TIMER_CAR and ((CS.out.vEgo <  1e-3 and actuators.accel < 1e-3) or stopping):
       should_compensate = False
     # pcm neutral force
-    pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass if (CC.longActive and should_compensate) else 0. 
+    pcm_neutral_force = 0.
+    if CC.longActive and should_compensate:
+      pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass
     # calculate and clip pcm_accel_cmd
-    pcm_accel_cmd = clip(actuators.accel + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max) if CC.longActive else CS.out.aEgo
-    pcm_raw_accel = clip(actuators.accel, CarControllerParams.ACCEL_MIN, _accel_max) if CC.longActive else CS.out.aEgo
+    pcm_accel_cmd = clip(actuators.accel + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max)
+    if not CC.longActive:
+      pcm_accel_cmd = clip(CS.out.aEgo * 1.15, 0, _accel_max)
+    pcm_raw_accel = clip(actuators.accel, CarControllerParams.ACCEL_MIN, _accel_max)
+    if not CC.longActive:
+      pcm_raw_accel = clip(CS.out.aEgo * 1.15, 0, _accel_max)
 
     # steer torque
     new_steer = int(round(actuators.steer * CarControllerParams.STEER_MAX))
@@ -118,7 +123,6 @@ class CarController:
         self.standstill_req = False
 
     self.last_steer = apply_steer
-    self.last_standstill = CS.out.standstill
 
     can_sends = []
 
@@ -153,10 +157,12 @@ class CarController:
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
         can_sends.append(create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, CC.longActive, lead_vehicle_stopped, pcm_raw_accel, should_compensate, acc_msg))
-        self.accel = pcm_accel_cmd
+        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, 
+                                              fcw_alert, CC.longActive, lead_vehicle_stopped, pcm_raw_accel, should_compensate, acc_msg))
+        self.accel = clip(actuators.accel, CarControllerParams.ACCEL_MIN, _accel_max)
       else:
-        can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, adjust_distance, False, False, False, 0, False, acc_msg))
+        can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, False, 
+                                              False, False, False, 0, False, acc_msg))
 
     if self.frame % 2 == 0 and self.CP.enableGasInterceptor:
       # send exactly zero if gas cmd is zero. Interceptor will send the max between read value and gas cmd.
