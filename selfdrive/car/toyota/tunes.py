@@ -26,10 +26,10 @@ class LatTunes(Enum):
 ###### LONG ######
 def set_long_tune(tune, name):
   if name == LongTunes.Toyota:
-    tune.kpBP = [0.]
-    tune.kpV = [1.]
-    tune.kiBP = [0.]
-    tune.kiV = [1.]
+    tune.kpBP = [0., 10.]
+    tune.kpV = [1., .8]
+    tune.kiBP = [0., 5.]
+    tune.kiV = [.3, 1.]
   else:
     raise NotImplementedError('This longitudinal tune does not exist')
 
