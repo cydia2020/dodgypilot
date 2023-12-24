@@ -307,8 +307,8 @@ class CarInterface(CarInterfaceBase):
         ret.radarTimeStep = 1.0 / 10.0
 
     # reach stopping target smoothly
-    ret.vEgoStopping = 0.25
-    ret.vEgoStarting = 0.25
+    ret.vEgoStopping = 0.35
+    ret.vEgoStarting = 0.35
 
     # we can't use the fingerprint to detect this reliably, since
     # the EV gas pedal signal can take a couple seconds to appear
