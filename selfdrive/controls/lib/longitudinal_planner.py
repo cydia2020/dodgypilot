@@ -89,10 +89,18 @@ class Planner:
     v_cruise_kph = min(v_cruise_kph, V_CRUISE_MAX)
     v_cruise = v_cruise_kph * CV.KPH_TO_MS
 
+    long_control_state = sm['controlsState'].longControlState
     force_slow_decel = sm['controlsState'].forceDecel
 
+    # Reset current state when not engaged, or user is controlling the speed
+    reset_state = long_control_state == LongCtrlState.off
+
     # No change cost when user is controlling the speed, or when standstill
-    prev_accel_constraint = not sm['carState'].standstill
+    prev_accel_constraint = not (reset_state or sm['carState'].standstill)
+
+    if reset_state:
+      self.v_desired_filter.x = v_ego
+      self.a_desired = 0.0
 
     # Prevent divergence, smooth in current v_ego
     self.v_desired_filter.x = max(0.0, self.v_desired_filter.update(v_ego))
