@@ -1,6 +1,8 @@
 from cereal import car
+from common.filter_simple import FirstOrderFilter
 from common.numpy_fast import clip, interp
 from common.params import Params
+from common.realtime import DT_CTRL
 from selfdrive.car import apply_toyota_steer_torque_limits, create_gas_interceptor_command, make_can_msg
 from selfdrive.car.toyota.toyotacan import create_steer_command, create_ui_command, \
                                            create_accel_command, create_acc_cancel_command, \
@@ -16,6 +18,7 @@ LongCtrlState = car.CarControl.Actuators.LongControlState
 # constants for fault workaround
 MAX_STEER_RATE = 100  # deg/s
 MAX_STEER_RATE_FRAMES = 19
+FORCE_TRANSITION_TIME = 1. # second
 
 params = Params()
 
@@ -29,9 +32,10 @@ class CarController:
     self.last_standstill = False
     self.standstill_req = False
     self.steer_rate_limited = False
-    self.last_off_frame = 0
+    self.last_long_off_frame = 0
     self.e2e_long = params.get_bool("EndToEndLong")
     self.steer_rate_counter = 0
+    self.pcm_neutral_force_filter = FirstOrderFilter(None, 50, FORCE_TRANSITION_TIME / DT_CTRL)
 
     self.packer = CANPacker(dbc_name)
     self.gas = 0
@@ -69,13 +73,20 @@ class CarController:
     else:
       interceptor_gas_cmd = 0.
 
+    # record last frame when long isn't active
+    if not CC.longActive:
+      self.last_long_off_frame = self.frame
     # NO_STOP_TIMER_CAR will creep if compensation is applied when stopping or stopped, don't compensate when stopped or stopping
     should_compensate = True
     if self.CP.carFingerprint in NO_STOP_TIMER_CAR and ((CS.out.vEgo <  1e-3 and actuators.accel < 1e-3) or stopping):
       should_compensate = False
     # pcm neutral force
     pcm_neutral_force = 0.
-    if CC.longActive and should_compensate:
+    # calculate transition force
+    self.pcm_neutral_force_filter.update(CS.pcm_neutral_force - 0.)
+    if self.frame - self.last_long_off_frame < FORCE_TRANSITION_TIME * DT_CTRL and should_compensate:
+      pcm_neutral_force = self.pcm_neutral_force_filter.x
+    elif CC.longActive and should_compensate:
       pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass
     # calculate and clip pcm_accel_cmd
     pcm_accel_cmd = clip(actuators.accel + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max)
