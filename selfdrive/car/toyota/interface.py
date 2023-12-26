@@ -306,11 +306,6 @@ class CarInterface(CarInterfaceBase):
       else:
         ret.radarTimeStep = 1.0 / 10.0
 
-    # reach stopping target smoothly
-    ret.vEgoStopping = 0.25
-    ret.vEgoStarting = 0.25
-    ret.stoppingDecelRate = 1.25
-
     # we can't use the fingerprint to detect this reliably, since
     # the EV gas pedal signal can take a couple seconds to appear
     if candidate in EV_HYBRID_CAR:
@@ -324,6 +319,7 @@ class CarInterface(CarInterfaceBase):
     ret.minEnableSpeed = -1. if (stop_and_go or ret.enableGasInterceptor) else MIN_ACC_SPEED
 
     # Longitudinal Tunes
+    ret.stoppingDecelRate = 0.15
     ret.stopAccel = -2.5 # stock Toyota has this value
     set_long_tune(ret.longitudinalTuning, LongTunes.Toyota)
 
