@@ -77,6 +77,8 @@ class CarController:
     pcm_neutral_force = 0.
     if CC.longActive and should_compensate:
       pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass
+    else:
+      pcm_neutral_force = 0.
     # calculate and clip pcm_accel_cmd
     pcm_accel_cmd = clip(actuators.accel + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max)
 
