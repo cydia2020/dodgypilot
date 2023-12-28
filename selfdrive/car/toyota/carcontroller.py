@@ -17,6 +17,7 @@ LongCtrlState = car.CarControl.Actuators.LongControlState
 MAX_STEER_RATE = 100  # deg/s
 MAX_STEER_RATE_FRAMES = 19
 
+ACCEL_TRANSITION_FRAMES = 100 * 1 # frames * second(s)
 params = Params()
 
 class CarController:
@@ -69,12 +70,17 @@ class CarController:
     else:
       interceptor_gas_cmd = 0.
 
+    if not CC.longActive:
+      self.last_off_frame = self.frame
+
     # NO_STOP_TIMER_CAR will creep if compensation is applied when stopping or stopped, don't compensate when stopped or stopping
     should_compensate = True
     if self.CP.carFingerprint in NO_STOP_TIMER_CAR and ((CS.out.vEgo <  1e-3 and actuators.accel < 1e-3) or stopping):
       should_compensate = False
     # pcm neutral force
-    if CC.longActive and should_compensate:
+    if self.frame - self.last_off_frame < ACCEL_TRANSITION_FRAMES:
+      pcm_neutral_force = max(CS.out.aEgo, actuators.accel, hud_control.leadAccel)
+    elif CC.longActive and should_compensate:
       pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass
     else:
       pcm_neutral_force = 0.
