@@ -48,7 +48,7 @@ class CarController:
 
     # gas and brake
     # Default interceptor logic
-    if self.CP.enableGasInterceptor and (CC.enabled and not CS.out.gasPressed) and self.CP.openpilotLongitudinalControl and self.CP.carFingerprint not in FULL_SPEED_DRCC_CAR:
+    if self.CP.enableGasInterceptor and (CC.longActive and not CS.out.gasPressed) and self.CP.openpilotLongitudinalControl and self.CP.carFingerprint not in FULL_SPEED_DRCC_CAR:
       MAX_INTERCEPTOR_GAS = 0.5
       # RAV4 has very sensitive gas pedal
       if self.CP.carFingerprint in (CAR.RAV4, CAR.RAV4H, CAR.HIGHLANDER, CAR.HIGHLANDERH):
@@ -74,12 +74,12 @@ class CarController:
     if self.CP.carFingerprint in NO_STOP_TIMER_CAR and ((CS.out.vEgo <  1e-3 and actuators.accel < 1e-3) or stopping):
       should_compensate = False
     # pcm neutral force
-    if CC.enabled and should_compensate:
+    if CC.longActive and should_compensate:
       pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass
     else:
       pcm_neutral_force = 0.
     # calculate and clip pcm_accel_cmd
-    if not CS.out.gasPressed or CC.enabled:
+    if not CS.out.gasPressed:
       pcm_accel_cmd = clip(actuators.accel + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max)
     else:
       pcm_accel_cmd = 0.
