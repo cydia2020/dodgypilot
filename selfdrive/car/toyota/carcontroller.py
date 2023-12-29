@@ -1,7 +1,6 @@
 from cereal import car
 from common.numpy_fast import clip, interp
 from common.params import Params
-from common.realtime import DT_CTRL
 from selfdrive.car import apply_toyota_steer_torque_limits, create_gas_interceptor_command, make_can_msg
 from selfdrive.car.toyota.toyotacan import create_steer_command, create_ui_command, \
                                            create_accel_command, create_acc_cancel_command, \
@@ -17,31 +16,13 @@ LongCtrlState = car.CarControl.Actuators.LongControlState
 # constants for fault workaround
 MAX_STEER_RATE = 100  # deg/s
 MAX_STEER_RATE_FRAMES = 19
-TRANS_SMOOTHING_TIME = 0.5 * DT_CTRL
-ACCEL_SMOOTHING_TIME = 1 * DT_CTRL
 
 params = Params()
-
-class AccelSmoother:
-    def __init__(self, smoothing_time):
-        self.smoothing_time = smoothing_time
-        self.values = []
-
-    def update(self, new_value):
-        self.values.append(new_value)
-        if len(self.values) > self.smoothing_time:
-            self.values.pop(0)
-
-    def get_smoothed_value(self):
-        if not self.values:
-            return None
-        return sum(self.values) / len(self.values)
 
 class CarController:
   def __init__(self, dbc_name, CP, VM):
     self.CP = CP
     self.torque_rate_limits = CarControllerParams(self.CP)
-    self.accel_smoother = AccelSmoother(smoothing_time=ACCEL_SMOOTHING_TIME)
     self.frame = 0
     self.last_steer = 0
     self.alert_active = False
@@ -64,16 +45,6 @@ class CarController:
 
     # maximum position acceleration based on vehicle model
     _accel_max = CarControllerParams.ACCEL_MAX_CAMRY if self.CP.carFingerprint == CAR.CAMRY else CarControllerParams.ACCEL_MAX
-
-    if CS.out.gasPressed or not CC.longActive:
-      self.last_off_frame = self.frame
-
-    if not CS.out.gasPressed:
-      raw_accel_value = clip(actuators.accel, CarControllerParams.ACCEL_MIN, _accel_max)
-    elif self.frame - self.last_off_frame < TRANS_SMOOTHING_TIME:
-      raw_accel_value = max(CS.out.aEgo, actuators.accel)
-    else:
-      raw_accel_value = 0.
 
     # gas and brake
     # Default interceptor logic
@@ -107,13 +78,11 @@ class CarController:
       pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass
     else:
       pcm_neutral_force = 0.
-
-    # update to smoother
-    self.accel_smoother.update(raw_accel_value)
-    # obtain from smoother
-    raw_accel_cmd = self.accel_smoother.get_smoothed_value()
-    # calculate and clip accel commands
-    pcm_accel_cmd = clip(raw_accel_cmd + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max)
+    # calculate and clip pcm_accel_cmd
+    if not CS.out.gasPressed:
+      pcm_accel_cmd = clip(actuators.accel + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max)
+    else:
+      pcm_accel_cmd = 0.
 
     # steer torque
     new_steer = int(round(actuators.steer * CarControllerParams.STEER_MAX))
@@ -189,7 +158,7 @@ class CarController:
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
         can_sends.append(create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, lead_vehicle_stopped, raw_accel_cmd, should_compensate, acc_msg))
+        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, lead_vehicle_stopped, actuators.accel, should_compensate, acc_msg))
         self.accel = pcm_accel_cmd
       else:
         can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, adjust_distance, False, False, 0, False, acc_msg))
