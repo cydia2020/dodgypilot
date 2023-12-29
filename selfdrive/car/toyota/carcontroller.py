@@ -1,5 +1,6 @@
 from cereal import car
 from common.numpy_fast import clip, interp
+import bottleneck as bn
 from common.params import Params
 from selfdrive.car import apply_toyota_steer_torque_limits, create_gas_interceptor_command, make_can_msg
 from selfdrive.car.toyota.toyotacan import create_steer_command, create_ui_command, \
@@ -78,9 +79,14 @@ class CarController:
       pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass
     else:
       pcm_neutral_force = 0.
+    # calculate moving mean for actuators.accel
+    if not CS.out.gasPressed:
+      accel_mean = bn.move_mean(actuators.accel, window=50, min_count=1)
+    else:
+      accel_mean = 0.
     # calculate and clip pcm_accel_cmd
     if not CS.out.gasPressed:
-      pcm_accel_cmd = clip(actuators.accel + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max)
+      pcm_accel_cmd = clip(accel_mean + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max)
     else:
       pcm_accel_cmd = 0.
 
@@ -158,7 +164,7 @@ class CarController:
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
         can_sends.append(create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, lead_vehicle_stopped, actuators.accel, should_compensate, acc_msg))
+        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, lead_vehicle_stopped, accel_mean, should_compensate, acc_msg))
         self.accel = pcm_accel_cmd
       else:
         can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, adjust_distance, False, False, 0, False, acc_msg))
