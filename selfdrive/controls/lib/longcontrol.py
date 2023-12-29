@@ -101,7 +101,7 @@ class LongControl():
       # Freeze the integrator so we don't accelerate to compensate, and don't allow positive acceleration
       prevent_overshoot = not CP.stoppingControl and CS.vEgo < 1.5 and v_target_future < 0.7 and v_target_future < self.v_pid
       deadzone = interp(CS.vEgo, CP.longitudinalTuning.deadzoneBP, CP.longitudinalTuning.deadzoneV)
-      freeze_integrator = prevent_overshoot or CS.brakeHoldActive or (CS.gasPressed and CP.carName == 'toyota')
+      freeze_integrator = prevent_overshoot or CS.brakeHoldActive
 
       error = self.v_pid - CS.vEgo
       error_deadzone = apply_deadzone(error, deadzone)
