@@ -34,7 +34,7 @@ class CarController:
     self.last_off_frame = 0
     self.e2e_long = params.get_bool("EndToEndLong")
     self.steer_rate_counter = 0
-    self.accel_filter = FirstOrderFilter(0, 0.1, DT_CTRL, initialized=False)
+    self.accel_filter = FirstOrderFilter(0, 50., DT_CTRL, initialized=False)
 
     self.packer = CANPacker(dbc_name)
     self.gas = 0
