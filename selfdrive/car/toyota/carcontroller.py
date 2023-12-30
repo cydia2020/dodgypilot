@@ -69,12 +69,8 @@ class CarController:
     else:
       interceptor_gas_cmd = 0.
 
-    # NO_STOP_TIMER_CAR will creep if compensation is applied when stopping or stopped, don't compensate when stopped or stopping
-    should_compensate = True
-    if self.CP.carFingerprint in NO_STOP_TIMER_CAR and ((CS.out.vEgo <  1e-3 and actuators.accel < 1e-3) or stopping):
-      should_compensate = False
     # pcm neutral force
-    if CC.longActive and should_compensate:
+    if CC.enabled:
       pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass
     else:
       pcm_neutral_force = 0.
@@ -158,10 +154,10 @@ class CarController:
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
         can_sends.append(create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, lead_vehicle_stopped, actuators.accel, should_compensate, acc_msg))
+        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, lead_vehicle_stopped, actuators.accel, acc_msg))
         self.accel = pcm_accel_cmd
       else:
-        can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, adjust_distance, False, False, 0, False, acc_msg))
+        can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, adjust_distance, False, False, 0, acc_msg))
 
     if self.frame % 2 == 0 and self.CP.enableGasInterceptor:
       # send exactly zero if gas cmd is zero. Interceptor will send the max between read value and gas cmd.
