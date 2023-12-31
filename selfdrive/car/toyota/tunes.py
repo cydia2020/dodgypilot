@@ -26,8 +26,8 @@ class LatTunes(Enum):
 ###### LONG ######
 def set_long_tune(tune, name):
   if name == LongTunes.Toyota:
-    tune.deadzoneBP = [0., 6., 9.]
-    tune.deadzoneV = [0., 0., .06]
+    tune.deadzoneBP = [0., 16., 20., 30.]
+    tune.deadzoneV = [0., .03, .06, .15]
     tune.kpBP = [0.]
     tune.kpV = [1.]
     tune.kiBP = [0.]
