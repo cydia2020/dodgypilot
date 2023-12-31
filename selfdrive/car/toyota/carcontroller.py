@@ -73,7 +73,7 @@ class CarController:
     else:
       pcm_neutral_force = 0.
     # calculate and clip pcm_accel_cmd
-    if not CS.out.gasPressed:
+    if CC.enabled:
       pcm_accel_cmd = clip(actuators.accel + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max)
     else:
       pcm_accel_cmd = 0.
