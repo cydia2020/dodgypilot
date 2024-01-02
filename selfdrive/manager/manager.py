@@ -86,14 +86,8 @@ def manager_init() -> None:
   params.put("GitBranch", get_short_branch(default=""))
   params.put("GitRemote", get_origin(default=""))
 
-  # set dongle id
-  reg_res = register(show_spinner=True)
-  if reg_res:
-    dongle_id = reg_res
-  else:
-    serial = params.get("HardwareSerial")
-    raise Exception(f"Registration failed for device {serial}")
-  os.environ['DONGLE_ID'] = dongle_id  # Needed for swaglog
+  dongle_id = "UnregisteredDevice"
+  os.environ['DONGLE_ID'] = "UnregisteredDevice"
 
   if not is_dirty():
     os.environ['CLEAN'] = '1'
