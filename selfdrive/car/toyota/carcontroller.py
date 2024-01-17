@@ -11,6 +11,7 @@ from opendbc.can.packer import CANPacker
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 AudibleAlert = car.CarControl.HUDControl.AudibleAlert
+LongCtrlState = car.CarControl.Actuators.LongControlState
 
 # constants for fault workaround
 MAX_STEER_RATE = 100  # deg/s
@@ -31,6 +32,7 @@ class CarController:
     self.last_off_frame = 0
     self.e2e_long = params.get_bool("EndToEndLong")
     self.steer_rate_counter = 0
+    self.allow_neg_calculation = False
 
     self.packer = CANPacker(dbc_name)
     self.gas = 0
@@ -40,6 +42,7 @@ class CarController:
     actuators = CC.actuators
     hud_control = CC.hudControl
     pcm_cancel_cmd = CC.cruiseControl.cancel or (not CC.enabled and CS.pcm_acc_status)
+    stopping = actuators.longControlState == LongCtrlState.stopping
 
     # maximum position acceleration based on vehicle model
     _accel_max = CarControllerParams.ACCEL_MAX_CAMRY if self.CP.carFingerprint == CAR.CAMRY else CarControllerParams.ACCEL_MAX
@@ -67,8 +70,16 @@ class CarController:
     else:
       interceptor_gas_cmd = 0.
 
+    if CS.out.gasPressed or not CS.out.cruiseState.enabled:
+      self.allow_neg_calculation = False
+    if CS.pcm_neutral_force > 1e-3 or actuators.accel < 1e-3:
+      self.allow_neg_calculation = True
+    # NO_STOP_TIMER_CAR will creep if compensation is applied when stopping or stopped, don't compensate when stopped or stopping
+    should_compensate = True
+    if self.CP.carFingerprint in NO_STOP_TIMER_CAR and ((CS.out.vEgo <  1e-3 and actuators.accel < 1e-3) or stopping):
+      should_compensate = False
     # pcm neutral force
-    if CC.enabled:
+    if CC.enabled and self.allow_neg_calculation and should_compensate:
       pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass
     else:
       pcm_neutral_force = 0.
