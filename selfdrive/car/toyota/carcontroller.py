@@ -159,11 +159,13 @@ class CarController:
 
       # Send ACC_CONTROL_SAFE if RADAR Interceptor is detected, else send 0x343
       acc_msg = 'ACC_CONTROL_SAFE' if self.CP.carFingerprint in RADAR_ACC_CAR_TSS1 else 'ACC_CONTROL'
+      # send compensated when lead visible, send -2.5 when stopping, send actuators.accel if accelerator not depressed else send 0
+      at_raw = pcm_accel_cmd if hud_control.leadVisible else -2.5 if stopping else actuators.accel if not CS.out.gasPressed else 0.
       # Lexus IS uses a different cancellation message
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
         can_sends.append(create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, lead_vehicle_stopped, actuators.accel, acc_msg))
+        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, adjust_distance, fcw_alert, lead_vehicle_stopped, at_raw, acc_msg))
         self.accel = pcm_accel_cmd
       else:
         can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, adjust_distance, False, False, 0, acc_msg))
