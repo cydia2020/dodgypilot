@@ -70,8 +70,10 @@ class CarController:
     else:
       interceptor_gas_cmd = 0.
 
-    if CS.out.gasPressed or not CS.out.cruiseState.enabled:
+    # set allow negative calculation to False when longActive is False
+    if not CC.longActive:
       self.allow_neg_calculation = False
+    # don't reset until the first positive is reached
     if CS.pcm_neutral_force > 1e-3:
       self.allow_neg_calculation = True
     # NO_STOP_TIMER_CAR will creep if compensation is applied when stopping or stopped, don't compensate when stopped or stopping
