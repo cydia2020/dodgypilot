@@ -32,7 +32,7 @@ class CarController:
     self.last_off_frame = 0
     self.e2e_long = params.get_bool("EndToEndLong")
     self.steer_rate_counter = 0
-    self.allow_neg_calculation = False
+    self.prohibit_neg_calculation = True
 
     self.packer = CANPacker(dbc_name)
     self.gas = 0
@@ -72,16 +72,18 @@ class CarController:
 
     # set allow negative calculation to False when longActive is False
     if not CC.longActive:
-      self.allow_neg_calculation = False
+      self.prohibit_neg_calculation = True
     # don't reset until the first positive is reached
-    if CS.pcm_neutral_force > 1e-3:
-      self.allow_neg_calculation = True
+    if CS.pcm_neutral_force > 0.:
+      self.prohibit_neg_calculation = False
     # NO_STOP_TIMER_CAR will creep if compensation is applied when stopping or stopped, don't compensate when stopped or stopping
     should_compensate = True
     if self.CP.carFingerprint in NO_STOP_TIMER_CAR and ((CS.out.vEgo <  1e-3 and actuators.accel < 1e-3) or stopping):
       should_compensate = False
     # pcm neutral force
-    if CC.enabled and self.allow_neg_calculation and should_compensate:
+    if CC.longActive and self.prohibit_neg_calculation:
+      pcm_neutral_force = min(0, CS.pcm_neutral_force / self.CP.mass)
+    elif CC.longActive and should_compensate:
       pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass
     else:
       pcm_neutral_force = 0.
@@ -162,7 +164,7 @@ class CarController:
       # Send ACC_CONTROL_SAFE if RADAR Interceptor is detected, else send 0x343
       acc_msg = 'ACC_CONTROL_SAFE' if self.CP.carFingerprint in RADAR_ACC_CAR_TSS1 else 'ACC_CONTROL'
       # send compensated when lead visible, send -2.5 when stopping, send actuators.accel if accelerator not depressed else send 0
-      at_raw = pcm_accel_cmd if hud_control.leadVisible else -2.5 if stopping else actuators.accel if not CS.out.gasPressed else 0.
+      at_raw = -2.5 if stopping else pcm_accel_cmd if hud_control.leadVisible else actuators.accel
       # Lexus IS uses a different cancellation message
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
         can_sends.append(create_acc_cancel_command(self.packer))
