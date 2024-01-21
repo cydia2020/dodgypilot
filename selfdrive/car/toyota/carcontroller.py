@@ -163,7 +163,8 @@ class CarController:
 
       # Send ACC_CONTROL_SAFE if RADAR Interceptor is detected, else send 0x343
       acc_msg = 'ACC_CONTROL_SAFE' if self.CP.carFingerprint in RADAR_ACC_CAR_TSS1 else 'ACC_CONTROL'
-      # send compensated when lead visible, send -2.5 when stopping, send actuators.accel if accelerator not depressed else send 0
+      # Handle raw acceleration, prevent vehicle creeping when coming to a stop
+      # send compensated when lead visible, send -2.5 when stopping, else send actuators.accel
       at_raw = -2.5 if stopping else pcm_accel_cmd if hud_control.leadVisible else actuators.accel
       # Lexus IS uses a different cancellation message
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
