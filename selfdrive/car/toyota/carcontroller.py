@@ -43,6 +43,7 @@ class CarController:
     hud_control = CC.hudControl
     pcm_cancel_cmd = CC.cruiseControl.cancel or (not CC.enabled and CS.pcm_acc_status)
     stopping = actuators.longControlState == LongCtrlState.stopping
+    stopping_can = stopping and not CS.out.gasPressed
 
     # maximum position acceleration based on vehicle model
     _accel_max = CarControllerParams.ACCEL_MAX_CAMRY if self.CP.carFingerprint == CAR.CAMRY else CarControllerParams.ACCEL_MAX
@@ -163,7 +164,7 @@ class CarController:
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
         can_sends.append(create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, stopping, self.standstill_req, lead, hud_control.leadVisible,
+        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, stopping_can, self.standstill_req, lead, hud_control.leadVisible,
                                               CS.acc_type, adjust_distance, fcw_alert, lead_vehicle_stopped, actuators.accel, acc_msg))
         self.accel = pcm_accel_cmd
       else:
