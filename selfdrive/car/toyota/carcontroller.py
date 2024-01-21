@@ -81,9 +81,7 @@ class CarController:
     if self.CP.carFingerprint in NO_STOP_TIMER_CAR and ((CS.out.vEgo <  1e-3 and actuators.accel < 1e-3) or stopping):
       should_compensate = False
     # pcm neutral force
-    if CC.longActive and self.prohibit_neg_calculation:
-      pcm_neutral_force = min(0, CS.pcm_neutral_force / self.CP.mass)
-    elif CC.longActive and should_compensate:
+    if CC.longActive and should_compensate and not self.prohibit_neg_calculation:
       pcm_neutral_force = CS.pcm_neutral_force / self.CP.mass
     else:
       pcm_neutral_force = 0.
