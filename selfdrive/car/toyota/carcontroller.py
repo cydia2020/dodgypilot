@@ -163,7 +163,7 @@ class CarController:
       acc_msg = 'ACC_CONTROL_SAFE' if self.CP.carFingerprint in RADAR_ACC_CAR_TSS1 else 'ACC_CONTROL'
       # Handle raw acceleration, prevent vehicle creeping when coming to a stop
       # send compensated when lead visible, send -2.5 when stopping, else send actuators.accel
-      at_raw = -2.5 if stopping else pcm_accel_cmd if hud_control.leadVisible else actuators.accel
+      at_raw = -2.5 if stopping or (CS.out.vEgo < 0.5 and lead_vehicle_stopped) else pcm_accel_cmd if hud_control.leadVisible else actuators.accel
       # Lexus IS uses a different cancellation message
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
         can_sends.append(create_acc_cancel_command(self.packer))
