@@ -17,6 +17,9 @@ LongCtrlState = car.CarControl.Actuators.LongControlState
 MAX_STEER_RATE = 100  # deg/s
 MAX_STEER_RATE_FRAMES = 19
 
+# constants for PCM available force compensation
+COMPENSTAORY_CALCULATION_THRESHOLD = -0.25  #m/s^2
+
 params = Params()
 
 class CarController:
@@ -73,8 +76,8 @@ class CarController:
     # set allow negative calculation to False when longActive is False
     if not CC.longActive:
       self.prohibit_neg_calculation = True
-    # don't reset until the first positive is reached
-    if CS.pcm_neutral_force > 0.:
+    # don't reset until a reasonable compensatory value is reached
+    if CS.pcm_neutral_force > COMPENSTAORY_CALCULATION_THRESHOLD * self.CP.mass:
       self.prohibit_neg_calculation = False
     # NO_STOP_TIMER_CAR will creep if compensation is applied when stopping or stopped, don't compensate when stopped or stopping
     should_compensate = True
