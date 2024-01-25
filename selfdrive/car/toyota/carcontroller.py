@@ -36,7 +36,6 @@ class CarController:
     self.e2e_long = params.get_bool("EndToEndLong")
     self.steer_rate_counter = 0
     self.prohibit_neg_calculation = True
-    self.prohibit_acceleration = False
 
     self.packer = CANPacker(dbc_name)
     self.gas = 0
@@ -74,15 +73,6 @@ class CarController:
     else:
       interceptor_gas_cmd = 0.
 
-    # cydia2020 - LVSTP Logic, 0.5 m/s to give radar some room for error
-    # Lead is never stopped and openpilot is ready to be resumed when using e2e long
-    lead_vehicle_stopped = (hud_control.leadVelocity < 0.3 and hud_control.leadVisible) and not self.e2e_long
-
-    if lead_vehicle_stopped and CS.out.vEgo < 1e-3:
-      self.prohibit_acceleration = True
-    if not lead_vehicle_stopped:
-      self.prohibit_acceleration = False
-
     # set allow negative calculation to False when longActive is False
     if not CC.longActive:
       self.prohibit_neg_calculation = True
@@ -99,9 +89,7 @@ class CarController:
     else:
       pcm_neutral_force = 0.
     # calculate and clip pcm_accel_cmd
-    if self.prohibit_acceleration:
-      pcm_accel_cmd = -2.5
-    elif CC.enabled:
+    if CC.enabled:
       pcm_accel_cmd = clip(actuators.accel + pcm_neutral_force, CarControllerParams.ACCEL_MIN, _accel_max)
     else:
       pcm_accel_cmd = 0.
@@ -126,6 +114,10 @@ class CarController:
     elif self.steer_rate_counter >= MAX_STEER_RATE_FRAMES:
       apply_steer_req = 0
       self.steer_rate_counter = 0
+
+    # cydia2020 - LVSTP Logic, 0.5 m/s to give radar some room for error
+    # Lead is never stopped and openpilot is ready to be resumed when using e2e long
+    lead_vehicle_stopped = (hud_control.leadVelocity < 0.5 and hud_control.leadVisible) and not self.e2e_long
 
     # release_standstill always 0 on radar_acc_tss1 cars
     if self.CP.carFingerprint in RADAR_ACC_CAR_TSS1:
