@@ -164,7 +164,7 @@ class CarController:
 
       # Send ACC_CONTROL_SAFE if RADAR Interceptor is detected, else send 0x343
       acc_msg = 'ACC_CONTROL_SAFE' if self.CP.carFingerprint in RADAR_ACC_CAR_TSS1 else 'ACC_CONTROL'
-      slow_brake_release = 1 if CS.out.vEgo < 4. and actuators.accel > 1e-3 else 0.
+      slow_brake_release = 1 if (CS.out.vEgo < 4. and actuators.accel > -1.0) or (CS.out.aEgo > 0.5 and actuators.accel < 0.3) else 0
       # Handle raw acceleration, prevent vehicle creeping when coming to a stop
       # send compensated when lead visible, send -2.5 when stopping, else send actuators.accel
       at_raw = -2.5 if stopping or (CS.out.vEgo < 0.5 and lead_vehicle_stopped) else pcm_accel_cmd if hud_control.leadVisible else actuators.accel
