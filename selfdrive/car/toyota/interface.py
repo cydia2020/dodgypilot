@@ -319,7 +319,7 @@ class CarInterface(CarInterfaceBase):
     ret.minEnableSpeed = -1. if (stop_and_go or ret.enableGasInterceptor) else MIN_ACC_SPEED
 
     # Longitudinal Tunes
-    ret.stoppingDecelRate = 0.15
+    ret.stoppingDecelRate = 0.3
     ret.stopAccel = -2.5 # stock Toyota has this value
     set_long_tune(ret.longitudinalTuning, LongTunes.Toyota)
 
