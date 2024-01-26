@@ -164,7 +164,7 @@ class CarController:
 
       # Send ACC_CONTROL_SAFE if RADAR Interceptor is detected, else send 0x343
       acc_msg = 'ACC_CONTROL_SAFE' if self.CP.carFingerprint in RADAR_ACC_CAR_TSS1 else 'ACC_CONTROL'
-      slow_brake_release = 1 if CS.out.aEgo > 0.5 and actuators.accel < 0.3 else 0
+      accel_stop_decision = 1 if CS.out.aEgo > 0.5 and actuators.accel < 1e-3 else 0
       permit_braking = 1 if pcm_accel_cmd < 0.3 or CS.out.vEgo < 5. else 0
       # Handle raw acceleration, prevent vehicle creeping when coming to a stop
       # send compensated when lead visible, send -2.5 when stopping, else send actuators.accel
@@ -173,7 +173,7 @@ class CarController:
       if pcm_cancel_cmd and self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC):
         can_sends.append(create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, slow_brake_release, permit_braking,
+        can_sends.append(create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, accel_stop_decision, permit_braking,
                                               CS.acc_type, adjust_distance, fcw_alert, lead_vehicle_stopped, at_raw, acc_msg))
         self.accel = pcm_accel_cmd
       else:
