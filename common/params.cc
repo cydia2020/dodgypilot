@@ -208,6 +208,7 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"VisionRadarToggle", PERSISTENT},
     {"WheeledBody", PERSISTENT},
     {"DisplayRadarInfo", PERSISTENT}, // display radar state on onroad UI
+    {"CarBrightnessControl", PERSISTENT}, // link display brightness with combination meter
 };
 
 } // namespace

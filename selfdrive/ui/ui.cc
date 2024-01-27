@@ -157,6 +157,9 @@ static void update_sockets(UIState *s) {
 static void update_state(UIState *s) {
   SubMaster &sm = *(s->sm);
   UIScene &scene = s->scene;
+  // meter dimmed and low brightness states
+  s->scene.meterDimmed = sm["carState"].getCarState().getMeterDimmed();
+  s->scene.meterLowBrightness = sm["carState"].getCarState().getMeterLowBrightness();
 
   if (sm.updated("liveCalibration")) {
     auto live_calib = sm["liveCalibration"].getLiveCalibration();
@@ -220,6 +223,7 @@ void ui_update_params(UIState *s) {
   s->scene.is_metric = params.getBool("IsMetric");
   s->scene.map_on_left = params.getBool("NavSettingLeftSide");
   s->scene.radar_state = params.getBool("DisplayRadarInfo");
+  s->scene.car_brightness = Params().getBool("CarBrightnessControl");
 }
 
 void UIState::updateStatus() {
@@ -320,22 +324,15 @@ void Device::resetInteractiveTimeout(int timeout) {
 }
 
 void Device::updateBrightness(const UIState &s) {
-  float clipped_brightness = offroad_brightness;
-  if (s.scene.started) {
-    clipped_brightness = s.scene.light_sensor;
+  int brightness;
 
-    // CIE 1931 - https://www.photonstophotos.net/GeneralTopics/Exposure/Psychometric_Lightness_and_Gamma.htm
-    if (clipped_brightness <= 8) {
-      clipped_brightness = (clipped_brightness / 903.3);
-    } else {
-      clipped_brightness = std::pow((clipped_brightness + 16.0) / 116.0, 3.0);
-    }
-
-    // Scale back to 10% to 100%
-    clipped_brightness = std::clamp(100.0f * clipped_brightness, 10.0f, 100.0f);
+  if (s.scene.car_brightness) {
+    brightness = (s.scene.started) ? (s.scene.meterDimmed) ? 50.0 : (s.scene.meterLowBrightness ? 1.0 : 100.0) : offroad_brightness;
+  } else {
+    float clipped_brightness = (s.scene.started) ? std::clamp((s.scene.light_sensor <= 8) ? (s.scene.light_sensor / 903.3) : std::pow((s.scene.light_sensor + 16.0) / 116.0, 3.0) * 100.0f, 10.0f, 100.0f) : offroad_brightness;
+    brightness = brightness_filter.update(clipped_brightness);
   }
 
-  int brightness = brightness_filter.update(clipped_brightness);
   if (!awake) {
     brightness = 0;
   }

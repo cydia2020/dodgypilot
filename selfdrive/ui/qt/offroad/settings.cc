@@ -77,6 +77,12 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       tr("Display speed in km/h instead of mph."),
       "../assets/offroad/icon_radar.png",
     },
+    {
+      "CarBrightnessControl",
+      tr("Use Car For Backlight Control"),
+      tr("Use the car's meter dimmer state for brightness control."),
+      "../assets/offroad/icon_brightness.png",
+    },
 #ifdef ENABLE_MAPS
     {
       "NavSettingTime24h",
