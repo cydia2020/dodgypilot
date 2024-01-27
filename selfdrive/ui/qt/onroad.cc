@@ -568,13 +568,14 @@ void AnnotatedCameraWidget::drawDriverState(QPainter &painter, const UIState *s)
   painter.restore();
 }
 
-void AnnotatedCameraWidget::drawLead(QPainter &painter, const cereal::RadarState::LeadData::Reader &lead_data, const QPointF &vd) {
+void AnnotatedCameraWidget::drawLead(QPainter &painter, const cereal::RadarState::LeadData::Reader &lead_data, const QPointF &vd, float vego) {
   painter.save();
 
   const float speedBuff = 10.;
   const float leadBuff = 40.;
   const float d_rel = lead_data.getDRel();
   const float v_rel = lead_data.getVRel();
+  const float v_abs = vego + lead_data.getVRel();
 
   float fillAlpha = 0;
   if (d_rel < leadBuff) {
@@ -592,6 +593,13 @@ void AnnotatedCameraWidget::drawLead(QPainter &painter, const cereal::RadarState
   float g_xo = sz / 5;
   float g_yo = sz / 10;
 
+  int x_int = (int)x;
+  int y_int = (int)y;
+
+  // convert lead distance + speed
+  QString v_abs_str = QString::number(std::nearbyint(v_abs * (scene.is_metric ? 3.6 : 2.2369362912))) + (scene.is_metric ? " km/h" : " mph");
+  QString d_rel_str = QString::number(std::nearbyint(d_rel * (scene.is_metric ? 1.0 : 1.093613))) + (scene.is_metric ? " m" : " yd");
+
   QPointF glow[] = {{x + (sz * 1.35) + g_xo, y + sz + g_yo}, {x, y - g_yo}, {x - (sz * 1.35) - g_xo, y + sz + g_yo}};
   painter.setBrush(QColor(218, 202, 37, 255));
   painter.drawPolygon(glow, std::size(glow));
@@ -600,6 +608,15 @@ void AnnotatedCameraWidget::drawLead(QPainter &painter, const cereal::RadarState
   QPointF chevron[] = {{x + (sz * 1.25), y + sz}, {x, y}, {x - (sz * 1.25), y + sz}};
   painter.setBrush(redColor(fillAlpha));
   painter.drawPolygon(chevron, std::size(chevron));
+
+  if (scene.radar_state) {
+    painter.setPen(QColor(10, 255, 226, 255));
+    configFont(painter, "Open Sans", 60, "Regular");
+    painter.drawText(x_int - 104, y_int + 118, radar_v_abs_str);
+    painter.setPen(QColor(10, 255, 226, 255));
+    configFont(painter, "Open Sans", 60, "Regular");
+    painter.drawText(x_int - 72, y_int + 182, radar_d_rel_str);
+  }
 
   painter.restore();
 }
@@ -666,11 +683,9 @@ void AnnotatedCameraWidget::paintGL() {
       update_leads(s, radar_state, model.getPosition());
       auto lead_one = radar_state.getLeadOne();
       auto lead_two = radar_state.getLeadTwo();
+      float vego = (*s->sm)["carState"].getCarState().getVEgo();
       if (lead_one.getStatus()) {
-        drawLead(painter, lead_one, s->scene.lead_vertices[0]);
-      }
-      if (lead_two.getStatus() && (std::abs(lead_one.getDRel() - lead_two.getDRel()) > 3.0)) {
-        drawLead(painter, lead_two, s->scene.lead_vertices[1]);
+        drawLead(painter, lead_one, s->scene.lead_vertices[0], vego);
       }
     }
   }
