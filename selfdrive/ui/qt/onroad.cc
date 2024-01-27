@@ -311,6 +311,7 @@ void AnnotatedCameraWidget::updateState(const UIState &s) {
   is_metric = s.scene.is_metric;
   speedUnit =  s.scene.is_metric ? tr("km/h") : tr("mph");
   hideBottomIcons = (cs.getAlertSize() != cereal::ControlsState::AlertSize::NONE);
+  brakeLights = car_state.getBrakeLights();
   status = s.status;
 
   // update engageability/experimental mode button
@@ -421,8 +422,10 @@ void AnnotatedCameraWidget::drawHud(QPainter &p) {
 
   // current speed
   p.setFont(InterFont(176, QFont::Bold));
+  p.setPen(QPen(brakeLights ? QColor(0xff, 0x7c, 0x80) : QColor(0xff, 0xff, 0xff)));
   drawText(p, rect().center().x(), 210, speedStr);
   p.setFont(InterFont(66));
+  p.setPen(QPen(brakeLights ? QColor(0xff, 0x7c, 0x80) : QColor(0xff, 0xff, 0xff)));
   drawText(p, rect().center().x(), 290, speedUnit, 200);
 
   p.restore();

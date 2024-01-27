@@ -85,6 +85,7 @@ private:
   bool is_cruise_set = false;
   bool is_metric = false;
   bool dmActive = false;
+  bool brakeLights = false;
   bool hideBottomIcons = false;
   bool rightHandDM = false;
   float dm_fade_state = 1.0;
