@@ -25,6 +25,7 @@ class CarInterface(CarInterfaceBase):
   @staticmethod
   def _get_params(ret, candidate, fingerprint, car_fw, experimental_long, docs):
     ret.carName = "volkswagen"
+    ret.dashcamOnly = True
     ret.radarUnavailable = True
 
     if candidate in PQ_CARS:
@@ -41,14 +42,6 @@ class CarInterface(CarInterfaceBase):
         ret.networkLocation = NetworkLocation.gateway
       else:
         ret.networkLocation = NetworkLocation.fwdCamera
-
-      # The PQ port is in dashcam-only mode due to a fixed six-minute maximum timer on HCA steering. An unsupported
-      # EPS flash update to work around this timer, and enable steering down to zero, is available from:
-      #   https://github.com/pd0wm/pq-flasher
-      # It is documented in a four-part blog series:
-      #   https://blog.willemmelching.nl/carhacking/2022/01/02/vw-part1/
-      # Panda ALLOW_DEBUG firmware required.
-      ret.dashcamOnly = True
 
     else:
       # Set global MQB parameters
