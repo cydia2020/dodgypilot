@@ -324,7 +324,7 @@ void Device::resetInteractiveTimeout(int timeout) {
 }
 
 void Device::updateBrightness(const UIState &s) {
-  if (s.scene.headlight_brightness_control) {
+  if (s.scene.car_brightness) {
     int brightness = offroad_brightness;
 
     if (!s.scene.started) {
@@ -338,9 +338,7 @@ void Device::updateBrightness(const UIState &s) {
     if (s.scene.meterLowBrightness) {
       brightness = 1.0;
     } else {
-      if ((s.scene.headlightON) && (s.scene.meterDimmed)) {
-        brightness = 10.0;
-      } else if ((s.scene.parkingLightON) && (!s.scene.headlightON) && (s.scene.meterDimmed)) {
+      if (s.scene.meterDimmed) {
         brightness = 50.0;
       } else {
         brightness = 100.0;
