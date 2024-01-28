@@ -324,26 +324,66 @@ void Device::resetInteractiveTimeout(int timeout) {
 }
 
 void Device::updateBrightness(const UIState &s) {
-  int brightness;
+  if (s.scene.headlight_brightness_control) {
+    int brightness = offroad_brightness;
 
-  if (s.scene.car_brightness) {
-    brightness = (s.scene.started) ? (s.scene.meterDimmed) ? 50.0 : (s.scene.meterLowBrightness ? 1.0 : 100.0) : offroad_brightness;
+    if (!s.scene.started) {
+      brightness = offroad_brightness;
+    }
+
+    if (!awake) {
+      brightness = 0;
+    }
+
+    if (s.scene.meterLowBrightness) {
+      brightness = 1.0;
+    } else {
+      if ((s.scene.headlightON) && (s.scene.meterDimmed)) {
+        brightness = 10.0;
+      } else if ((s.scene.parkingLightON) && (!s.scene.headlightON) && (s.scene.meterDimmed)) {
+        brightness = 50.0;
+      } else {
+        brightness = 100.0;
+      }
+    }
+
+    if (brightness != last_brightness) {
+      if (!brightness_future.isRunning()) {
+        brightness_future = QtConcurrent::run(Hardware::set_brightness, brightness);
+        last_brightness = brightness;
+      }
+    }
   } else {
-    float clipped_brightness = (s.scene.started) ? std::clamp((s.scene.light_sensor <= 8) ? (s.scene.light_sensor / 903.3) : std::pow((s.scene.light_sensor + 16.0) / 116.0, 3.0) * 100.0f, 10.0f, 100.0f) : offroad_brightness;
-    brightness = brightness_filter.update(clipped_brightness);
-  }
+    float clipped_brightness = offroad_brightness;
+    if (s.scene.started) {
+      // Scale to 0% to 100%
+      clipped_brightness = 100.0 * s.scene.light_sensor;
 
-  if (!awake) {
-    brightness = 0;
-  }
+      // CIE 1931 - https://www.photonstophotos.net/GeneralTopics/Exposure/Psychometric_Lightness_and_Gamma.htm
+      if (clipped_brightness <= 8) {
+        clipped_brightness = (clipped_brightness / 903.3);
+      } else {
+        clipped_brightness = std::pow((clipped_brightness + 16.0) / 116.0, 3.0);
+      }
 
-  if (brightness != last_brightness) {
-    if (!brightness_future.isRunning()) {
-      brightness_future = QtConcurrent::run(Hardware::set_brightness, brightness);
-      last_brightness = brightness;
+      // Scale back to 10% to 100%
+      clipped_brightness = std::clamp(100.0f * clipped_brightness, 10.0f, 100.0f);
+    }
+
+    int brightness = brightness_filter.update(clipped_brightness);
+    if (!awake) {
+      brightness = 0;
+    }
+
+    if (brightness != last_brightness) {
+      if (!brightness_future.isRunning()) {
+        brightness_future = QtConcurrent::run(Hardware::set_brightness, brightness);
+        last_brightness = brightness;
+      }
     }
   }
 }
+
 
 void Device::updateWakefulness(const UIState &s) {
   bool ignition_just_turned_off = !s.scene.ignition && ignition_on;
