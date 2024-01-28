@@ -44,6 +44,9 @@ class CarState(CarStateBase):
     self.acc_type = 1
     self.lkas_hud = {}
 
+    # Secondary Steer Sensor
+    self.cruise_active_prev = False
+
   def update(self, cp, cp_cam):
     ret = car.CarState.new_message()
 
@@ -76,19 +79,26 @@ class CarState(CarStateBase):
     ret.steeringAngleDeg = cp.vl["STEER_ANGLE_SENSOR"]["STEER_ANGLE"] + cp.vl["STEER_ANGLE_SENSOR"]["STEER_FRACTION"]
     ret.steeringRateDeg = cp.vl["STEER_ANGLE_SENSOR"]["STEER_RATE"]
     torque_sensor_angle_deg = cp.vl["STEER_TORQUE_SENSOR"]["STEER_ANGLE"]
+    zss_angle_deg = cp.vl["SECONDARY_STEER_ANGLE"]["ZORRO_STEER"] if self.CP.enableSecondarySteerAngleSensor else 0.
 
-    # On some cars, the angle measurement is non-zero while initializing
-    if abs(torque_sensor_angle_deg) > 1e-3 and not bool(cp.vl["STEER_TORQUE_SENSOR"]["STEER_ANGLE_INITIALIZING"]):
+    # On some cars, the angle measurement is non-zero while initializing. Use if non-zero or ZSS
+    # Also only get offset when ZSS comes up in case it's slow to start sending messages
+    if abs(torque_sensor_angle_deg) > 1e-3 and not bool(cp.vl["STEER_TORQUE_SENSOR"]["STEER_ANGLE_INITIALIZING"]) or \
+       (self.CP.enableSecondarySteerAngleSensor and abs(zss_angle_deg) > 1e-3):
       self.accurate_steer_angle_seen = True
 
     if self.accurate_steer_angle_seen:
+      acc_angle_deg = zss_angle_deg if self.CP.enableSecondarySteerAngleSensor else torque_sensor_angle_deg
       # Offset seems to be invalid for large steering angles and high angle rates
-      if abs(ret.steeringAngleDeg) < 90 and abs(ret.steeringRateDeg) < 100 and cp.can_valid:
-        self.angle_offset.update(torque_sensor_angle_deg - ret.steeringAngleDeg)
+      # Compute offset after re-enabling
+      if (abs(ret.steeringAngleDeg) < 90 or (bool(cp.vl["PCM_CRUISE"]["CRUISE_ACTIVE"]) and not self.cruise_active_prev)) \
+         and cp.can_valid:
+        self.angle_offset.update(acc_angle_deg - ret.steeringAngleDeg)
 
       if self.angle_offset.initialized:
         ret.steeringAngleOffsetDeg = self.angle_offset.x
-        ret.steeringAngleDeg = torque_sensor_angle_deg - self.angle_offset.x
+        ret.steeringAngleDeg = acc_angle_deg - self.angle_offset.x
+      self.cruise_active_prev = bool(cp.vl["PCM_CRUISE"]["CRUISE_ACTIVE"])
 
     can_gear = int(cp.vl["GEAR_PACKET"]["GEAR"])
     ret.gearShifter = self.parse_gear_shifter(self.shifter_values.get(can_gear, None))
@@ -197,6 +207,10 @@ class CarState(CarStateBase):
     # add gas interceptor reading if we are using it
     if CP.enableGasInterceptor:
       messages.append(("GAS_SENSOR", 50))
+
+    # add zss if detected
+    if CP.enableSecondarySteerAngleSensor:
+      messages.append(("SECONDARY_STEER_ANGLE", 0))  # rate inconsistent
 
     if CP.enableBsm:
       messages.append(("BSM", 1))
