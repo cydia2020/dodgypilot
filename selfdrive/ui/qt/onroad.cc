@@ -611,10 +611,10 @@ void AnnotatedCameraWidget::drawLead(QPainter &painter, const UIScene &scene, co
 
   if (scene.radar_state) {
     painter.setPen(QColor(10, 255, 226, 255));
-    configFont(painter, "Open Sans", 60, "Regular");
+    painter.setFont(InterFont(60, QFont::DemiBold));
     painter.drawText(x_int - 104, y_int + 118, v_abs_str);
     painter.setPen(QColor(10, 255, 226, 255));
-    configFont(painter, "Open Sans", 60, "Regular");
+    painter.setFont(InterFont(60, QFont::DemiBold));
     painter.drawText(x_int - 72, y_int + 182, d_rel_str);
   }
 
