@@ -568,7 +568,7 @@ void AnnotatedCameraWidget::drawDriverState(QPainter &painter, const UIState *s)
   painter.restore();
 }
 
-void AnnotatedCameraWidget::drawLead(QPainter &painter, const cereal::RadarState::LeadData::Reader &lead_data, const QPointF &vd, float vego) {
+void AnnotatedCameraWidget::drawLead(QPainter &painter, const UIScene &scene, const cereal::RadarState::LeadData::Reader &lead_data, const QPointF &vd, float vego) {
   painter.save();
 
   const float speedBuff = 10.;
@@ -612,10 +612,10 @@ void AnnotatedCameraWidget::drawLead(QPainter &painter, const cereal::RadarState
   if (scene.radar_state) {
     painter.setPen(QColor(10, 255, 226, 255));
     configFont(painter, "Open Sans", 60, "Regular");
-    painter.drawText(x_int - 104, y_int + 118, radar_v_abs_str);
+    painter.drawText(x_int - 104, y_int + 118, v_abs_str);
     painter.setPen(QColor(10, 255, 226, 255));
     configFont(painter, "Open Sans", 60, "Regular");
-    painter.drawText(x_int - 72, y_int + 182, radar_d_rel_str);
+    painter.drawText(x_int - 72, y_int + 182, d_rel_str);
   }
 
   painter.restore();
@@ -682,10 +682,9 @@ void AnnotatedCameraWidget::paintGL() {
       auto radar_state = sm["radarState"].getRadarState();
       update_leads(s, radar_state, model.getPosition());
       auto lead_one = radar_state.getLeadOne();
-      auto lead_two = radar_state.getLeadTwo();
       float vego = (*s->sm)["carState"].getCarState().getVEgo();
       if (lead_one.getStatus()) {
-        drawLead(painter, lead_one, s->scene.lead_vertices[0], vego);
+        drawLead(painter, s->scene, lead_one, s->scene.lead_vertices[0], vego);
       }
     }
   }
