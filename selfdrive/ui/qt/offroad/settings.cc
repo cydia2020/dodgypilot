@@ -67,8 +67,8 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
     },
     {
       "DisplayRadarInfo",
-      tr("Use Metric System"),
-      tr("Display speed in km/h instead of mph."),
+      tr("Display Lead Info"),
+      tr("Display speed and distance of lead on onroad UI."),
       "../assets/offroad/icon_radar.png",
     },
     {
