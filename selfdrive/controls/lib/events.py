@@ -380,8 +380,8 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
   },
 
   EventName.invalidLkasSetting: {
-    ET.PERMANENT: NormalPermanentAlert("Stock LKAS is on",
-                                       "Turn off stock LKAS to engage"),
+    ET.PERMANENT: NormalPermanentAlert("Turn off stock LKAS to engage"),
+    ET.NO_ENTRY: NoEntryAlert("Turn off stock LKAS to engage"),
   },
 
   EventName.cruiseMismatch: {

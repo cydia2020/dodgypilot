@@ -188,26 +188,15 @@ class CarController:
       self.gas = interceptor_gas_cmd
 
     # *** hud ui ***
+    # usually this is sent at a much lower rate, but no adverse effects has been observed when sent at a much higher rate
+    # doing so simplifies carcontroller logic and allows faster response from the vehicle's combination meter
     if self.CP.carFingerprint != CAR.PRIUS_V:
-      # ui mesg is at 1Hz but we send asap if:
-      # - there is something to display
-      # - there is something to stop displaying
-      send_ui = False
-      if ((fcw_alert or steer_alert) and not self.alert_active) or \
-         (not (fcw_alert or steer_alert) and self.alert_active):
-        send_ui = True
-        self.alert_active = not self.alert_active
-      elif pcm_cancel_cmd:
-        # forcing the pcm to disengage causes a bad fault sound so play a good sound instead
-        send_ui = True
+      can_sends.append(toyotacan.create_ui_command(self.packer, steer_alert, pcm_cancel_cmd, hud_control.leftLaneVisible,
+                                                   hud_control.rightLaneVisible, CC.enabled, CS.lkas_hud, CS.lda_left_lane,
+                                                   CS.lda_right_lane, CS.sws_beeps, CS.lda_sa_toggle))
 
-      if self.frame % 20 == 0 or send_ui:
-        can_sends.append(toyotacan.create_ui_command(self.packer, steer_alert, pcm_cancel_cmd, hud_control.leftLaneVisible,
-                                                     hud_control.rightLaneVisible, hud_control.leftLaneDepart,
-                                                     hud_control.rightLaneDepart, CC.enabled, CS.lkas_hud))
-
-      if (self.frame % 100 == 0 or send_ui) and (self.CP.enableDsu or self.CP.flags & ToyotaFlags.DISABLE_RADAR.value):
-        can_sends.append(toyotacan.create_fcw_command(self.packer, fcw_alert))
+    if self.CP.enableDsu or self.CP.flags & ToyotaFlags.DISABLE_RADAR.value:
+      can_sends.append(toyotacan.create_fcw_command(self.packer, fcw_alert))
 
     # *** static msgs ***
     for addr, cars, bus, fr_step, vl in STATIC_DSU_MSGS:

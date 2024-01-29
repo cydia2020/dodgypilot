@@ -288,6 +288,11 @@ class CarInterface(CarInterfaceBase):
     # events
     events = self.create_common_events(ret)
 
+    # LDA faults if user does not put their hands on the steering wheel
+    # disallow engagement if LDA Steering Assist is ON
+    if self.CS.lda_sa_toggle == 1:
+      events.add(car.CarEvent.EventName.invalidLkasSetting)
+
     # Lane Tracing Assist control is unavailable (EPS_STATUS->LTA_STATE=0) until
     # the more accurate angle sensor signal is initialized
     if self.CP.steerControlType == SteerControlType.angle and not self.CS.accurate_steer_angle_seen:
