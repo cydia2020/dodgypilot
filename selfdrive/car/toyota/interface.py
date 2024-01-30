@@ -1,4 +1,5 @@
 from cereal import car
+from cereal import log
 from openpilot.common.conversions import Conversions as CV
 from panda import Panda
 from panda.python import uds
@@ -7,12 +8,18 @@ from openpilot.selfdrive.car.toyota.values import Ecu, CAR, DBC, ToyotaFlags, Ca
 from openpilot.selfdrive.car import get_safety_config
 from openpilot.selfdrive.car.disable_ecu import disable_ecu
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase
+from openpilot.common.params import Params
 
 EventName = car.CarEvent.EventName
 SteerControlType = car.CarParams.SteerControlType
 
 
 class CarInterface(CarInterfaceBase):
+  def __init__(self, CP, CarController, CarState):
+    super().__init__(CP, CarController, CarState)
+
+    self.pcmFollowDistancePrev = 0
+
   @staticmethod
   def get_pid_accel_limits(CP, current_speed, cruise_speed):
     return CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX
@@ -263,7 +270,7 @@ class CarInterface(CarInterfaceBase):
     tune = ret.longitudinalTuning
     tune.deadzoneBP = [0., 16., 20., 30.]
     tune.deadzoneV = [0., .03, .06, .15]
-    ret.stoppingDecelRate = 0.3  # This is okay for TSS-P
+    ret.stoppingDecelRate = 0.2  # This is okay for TSS-P
     if candidate in TSS2_CAR:
       ret.vEgoStopping = 0.25
       ret.vEgoStarting = 0.25
@@ -288,6 +295,16 @@ class CarInterface(CarInterfaceBase):
 
     # events
     events = self.create_common_events(ret)
+
+    if self.CS.pcmFollowDistance == 1 and self.pcmFollowDistancePrev != 1:
+      Params().put_nonblocking("LongitudinalPersonality", str(log.LongitudinalPersonality.relaxed))
+      self.pcmFollowDistancePrev = 1
+    if self.CS.pcmFollowDistance == 2 and self.pcmFollowDistancePrev != 2:
+      Params().put_nonblocking("LongitudinalPersonality", str(log.LongitudinalPersonality.standard))
+      self.pcmFollowDistancePrev = 2
+    if self.CS.pcmFollowDistance == 3 and self.pcmFollowDistancePrev != 3:
+      Params().put_nonblocking("LongitudinalPersonality", str(log.LongitudinalPersonality.aggressive))
+      self.pcmFollowDistancePrev = 3
 
     # LDA faults if user does not put their hands on the steering wheel
     # disallow engagement if LDA Steering Assist is ON

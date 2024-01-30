@@ -144,10 +144,16 @@ class CarState(CarStateBase):
 
     cp_acc = cp_cam if self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) else cp
 
+    # Follow Distance
+    self.pcmFollowDistance = 3 if self.CP.carFingerprint in (CAR.LEXUS_IS, CAR.LEXUS_RC) else cp.vl["PCM_CRUISE_2"]["PCM_FOLLOW_DISTANCE"]
+
     if self.CP.carFingerprint in TSS2_CAR and not self.CP.flags & ToyotaFlags.DISABLE_RADAR.value:
       if not (self.CP.flags & ToyotaFlags.SMART_DSU.value):
         self.acc_type = cp_acc.vl["ACC_CONTROL"]["ACC_TYPE"]
       ret.stockFcw = bool(cp_acc.vl["PCS_HUD"]["FCW"])
+      self.distance_btn = 1 if cp_cam.vl["ACC_CONTROL"]["DISTANCE"] == 1 else 0
+    if self.CP.flags & ToyotaFlags.SMART_DSU.value:
+      self.distance_btn = 1 if cp.vl["SDSU"]["FD_BUTTON"] == 1 else 0
 
     # some TSS2 cars have low speed lockout permanently set, so ignore on those cars
     # these cars are identified by an ACC_TYPE value of 2.
@@ -218,6 +224,9 @@ class CarState(CarStateBase):
 
     if CP.enableBsm:
       messages.append(("BSM", 1))
+
+    if CP.flags & ToyotaFlags.SMART_DSU.value:
+      messages.append(("SDSU", 0)),  # rate inconsistent
 
     if CP.carFingerprint in RADAR_ACC_CAR and not CP.flags & ToyotaFlags.DISABLE_RADAR.value:
       if not CP.flags & ToyotaFlags.SMART_DSU.value:
