@@ -157,9 +157,6 @@ static void update_sockets(UIState *s) {
 static void update_state(UIState *s) {
   SubMaster &sm = *(s->sm);
   UIScene &scene = s->scene;
-  // meter dimmed and low brightness states
-  s->scene.meterDimmed = sm["carState"].getCarState().getMeterDimmed();
-  s->scene.meterLowBrightness = sm["carState"].getCarState().getMeterLowBrightness();
 
   if (sm.updated("liveCalibration")) {
     auto live_calib = sm["liveCalibration"].getLiveCalibration();
@@ -210,6 +207,9 @@ static void update_state(UIState *s) {
     scene.light_sensor = std::max(100.0f - scale * cam_state.getExposureValPercent(), 0.0f);
   }
   scene.started = sm["deviceState"].getDeviceState().getStarted() && scene.ignition;
+
+  // meter brightness
+  scene.car_meter_brightness = sm["carState"].getCarState().getMeterBrightness();
 
   scene.world_objects_visible = scene.world_objects_visible ||
                                 (scene.started &&
@@ -331,18 +331,12 @@ void Device::updateBrightness(const UIState &s) {
       brightness = offroad_brightness;
     }
 
-    if (!awake) {
-      brightness = 0;
+    if (s.scene.started) {
+      brightness = s.scene.car_meter_brightness;
     }
 
-    if (s.scene.meterLowBrightness) {
-      brightness = 1.0;
-    } else {
-      if (s.scene.meterDimmed) {
-        brightness = 50.0;
-      } else {
-        brightness = 100.0;
-      }
+    if (!awake) {
+      brightness = 0;
     }
 
     if (brightness != last_brightness) {

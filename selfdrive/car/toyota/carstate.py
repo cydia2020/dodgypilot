@@ -114,8 +114,9 @@ class CarState(CarStateBase):
     ret.brakeLights = bool(cp.vl["ESP_CONTROL"]['BRAKE_LIGHTS_ACC'] or cp.vl["BRAKE_MODULE"]["BRAKE_PRESSED"] != 0)
 
     # combination meter dimmer states
-    ret.meterDimmed = cp.vl["BODY_CONTROL_STATE"]['METER_DIMMED'] == 1
-    ret.meterLowBrightness = cp.vl["BODY_CONTROL_STATE_2"]["METER_SLIDER_LOW_BRIGHTNESS"] == 1
+    ret.meterBrightness = cp.vl["BODY_CONTROL_STATE_2"]['METER_SLIDER_BRIGHTNESS_PCT'] * 0.6 if \
+                          cp.vl["BODY_CONTROL_STATE"]['METER_DIMMED'] == 1 else 1.0 if \
+                          cp.vl["BODY_CONTROL_STATE_2"]["METER_SLIDER_LOW_BRIGHTNESS"] == 1 else 100.
 
     # Check EPS LKA/LTA fault status
     ret.steerFaultTemporary = cp.vl["EPS_STATUS"]["LKA_STATE"] in TEMP_STEER_FAULTS

@@ -156,9 +156,9 @@ typedef struct UIScene {
 
   bool navigate_on_openpilot = false;
 
-  float light_sensor;
+  float light_sensor, car_meter_brightness;
   bool started, ignition, is_metric, map_on_left, longitudinal_control;
-  bool radar_state, meterDimmed, meterLowBrightness, car_brightness;
+  bool radar_state, car_brightness;
   bool world_objects_visible = false;
   uint64_t started_frame;
 } UIScene;
