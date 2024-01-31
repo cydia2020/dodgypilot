@@ -104,6 +104,7 @@ class Controls:
     # read params
     self.is_metric = self.params.get_bool("IsMetric")
     openpilot_enabled_toggle = self.params.get_bool("OpenpilotEnabledToggle")
+    self.is_mute_enabled = self.params.get_bool("MuteAlerts")
 
     # detect sound card presence and ensure successful init
     sounds_available = HARDWARE.get_sound_card_online()
@@ -703,6 +704,7 @@ class Controls:
     hudControl.lanesVisible = self.enabled
     hudControl.leadVisible = self.sm['longitudinalPlan'].hasLead
     hudControl.leadVelocity = self.sm['radarState'].leadOne.vLeadK if self.sm['longitudinalPlan'].hasLead else 0.0
+    hudControl.enableVehicleBuzzer = self.is_mute_enabled
 
     hudControl.rightLaneVisible = True
     hudControl.leftLaneVisible = True

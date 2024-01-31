@@ -114,8 +114,10 @@ class Soundd:
       self.current_sound_frame = 0
 
   def get_audible_alert(self, sm):
+    if sm.updated['carControl']:
+      mute_alert = sm['carControl'].hudControl.enableVehicleBuzzer
     if sm.updated['controlsState']:
-      new_alert = sm['controlsState'].alertSound.raw
+      new_alert = AudibleAlert.none if mute_alert else sm['controlsState'].alertSound.raw
       self.update_alert(new_alert)
     elif check_controls_timeout_alert(sm):
       self.update_alert(AudibleAlert.warningImmediate)
@@ -139,7 +141,7 @@ class Soundd:
     # sounddevice must be imported after forking processes
     import sounddevice as sd
 
-    sm = messaging.SubMaster(['controlsState', 'microphone'])
+    sm = messaging.SubMaster(['controlsState', 'carControl', 'microphone'])
 
     with self.get_stream(sd) as stream:
       rk = Ratekeeper(20)
