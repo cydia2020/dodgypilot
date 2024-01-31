@@ -738,6 +738,7 @@ class Controls:
     current_alert = self.AM.process_alerts(self.sm.frame, clear_event_types)
     if current_alert:
       hudControl.visualAlert = current_alert.visual_alert
+      hudControl.audibleAlert = current_alert.audible_alert
 
     if not self.CP.passive and self.initialized:
       # send car controls over can

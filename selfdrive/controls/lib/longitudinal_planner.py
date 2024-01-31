@@ -143,7 +143,8 @@ class LongitudinalPlanner:
     self.j_desired_trajectory = np.interp(ModelConstants.T_IDXS[:CONTROL_N], T_IDXS_MPC[:-1], self.mpc.j_solution)
 
     # TODO counter is only needed because radar is glitchy, remove once radar is gone
-    self.fcw = self.mpc.crash_cnt > 2 and not sm['carState'].standstill
+    self.fcw = self.mpc.crash_cnt > 2 and sm['carState'].vEgo > 5. and \
+               (sm['carState'].steeringAngleDeg < 35. and sm['carState'].steeringAngleDeg > -35.) 
     if self.fcw:
       cloudlog.info("FCW triggered")
 

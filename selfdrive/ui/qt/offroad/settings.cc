@@ -73,9 +73,15 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
     },
     {
       "CarBrightnessControl",
-      tr("Use Car For Backlight Control"),
+      tr("Use Vehicle Settings For Backlight Control"),
       tr("Use the car's meter dimmer state for brightness control."),
       "../assets/offroad/icon_brightness.png",
+    },
+    {
+      "MuteAlerts",
+      tr("Passthrough and Mute openpilot Alerts"),
+      tr("Mute openpilot's alerts, and pass the alert sounds through to the vehicle."),
+      "../assets/offroad/icon_volume_off.png",
     },
 #ifdef ENABLE_MAPS
     {

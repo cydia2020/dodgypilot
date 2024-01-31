@@ -1,5 +1,6 @@
 from cereal import car
 from openpilot.common.numpy_fast import clip, interp
+from openpilot.common.params import Params
 from openpilot.selfdrive.car import apply_meas_steer_torque_limits, apply_std_steer_angle_limits, common_fault_avoidance, \
                           create_gas_interceptor_command, make_can_msg
 from openpilot.selfdrive.car.toyota import toyotacan
@@ -10,6 +11,7 @@ from opendbc.can.packer import CANPacker
 
 SteerControlType = car.CarParams.SteerControlType
 VisualAlert = car.CarControl.HUDControl.VisualAlert
+AudibleAlert = car.CarControl.HUDControl.AudibleAlert
 LongCtrlState = car.CarControl.Actuators.LongControlState
 
 # LKA limits
@@ -41,6 +43,7 @@ class CarController:
     self.standstill_req = False
     self.steer_rate_counter = 0
     self.prohibit_neg_calculation = True
+    self.dash_sounds = Params().get_bool("MuteAlerts")
 
     self.packer = CANPacker(dbc_name)
     self.gas = 0
@@ -161,8 +164,12 @@ class CarController:
 
     # handle UI messages
     fcw_alert = hud_control.visualAlert == VisualAlert.fcw
-    steer_alert = hud_control.visualAlert in (VisualAlert.steerRequired, VisualAlert.ldw)
+    steer_alert = hud_control.visualAlert in (VisualAlert.steerRequired, VisualAlert.ldw) and not self.dash_sounds
     lead_vehicle_stopped = hud_control.leadVelocity < 0.5 and hud_control.leadVisible
+    alert_prompt = hud_control.audibleAlert in (AudibleAlert.promptDistracted, AudibleAlert.prompt) and self.dash_sounds
+    alert_prompt_repeat = hud_control.audibleAlert in (AudibleAlert.promptRepeat, AudibleAlert.warningSoft) and self.dash_sounds
+    alert_immediate = hud_control.audibleAlert == AudibleAlert.warningImmediate and self.dash_sounds
+    cancel_chime = pcm_cancel_cmd and not self.dash_sounds
 
     # we can spam can to cancel the system even if we are using lat only control
     if (self.frame % 3 == 0 and self.CP.openpilotLongitudinalControl) or pcm_cancel_cmd:
@@ -190,9 +197,10 @@ class CarController:
     # usually this is sent at a much lower rate, but no adverse effects has been observed when sent at a much higher rate
     # doing so simplifies carcontroller logic and allows faster response from the vehicle's combination meter
     if self.CP.carFingerprint != CAR.PRIUS_V:
-      can_sends.append(toyotacan.create_ui_command(self.packer, steer_alert, pcm_cancel_cmd, hud_control.leftLaneVisible,
-                                                   hud_control.rightLaneVisible, CC.enabled, CS.lkas_hud, CS.lda_left_lane,
-                                                   CS.lda_right_lane, CS.sws_beeps, CS.lda_sa_toggle))
+      can_sends.append(toyotacan.create_ui_command(self.packer, steer_alert, cancel_chime, hud_control.leftLaneVisible,
+                                                   hud_control.rightLaneVisible, CC.enabled, CS.lkas_hud, CS.lda_left_lane, 
+                                                   CS.lda_right_lane, CS.sws_beeps, CS.lda_sa_toggle, alert_prompt,
+                                                   alert_prompt_repeat, alert_immediate))
 
     if self.CP.enableDsu or self.CP.flags & ToyotaFlags.DISABLE_RADAR.value:
       can_sends.append(toyotacan.create_fcw_command(self.packer, fcw_alert))

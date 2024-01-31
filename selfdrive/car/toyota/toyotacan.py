@@ -76,20 +76,21 @@ def create_fcw_command(packer, fcw):
 
 
 def create_ui_command(packer, steer, chime, left_line, right_line, enabled, stock_lkas_hud,
-                      lda_left_lane, lda_right_lane, sws_beeps, lda_sa_toggle):
+                      lda_left_lane, lda_right_lane, sws_beeps, lda_sa_toggle, alert_prompt, 
+                      alert_prompt_repeat, alert_immediate):
   values = {
-    "TWO_BEEPS": chime or sws_beeps,
-    "LDA_ALERT": steer,
+    "TWO_BEEPS": chime or sws_beeps or alert_prompt,
+    "LDA_ALERT":  3 if alert_immediate else 2 if alert_prompt_repeat else 1 if alert_prompt or steer else 0,
     "RIGHT_LINE": 3 if lda_right_lane else 1 if right_line else 2,
     "LEFT_LINE": 3 if lda_left_lane else 1 if left_line else 2,
     "BARRIERS": 1 if enabled else 0,
     "LDA_SA_TOGGLE": lda_sa_toggle,
+    "REPEATED_BEEPS": 1 if alert_prompt_repeat or lda_right_lane or lda_left_lane else 0,
 
     # static signals
     "SET_ME_X02": 2,
     "SET_ME_X01": 1,
     "LKAS_STATUS": 1,
-    "REPEATED_BEEPS": 0,
     "LANE_SWAY_FLD": 7,
     "LANE_SWAY_BUZZER": 0,
     "LANE_SWAY_WARNING": 0,
@@ -127,7 +128,6 @@ def create_ui_command(packer, steer, chime, left_line, right_line, enabled, stoc
       "TAKE_CONTROL",
       "LDA_FRONT_CAMERA_BLOCKED",
       "LKAS_STATUS",
-      "REPEATED_BEEPS",  # LDA warning buzzer
       # keep these as well just in case
       "SET_ME_X01",
       "SET_ME_X02",
