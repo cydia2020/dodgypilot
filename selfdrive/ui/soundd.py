@@ -8,7 +8,6 @@ from typing import Dict, Optional, Tuple
 from cereal import car, messaging
 from openpilot.common.basedir import BASEDIR
 from openpilot.common.filter_simple import FirstOrderFilter
-from openpilot.common.params import Params
 from openpilot.common.realtime import Ratekeeper
 from openpilot.common.retry import retry
 from openpilot.common.swaglog import cloudlog
@@ -59,7 +58,6 @@ class Soundd:
     self.current_alert = AudibleAlert.none
     self.current_volume = MIN_VOLUME
     self.current_sound_frame = 0
-    self.mute = Params().get_bool("MuteAlerts")
 
     self.controls_timeout_alert = False
 
@@ -85,7 +83,7 @@ class Soundd:
 
     ret = np.zeros(frames, dtype=np.float32)
 
-    if self.current_alert != AudibleAlert.none and not self.mute:
+    if self.current_alert != AudibleAlert.none:
       num_loops = sound_list[self.current_alert][1]
       sound_data = self.loaded_sounds[self.current_alert]
       written_frames = 0
@@ -114,10 +112,8 @@ class Soundd:
       self.current_sound_frame = 0
 
   def get_audible_alert(self, sm):
-    if sm.updated['carControl']:
-      mute_alert = sm['carControl'].hudControl.enableVehicleBuzzer
     if sm.updated['controlsState']:
-      new_alert = AudibleAlert.none if mute_alert else sm['controlsState'].alertSound.raw
+      new_alert = sm['controlsState'].alertSound.raw
       self.update_alert(new_alert)
     elif check_controls_timeout_alert(sm):
       self.update_alert(AudibleAlert.warningImmediate)
@@ -141,7 +137,7 @@ class Soundd:
     # sounddevice must be imported after forking processes
     import sounddevice as sd
 
-    sm = messaging.SubMaster(['controlsState', 'carControl', 'microphone'])
+    sm = messaging.SubMaster(['controlsState', 'microphone'])
 
     with self.get_stream(sd) as stream:
       rk = Ratekeeper(20)
