@@ -198,6 +198,11 @@ class CarState(CarStateBase):
     else:
       self.stock_resume_ready = False
 
+    # kinematics
+    ret.accelX = (cp.vl["KINEMATICS"]["ACCEL_X"])
+    ret.accelY = (cp.vl["KINEMATICS"]["ACCEL_Y"])
+    ret.yawRate = (cp.vl["KINEMATICS"]["YAW_RATE"])
+
     return ret
 
   @staticmethod
@@ -216,6 +221,7 @@ class CarState(CarStateBase):
       ("PCM_CRUISE", 33),
       ("PCM_CRUISE_SM", 1),
       ("STEER_TORQUE_SENSOR", 50),
+      ("KINEMATICS", 80),
     ]
 
     if CP.carFingerprint in UNSUPPORTED_DSU_CAR:
