@@ -118,7 +118,6 @@ class CarController:
       can_sends.append(toyotacan.create_lta_steer_command(self.packer, self.CP.steerControlType, self.last_angle,
                                                           lta_active, self.frame // 2, torque_wind_down))
 
-
     # *** gas and brake ***
     # Default interceptor logic
     if self.CP.enableGasInterceptor and CC.longActive and self.CP.openpilotLongitudinalControl and \
