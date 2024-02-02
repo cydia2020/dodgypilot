@@ -703,19 +703,22 @@ class Controls:
     hudControl.speedVisible = self.enabled
     hudControl.lanesVisible = self.enabled
     hudControl.leadVisible = self.sm['longitudinalPlan'].hasLead
-    hudControl.leadVelocity = self.sm['radarState'].leadOne.vLeadK if self.sm['longitudinalPlan'].hasLead else 0.0
     hudControl.enableVehicleBuzzer = self.is_mute_enabled
-
-    hudControl.rightLaneVisible = True
-    hudControl.leftLaneVisible = True
-
-    ldw_allowed = False
 
     model_v2 = self.sm['modelV2']
     desire_prediction = model_v2.meta.desirePrediction
-    if len(desire_prediction) and ldw_allowed:
+    right_lane_visible = False
+    left_lane_visible = False
+    if len(desire_prediction):
       right_lane_visible = model_v2.laneLineProbs[2] > 0.5
       left_lane_visible = model_v2.laneLineProbs[1] > 0.5
+
+    CC.hudControl.rightLaneVisible = bool(right_lane_visible) and CS.vEgo > 12
+    CC.hudControl.leftLaneVisible = bool(left_lane_visible) and CS.vEgo > 12
+
+    ldw_allowed = False
+
+    if len(desire_prediction) and ldw_allowed:
       l_lane_change_prob = desire_prediction[Desire.laneChangeLeft]
       r_lane_change_prob = desire_prediction[Desire.laneChangeRight]
 

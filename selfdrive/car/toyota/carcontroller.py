@@ -1,5 +1,6 @@
 from cereal import car
 from openpilot.common.numpy_fast import clip, interp
+from openpilot.common.realtime import DT_CTRL
 from openpilot.selfdrive.car import apply_meas_steer_torque_limits, apply_std_steer_angle_limits, common_fault_avoidance, \
                           create_gas_interceptor_command, make_can_msg
 from openpilot.selfdrive.car.toyota import toyotacan
@@ -29,6 +30,9 @@ MAX_LTA_DRIVER_TORQUE_ALLOWANCE = 150  # slightly above steering pressed allows 
 # PCM compensatory force calculation threshold
 COMPENSATORY_CALCULATION_THRESHOLD = -0.25  # m/s^2
 
+# resume, lead, and lane lines hysteresis
+RESUME_HYSTERESIS_TIME = 3.  # seconds
+UI_HYSTERESIS_TIME = 1.5  # seconds
 
 class CarController:
   def __init__(self, dbc_name, CP, VM):
@@ -38,7 +42,6 @@ class CarController:
     self.last_steer = 0
     self.last_angle = 0
     self.alert_active = False
-    self.last_standstill = False
     self.standstill_req = False
     self.steer_rate_counter = 0
     self.prohibit_neg_calculation = True
@@ -46,6 +49,16 @@ class CarController:
     self.packer = CANPacker(dbc_name)
     self.gas = 0
     self.accel = 0
+
+    # hysteresis
+    self.last_resume = 0
+    self.resume = False
+    self.last_lead = 0
+    self.lead = False
+    self.last_left_lane = 0
+    self.left_lane = False
+    self.last_right_lane = 0
+    self.right_lane = False
 
   def update(self, CC, CS, now_nanos):
     actuators = CC.actuators
@@ -105,9 +118,11 @@ class CarController:
       can_sends.append(toyotacan.create_lta_steer_command(self.packer, self.CP.steerControlType, self.last_angle,
                                                           lta_active, self.frame // 2, torque_wind_down))
 
+
     # *** gas and brake ***
     # Default interceptor logic
-    if self.CP.enableGasInterceptor and CC.longActive and self.CP.openpilotLongitudinalControl and self.CP.carFingerprint not in FULL_SPEED_DRCC_CAR:
+    if self.CP.enableGasInterceptor and CC.longActive and self.CP.openpilotLongitudinalControl and \
+      self.CP.carFingerprint not in FULL_SPEED_DRCC_CAR:
       MAX_INTERCEPTOR_GAS = 0.5
       # RAV4 has very sensitive gas pedal
       if self.CP.carFingerprint in (CAR.RAV4, CAR.RAV4H, CAR.HIGHLANDER):
@@ -121,7 +136,8 @@ class CarController:
       pedal_command = PEDAL_SCALE * (actuators.accel + pedal_offset)
       interceptor_gas_cmd = clip(pedal_command, 0., MAX_INTERCEPTOR_GAS)
     # FSRDRCC SnG logic
-    elif self.CP.enableGasInterceptor and self.CP.openpilotLongitudinalControl and self.CP.carFingerprint in FULL_SPEED_DRCC_CAR and actuators.accel > 0. and CS.out.standstill and CS.pcm_acc_status == 7:
+    elif ((self.CP.openpilotLongitudinalControl and CC.cruiseControl.resume) or (not self.CP.openpilotLongitudinalControl and \
+          CS.stock_resume_ready)) and self.CP.carFingerprint in FULL_SPEED_DRCC_CAR and self.CP.enableGasInterceptor:
       interceptor_gas_cmd = 0.14
     else:
       interceptor_gas_cmd = 0.
@@ -152,38 +168,54 @@ class CarController:
     if not CC.enabled and CS.pcm_acc_status:
       pcm_cancel_cmd = 1
 
-    # on entering standstill, send standstill request
-    if stopping and (self.CP.carFingerprint not in NO_STOP_TIMER_CAR or self.CP.enableGasInterceptor):
-      self.standstill_req = True
+    # *** resume hysteresis ***
     if CC.cruiseControl.resume:
-      self.standstill_req = False
+      self.resume = True
+      self.last_resume = self.frame
+    elif self.frame - self.last_resume < RESUME_HYSTERESIS_TIME / DT_CTRL:
+      self.resume = True
+    else:
+      self.resume = False
 
-    self.last_standstill = CS.out.standstill
+    # send standstill when vehicle is stopping
+    if self.resume and (self.CP.carFingerprint not in NO_STOP_TIMER_CAR or self.CP.enableGasInterceptor):
+      self.standstill_req = False
+    # send resume when long planner wants to go
+    else:
+      self.standstill_req = True
 
     # handle UI messages
     fcw_alert = hud_control.visualAlert == VisualAlert.fcw
     steer_alert = hud_control.visualAlert in (VisualAlert.steerRequired, VisualAlert.ldw) and not hud_control.enableVehicleBuzzer
-    lead_vehicle_stopped = hud_control.leadVelocity < 0.5 and hud_control.leadVisible
     alert_prompt = hud_control.audibleAlert in (AudibleAlert.promptDistracted, AudibleAlert.prompt) and hud_control.enableVehicleBuzzer
     alert_prompt_repeat = hud_control.audibleAlert in (AudibleAlert.promptRepeat, AudibleAlert.warningSoft) and hud_control.enableVehicleBuzzer
     alert_immediate = hud_control.audibleAlert == AudibleAlert.warningImmediate and hud_control.enableVehicleBuzzer
     cancel_chime = pcm_cancel_cmd and not hud_control.enableVehicleBuzzer
 
+    # *** lead hysteresis ***
+    # at low speed we always assume the lead is present so ACC can be engaged
+    if hud_control.leadVisible:
+      self.lead = True
+      self.last_lead = self.frame
+    elif self.frame - self.last_lead < UI_HYSTERESIS_TIME / DT_CTRL or CS.out.vEgo < 12.:
+      self.lead = True
+    else:
+      self.lead = False
+
     # we can spam can to cancel the system even if we are using lat only control
     if (self.frame % 3 == 0 and self.CP.openpilotLongitudinalControl) or pcm_cancel_cmd:
-      lead = hud_control.leadVisible or CS.out.vEgo < 12.  # at low speed we always assume the lead is present so ACC can be engaged
       # when stopping, send -2.5 raw acceleration immediately to prevent vehicle from creeping, else send actuators.accel
-      accel_raw = -2.5 if stopping or (CS.out.vEgo < 0.5 and lead_vehicle_stopped) else actuators.accel
+      accel_raw = -2.5 if stopping else actuators.accel
 
       # Lexus IS uses a different cancellation message
       if pcm_cancel_cmd and self.CP.carFingerprint in UNSUPPORTED_DSU_CAR:
         can_sends.append(toyotacan.create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
         can_sends.append(toyotacan.create_accel_command(self.packer, pcm_accel_cmd, accel_raw, pcm_cancel_cmd, self.standstill_req,
-                                                        lead, CS.acc_type, fcw_alert, lead_vehicle_stopped, CS.distance_btn))
+                                                        self.lead, CS.acc_type, fcw_alert, CS.distance_btn))
         self.accel = pcm_accel_cmd
       else:
-        can_sends.append(toyotacan.create_accel_command(self.packer, 0, 0, pcm_cancel_cmd, False, lead, CS.acc_type, False, False, False))
+        can_sends.append(toyotacan.create_accel_command(self.packer, 0, 0, pcm_cancel_cmd, False, self.lead, CS.acc_type, False, False))
 
     if self.frame % 2 == 0 and self.CP.enableGasInterceptor and self.CP.openpilotLongitudinalControl:
       # send exactly zero if gas cmd is zero. Interceptor will send the max between read value and gas cmd.
@@ -191,12 +223,30 @@ class CarController:
       can_sends.append(create_gas_interceptor_command(self.packer, interceptor_gas_cmd, self.frame // 2))
       self.gas = interceptor_gas_cmd
 
+    # *** lane line hysteresis ***
+    # left lane
+    if hud_control.leftLaneVisible:
+      self.left_lane = True
+      self.last_left_lane = self.frame
+    elif self.frame - self.last_left_lane < UI_HYSTERESIS_TIME / DT_CTRL:
+      self.left_lane = True
+    else:
+      self.left_lane = False
+    # right lane
+    if hud_control.rightLaneVisible:
+      self.right_lane = True
+      self.last_right_lane = self.frame
+    elif self.frame - self.last_right_lane < UI_HYSTERESIS_TIME / DT_CTRL:
+      self.right_lane = True
+    else:
+      self.right_lane = False
+
     # *** hud ui ***
     # usually this is sent at a much lower rate, but no adverse effects has been observed when sent at a much higher rate
     # doing so simplifies carcontroller logic and allows faster response from the vehicle's combination meter
     if self.CP.carFingerprint != CAR.PRIUS_V:
-      can_sends.append(toyotacan.create_ui_command(self.packer, steer_alert, cancel_chime, hud_control.leftLaneVisible,
-                                                   hud_control.rightLaneVisible, CC.enabled, CS.lkas_hud, CS.lda_left_lane, 
+      can_sends.append(toyotacan.create_ui_command(self.packer, steer_alert, cancel_chime, self.left_lane,
+                                                   self.right_lane, CC.enabled, CS.lkas_hud, CS.lda_left_lane, 
                                                    CS.lda_right_lane, CS.sws_beeps, CS.lda_sa_toggle, alert_prompt,
                                                    alert_prompt_repeat, alert_immediate))
 
