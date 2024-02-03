@@ -423,10 +423,9 @@ void AnnotatedCameraWidget::drawHud(QPainter &p) {
   // current speed
   p.setFont(InterFont(176, QFont::Bold));
   p.setPen(QPen(brakeLights ? QColor(0xff, 0x7c, 0x80) : QColor(0xff, 0xff, 0xff)));
-  drawText(p, rect().center().x(), 210, speedStr);
+  p.drawText(rect().center().x(), 210, speedStr);
   p.setFont(InterFont(66));
-  p.setPen(QPen(brakeLights ? QColor(0xff, 0x7c, 0x80) : QColor(0xff, 0xff, 0xff)));
-  drawText(p, rect().center().x(), 290, speedUnit, 200);
+  drawText(rect().center().x(), 290, speedUnit, 200);
 
   p.restore();
 }
