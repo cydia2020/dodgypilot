@@ -40,6 +40,12 @@ Primeless::Primeless(QWidget *parent) : QWidget(parent) {
   ipLabel = new LabelControl(tr("Manage Your Settings At"), QString("%1:8082").arg(wifi->getIp4Address()));
   list->addItem(ipLabel);
 
+  std::vector<QString> searchOptions{tr("MapBox"), tr("Amap"), tr("Google")};
+  ButtonParamControl *searchInput = new ButtonParamControl("SearchInput", tr("Destination Search Provider"),
+                                       tr("Select a search provider for destination queries in Navigate on Openpilot. Options include MapBox (recommended), Amap, and Google Maps."),
+                                       "", searchOptions);
+  list->addItem(searchInput);
+
   createMapboxKeyControl(publicMapboxKeyControl, tr("Public Mapbox Key"), "MapboxPublicKey", "pk.");
   createMapboxKeyControl(secretMapboxKeyControl, tr("Secret Mapbox Key"), "MapboxSecretKey", "sk.");
 
