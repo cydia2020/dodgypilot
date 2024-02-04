@@ -17,6 +17,7 @@ cdef extern from "common/params.h":
     c_Params(string) except + nogil
     string get(string, bool) nogil
     bool getBool(string, bool) nogil
+    int getInt(string, bool) nogil
     int remove(string) nogil
     int put(string, string) nogil
     void putNonBlocking(string, string) nogil
