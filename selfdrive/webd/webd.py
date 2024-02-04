@@ -119,7 +119,6 @@ def addr_input():
   SearchInput = fleet.get_SearchInput()
   token = fleet.get_public_token()
   s_token = fleet.get_app_token()
-  gmap_key = fleet.get_gmap_key()
   PrimeType = fleet.get_PrimeType()
   lon = float(0.0)
   lat = float(0.0)
@@ -149,6 +148,7 @@ def addr_input():
   elif s_token == "" or s_token is None:
     return redirect(url_for('app_token_input'))
   elif SearchInput == 2:
+    gmap_key = fleet.get_gmap_key()
     lon, lat = fleet.get_last_lon_lat()
     if gmap_key == "" or gmap_key is None:
       return redirect(url_for('gmap_key_input'))
