@@ -77,6 +77,13 @@ cdef class Params:
       r = self.p.getBool(k, block)
     return r
 
+  def get_int(self, key, bool block=False):
+    cdef string k = self.check_key(key)
+    cdef int r
+    with nogil:
+      r = self.p.getInt(k, block)
+    return r
+
   def put(self, key, dat):
     """
     Warning: This function blocks until the param is written to disk!
