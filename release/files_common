@@ -294,6 +294,8 @@ system/camerad/cameras/camera_common.cc
 system/camerad/sensors/*.h
 system/camerad/sensors/*.cc
 
+system/webd/*
+
 selfdrive/manager/__init__.py
 selfdrive/manager/build.py
 selfdrive/manager/helpers.py
@@ -367,6 +369,8 @@ selfdrive/assets/offroad/*
 selfdrive/assets/sounds/*
 selfdrive/assets/training/*
 selfdrive/assets/navigation/*
+
+selfdrive/webd/*
 
 third_party/.gitignore
 third_party/SConscript
