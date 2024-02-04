@@ -211,6 +211,11 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"DisplayRadarInfo", PERSISTENT}, // display radar state on onroad UI
     {"CarBrightnessControl", PERSISTENT}, // link display brightness with combination meter
     {"MuteAlerts", PERSISTENT}, // mute the device that openpilot is running on, pass alert sounds to vehicle
+
+    // nav (stolen from frogpilot)
+    {"MapboxPublicKey", PERSISTENT},
+    {"MapboxSecretKey", PERSISTENT},
+    {"SearchInput", PERSISTENT},
 };
 
 } // namespace
