@@ -215,7 +215,6 @@ std::unordered_map<std::string, uint32_t> keys = {
     // nav (stolen from frogpilot)
     {"MapboxPublicKey", PERSISTENT},
     {"MapboxSecretKey", PERSISTENT},
-    {"SearchInput", PERSISTENT},
 };
 
 } // namespace
