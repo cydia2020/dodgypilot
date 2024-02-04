@@ -21,7 +21,7 @@ private:
   void updateStep();
 
   QVBoxLayout *mainLayout;
-  FrogPilotListWidget *list;
+  ListWidget *list;
 
   QPushButton *backButton;
   QLabel *imageLabel;
