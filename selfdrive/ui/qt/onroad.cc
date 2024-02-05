@@ -336,7 +336,7 @@ void AnnotatedCameraWidget::drawHud(QPainter &p) {
 
   // Header gradient
   QLinearGradient bg(0, UI_HEADER_HEIGHT - (UI_HEADER_HEIGHT / 2.5), 0, UI_HEADER_HEIGHT);
-  bg.setColorAt(0, QColor::fromRgbF(0, 0, 0, 0.45));
+  bg.setColorAt(0, brakeLights ? QColor::fromRgbF(1.0, 0.48, 0.5, 0.45) : (QColor::fromRgbF(0, 0, 0, 0.45));
   bg.setColorAt(1, QColor::fromRgbF(0, 0, 0, 0));
   p.fillRect(0, 0, width(), UI_HEADER_HEIGHT, bg);
 
@@ -422,10 +422,8 @@ void AnnotatedCameraWidget::drawHud(QPainter &p) {
 
   // current speed
   p.setFont(InterFont(176, QFont::Bold));
-  p.setPen(QPen(brakeLights ? QColor(0xff, 0x7c, 0x80) : QColor(0xff, 0xff, 0xff)));
   drawText(p, rect().center().x(), 210, speedStr);
   p.setFont(InterFont(66));
-  p.setPen(QPen(brakeLights ? QColor(0xff, 0x7c, 0x80) : QColor(0xff, 0xff, 0xff)));
   drawText(p, rect().center().x(), 290, speedUnit, 200);
 
   p.restore();
