@@ -185,9 +185,7 @@ class CarState(CarStateBase):
     # 1) the car is no longer sending standstill
     # 2) the car is still in standstill
     if not self.CP.openpilotLongitudinalControl and self.CP.carFingerprint not in (TSS2_CAR, CAR.LEXUS_IS, CAR.LEXUS_RC):
-      self.stock_resume_ready = (cp.vl["ACC_CONTROL"]["RELEASE_STANDSTILL"] == 1 and ret.cruiseState.standstill)
-    else:
-      self.stock_resume_ready = False
+      self.stock_resume_ready = cp.vl["ACC_CONTROL"]["RELEASE_STANDSTILL"] == 1
 
     # kinematics
     ret.accelX = (cp.vl["KINEMATICS"]["ACCEL_X"])

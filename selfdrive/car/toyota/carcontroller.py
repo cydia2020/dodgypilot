@@ -132,7 +132,7 @@ class CarController:
       interceptor_gas_cmd = clip(pedal_command, 0., MAX_INTERCEPTOR_GAS)
     # FSRDRCC SnG logic
     elif ((self.CP.openpilotLongitudinalControl and CC.cruiseControl.resume) or (not self.CP.openpilotLongitudinalControl and \
-          CS.stock_resume_ready)) and self.CP.carFingerprint in FULL_SPEED_DRCC_CAR and self.CP.enableGasInterceptor:
+          CS.stock_resume_ready)) and self.CP.carFingerprint in FULL_SPEED_DRCC_CAR and self.CP.enableGasInterceptor and CS.out.cruiseState.standstill:
       interceptor_gas_cmd = 0.14
     else:
       interceptor_gas_cmd = 0.
