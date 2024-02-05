@@ -32,7 +32,7 @@ COMPENSATORY_CALCULATION_THRESHOLD = -0.25  # m/s^2
 
 # resume, lead, and lane lines hysteresis
 RESUME_HYSTERESIS_TIME = 3.  # seconds
-UI_HYSTERESIS_TIME = 1.5  # seconds
+UI_HYSTERESIS_TIME = 1.  # seconds
 
 class CarController:
   def __init__(self, dbc_name, CP, VM):
@@ -170,10 +170,7 @@ class CarController:
     # *** resume hysteresis ***
     if CC.cruiseControl.resume:
       self.resume = True
-      self.last_resume = self.frame
-    elif self.frame - self.last_resume < RESUME_HYSTERESIS_TIME / DT_CTRL:
-      self.resume = True
-    else:
+    if self.frame % RESUME_HYSTERESIS_TIME / DT_CTRL == 0 and not CC.cruiseControl.resume:
       self.resume = False
 
     # send standstill when vehicle is stopping
@@ -191,19 +188,16 @@ class CarController:
     alert_immediate = hud_control.audibleAlert == AudibleAlert.warningImmediate and hud_control.enableVehicleBuzzer
     cancel_chime = pcm_cancel_cmd and not hud_control.enableVehicleBuzzer
 
-    # *** lead hysteresis ***
-    # at low speed we always assume the lead is present so ACC can be engaged
-    if hud_control.leadVisible:
-      self.lead = True
-      self.last_lead = self.frame
-    elif self.frame - self.last_lead < UI_HYSTERESIS_TIME / DT_CTRL or CS.out.vEgo < 12.:
-      self.lead = True
-    else:
-      self.lead = False
+    # *** ui hysteresis ***
+    if self.frame % UI_HYSTERESIS_TIME / DT_CTRL == 0:
+      self.lead = hud_control.leadVisible
+      self.left_lane = hud_control.leftLaneVisible
+      self.right_lane = hud_control.rightLaneVisible
 
     # we can spam can to cancel the system even if we are using lat only control
     if (self.frame % 3 == 0 and self.CP.openpilotLongitudinalControl) or pcm_cancel_cmd:
       # when stopping, send -2.5 raw acceleration immediately to prevent vehicle from creeping, else send actuators.accel
+      lead = self.lead or CS.out.vEgo < 12.  # at low speed we always assume the lead is present so ACC can be engaged
       accel_raw = -2.5 if stopping else actuators.accel
 
       # Lexus IS uses a different cancellation message
@@ -211,34 +205,16 @@ class CarController:
         can_sends.append(toyotacan.create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
         can_sends.append(toyotacan.create_accel_command(self.packer, pcm_accel_cmd, accel_raw, pcm_cancel_cmd, self.standstill_req,
-                                                        self.lead, CS.acc_type, fcw_alert, CS.distance_btn))
+                                                        lead, CS.acc_type, fcw_alert, CS.distance_btn))
         self.accel = pcm_accel_cmd
       else:
-        can_sends.append(toyotacan.create_accel_command(self.packer, 0, 0, pcm_cancel_cmd, False, self.lead, CS.acc_type, False, False))
+        can_sends.append(toyotacan.create_accel_command(self.packer, 0, 0, pcm_cancel_cmd, False, lead, CS.acc_type, False, False))
 
     if self.frame % 2 == 0 and self.CP.enableGasInterceptor and self.CP.openpilotLongitudinalControl:
       # send exactly zero if gas cmd is zero. Interceptor will send the max between read value and gas cmd.
       # This prevents unexpected pedal range rescaling
       can_sends.append(create_gas_interceptor_command(self.packer, interceptor_gas_cmd, self.frame // 2))
       self.gas = interceptor_gas_cmd
-
-    # *** lane line hysteresis ***
-    # left lane
-    if hud_control.leftLaneVisible:
-      self.left_lane = True
-      self.last_left_lane = self.frame
-    elif self.frame - self.last_left_lane < UI_HYSTERESIS_TIME / DT_CTRL:
-      self.left_lane = True
-    else:
-      self.left_lane = False
-    # right lane
-    if hud_control.rightLaneVisible:
-      self.right_lane = True
-      self.last_right_lane = self.frame
-    elif self.frame - self.last_right_lane < UI_HYSTERESIS_TIME / DT_CTRL:
-      self.right_lane = True
-    else:
-      self.right_lane = False
 
     # *** hud ui ***
     # usually this is sent at a much lower rate, but no adverse effects has been observed when sent at a much higher rate
