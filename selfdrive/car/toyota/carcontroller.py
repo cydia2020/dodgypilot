@@ -51,13 +51,9 @@ class CarController:
     self.accel = 0
 
     # hysteresis
-    self.last_resume = 0
     self.resume = False
-    self.last_lead = 0
     self.lead = False
-    self.last_left_lane = 0
     self.left_lane = False
-    self.last_right_lane = 0
     self.right_lane = False
 
   def update(self, CC, CS, now_nanos):
