@@ -49,10 +49,9 @@ class CarController:
     self.packer = CANPacker(dbc_name)
     self.gas = 0
     self.accel = 0
-    self.last_resume_frame = 0.
 
     # hysteresis
-    self.resume = False
+    self.resume_off_frames = 0.
     self.lead = False
     self.left_lane = False
     self.right_lane = False
@@ -164,30 +163,13 @@ class CarController:
     if not CC.enabled and CS.pcm_acc_status:
       pcm_cancel_cmd = 1
 
-    # *** resume hysteresis ***
-    if CC.cruiseControl.resume:
-      self.resume = True  # set resume to True immediately when long planner requests
-      self.last_resume_frame = self.frame  # record last resume frame
-    elif not CS.out.cruiseState.standstill:
-      self.last_resume_frame = 0.  # reset resume frame when the vehicle moves
-    elif self.frame - self.last_resume_frame < RESUME_HYSTERESIS_TIME / DT_CTRL:
-      self.resume = True  # keep resume True for 300 frames after last actual resume frame so vehicle can re-enter resume
+    if not CC.cruiseControl.resume:
+        self.resume_off_frames += 1
+        if self.resume_off_frames >= self.resume_off_threshold:
+            self.standstill_req = True
     else:
-      self.resume = False
-
-    # send standstill when vehicle is stopping
-    if self.resume and (self.CP.carFingerprint not in NO_STOP_TIMER_CAR or self.CP.enableGasInterceptor):
-      self.standstill_req = False
-    # send resume when long planner wants to go
-    else:
-      self.standstill_req = True
-
-    # send standstill when vehicle is stopping
-    if self.resume and (self.CP.carFingerprint not in NO_STOP_TIMER_CAR or self.CP.enableGasInterceptor):
-      self.standstill_req = False
-    # send resume when long planner wants to go
-    else:
-      self.standstill_req = True
+        self.resume_off_frames = 0
+        self.standstill_req = False
 
     # handle UI messages
     fcw_alert = hud_control.visualAlert == VisualAlert.fcw
