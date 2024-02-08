@@ -323,8 +323,6 @@ class CarInterface(CarInterfaceBase):
       events.add(EventName.vehicleSensorsInvalid)
 
     if self.CP.openpilotLongitudinalControl:
-      if ret.cruiseState.standstill and not ret.brakePressed and not self.CP.enableGasInterceptor:
-        events.add(EventName.resumeRequired)
       if self.CS.low_speed_lockout:
         events.add(EventName.lowSpeedLockout)
       if ret.vEgo < self.CP.minEnableSpeed:
@@ -343,4 +341,16 @@ class CarInterface(CarInterfaceBase):
   # pass in a car.CarControl
   # to be called @ 100hz
   def apply(self, c, now_nanos):
-    return self.CC.update(c, self.CS, now_nanos)
+    ret = self.CC.update(c, self.CS, now_nanos)
+
+    # events
+    events = self.create_common_events(ret)
+
+    # resume event
+    if self.CP.openpilotLongitudinalControl and self.CS.cruiseState.standstill and not self.CS.brakePressed and \
+       not self.CP.enableGasInterceptor and not self.standstill_req:
+      events.add(EventName.resumeRequired)
+
+    ret.events = events.to_msg()
+
+    return ret
