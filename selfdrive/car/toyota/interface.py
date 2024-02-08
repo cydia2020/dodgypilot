@@ -344,7 +344,7 @@ class CarInterface(CarInterfaceBase):
     ret = self.CC.update(c, self.CS, now_nanos)
 
     # events
-    events = self.CS.create_common_events(ret)
+    events = self.create_common_events(ret)
 
     # resume event
     if self.CP.openpilotLongitudinalControl and self.CS.cruiseState.standstill and not self.CS.brakePressed and \
