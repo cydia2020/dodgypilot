@@ -6,7 +6,7 @@
 		searchall = true
 		autodetect = true
 [remote "origin"]
-	lfsurl = ssh://git@github.com/cydia2020/dodgypilot.git
+	lfsurl = https://github.com/cydia2020/dodgypilot.git/info/lfs
 [remote "upstream"]
 	lfsurl = https://gitlab.com/commaai/openpilot-lfs.git/info/lfs
 
