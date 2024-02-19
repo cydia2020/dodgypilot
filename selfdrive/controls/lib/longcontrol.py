@@ -7,7 +7,7 @@ from openpilot.selfdrive.modeld.constants import ModelConstants
 
 LongCtrlState = car.CarControl.Actuators.LongControlState
 
-VDIFF_DEADZONE_BP = [0., 0.5]
+VDIFF_DEADZONE_BP = [0., 0.3]
 VDIFF_DEADZONE_V = [0.2, 0.]
 
 def long_control_state_trans(CP, active, long_control_state, v_ego, v_target,
