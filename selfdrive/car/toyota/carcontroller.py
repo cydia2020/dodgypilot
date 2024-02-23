@@ -27,9 +27,7 @@ MAX_USER_TORQUE = 500
 MAX_LTA_ANGLE = 94.9461  # deg
 MAX_LTA_DRIVER_TORQUE_ALLOWANCE = 150  # slightly above steering pressed allows some resistance when changing lanes
 
-# PCM compensatory force calculation threshold
-# a variation in accel command is more pronounced at higher speeds, let compensatory forces ramp to zero before
-# applying when speed is high
+# PCM compensatory force calculation threshold interpolation values
 COMPENSATORY_CALCULATION_THRESHOLD_V = [-0.3, -0.25, 0.]  # m/s^2
 COMPENSATORY_CALCULATION_THRESHOLD_BP = [0., 11., 23.]  # m/s
 
@@ -133,21 +131,23 @@ class CarController:
       interceptor_gas_cmd = clip(pedal_command, 0., MAX_INTERCEPTOR_GAS)
     # Full-speed Dynamic RADAR Cruise Control automatic resume logic using a comma pedal
     # Activated when these conditions are met:
-    # 1. openpilot is controlling longitudinal and is requesting more than 0.0 m/s^2 acceleration **OR:**
-    #    openpilot is not controlling longitudinal, but the vehicle is no longer requesting standstill **WHEN**
+    # 1. openpilot is controlling longitudinal, and is requesting more than 0.0 m/s^2 acceleration **OR:**
+    #    openpilot is not controlling longitudinal, and the vehicle is no longer requesting standstill **WHEN**
     # 2. the vehicle that openpilot is operating on is in the STOP_AND_GO_CAR object,
-    # 3. a comma pedal is detected on CAN **AND**
-    # 4. the report speed on the CAN network is larger than 0.001 m/s (Toyota starts reporting at 0.3 m/s)
+    # 3. a comma pedal is detected on the CAN network **AND**
+    # 4. the reported speed on the CAN network is larger than 0.001 m/s (Toyota starts reporting at 0.3 m/s)
     elif ((CC.longActive and actuators.accel > 0.) or (not self.CP.openpilotLongitudinalControl and CS.stock_resume_ready)) \
       and self.CP.carFingerprint in STOP_AND_GO_CAR and self.CP.enableGasInterceptor and CS.out.vEgo < 1e-3:
       interceptor_gas_cmd = 0.12
     else:
       interceptor_gas_cmd = 0.
 
+    # a variation in accel command is more pronounced at higher speeds, let compensatory forces ramp to zero before
+    # applying when speed is high
+    comp_thresh = interp(CS.out.vEgo, COMPENSATORY_CALCULATION_THRESHOLD_BP, COMPENSATORY_CALCULATION_THRESHOLD_V)
     # prohibit negative compensatory calculations when first activating long after accelerator depression or engagement
     if not CC.longActive:
       self.prohibit_neg_calculation = True
-    comp_thresh = interp(CS.out.vEgo, COMPENSATORY_CALCULATION_THRESHOLD_BP, COMPENSATORY_CALCULATION_THRESHOLD_V)
     # don't reset until a reasonable compensatory value is reached
     if CS.pcm_neutral_force > comp_thresh * self.CP.mass:
       self.prohibit_neg_calculation = False
