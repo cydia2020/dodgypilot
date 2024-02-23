@@ -259,10 +259,10 @@ class CarInterface(CarInterfaceBase):
     ret.stopAccel = -2.5
 
     tune = ret.longitudinalTuning
-    tune.deadzoneBP = [0., 12.]
-    tune.deadzoneV = [.05, .09]
-    ret.longitudinalActuatorDelayLowerBound = 0.5
-    ret.longitudinalActuatorDelayUpperBound = 0.5
+    tune.deadzoneBP = [0., 12., 20.]
+    tune.deadzoneV = [0., .05, .08]
+    ret.longitudinalActuatorDelayLowerBound = 0.
+    ret.longitudinalActuatorDelayUpperBound = 0.75
     ret.stoppingDecelRate = 0.3  # This is okay for TSS-P
     if candidate in TSS2_CAR:
       ret.vEgoStopping = 0.25
