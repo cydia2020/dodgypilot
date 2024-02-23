@@ -131,7 +131,13 @@ class CarController:
       pedal_offset = interp(CS.out.vEgo, [0.0, 2.3, MIN_ACC_SPEED + PEDAL_TRANSITION], [-.4, 0.0, 0.2])
       pedal_command = PEDAL_SCALE * (actuators.accel + pedal_offset)
       interceptor_gas_cmd = clip(pedal_command, 0., MAX_INTERCEPTOR_GAS)
-    # FSRDRCC SnG logic
+    # Full-speed Dynamic RADAR Cruise Control automatic resume logic using a comma pedal
+    # Activated when these conditions are met:
+    # 1. openpilot is controlling longitudinal and is requesting more than 0.0 m/s^2 acceleration **OR:**
+    #    openpilot is not controlling longitudinal, but the vehicle is no longer requesting standstill **WHEN**
+    # 2. the vehicle that openpilot is operating on is in the STOP_AND_GO_CAR object,
+    # 3. a comma pedal is detected on CAN **AND**
+    # 4. the report speed on the CAN network is larger than 0.001 m/s (Toyota starts reporting at 0.3 m/s)
     elif ((CC.longActive and actuators.accel > 0.) or (not self.CP.openpilotLongitudinalControl and CS.stock_resume_ready)) \
       and self.CP.carFingerprint in STOP_AND_GO_CAR and self.CP.enableGasInterceptor and CS.out.vEgo < 1e-3:
       interceptor_gas_cmd = 0.12
@@ -188,7 +194,7 @@ class CarController:
     cancel_chime = pcm_cancel_cmd and not hud_control.enableVehicleBuzzer
 
     # *** ui hysteresis ***
-    if self.frame % UI_HYSTERESIS_TIME / DT_CTRL == 0:
+    if self.frame % (UI_HYSTERESIS_TIME / DT_CTRL) == 0:
       self.lead = hud_control.leadVisible
       self.left_lane = hud_control.leftLaneVisible
       self.right_lane = hud_control.rightLaneVisible
