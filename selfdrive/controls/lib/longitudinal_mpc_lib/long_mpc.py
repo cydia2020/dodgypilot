@@ -71,22 +71,22 @@ def get_a_change_cost_multiplier(v_ego, v_lead0, v_lead1, personality=log.Longit
   if personality==log.LongitudinalPersonality.relaxed:
     a_change_cost_multiplier_follow_distance = 1.0
   elif personality==log.LongitudinalPersonality.standard:
-    a_change_cost_multiplier_follow_distance = 0.8
+    a_change_cost_multiplier_follow_distance = 0.7
   elif personality==log.LongitudinalPersonality.aggressive:
-    a_change_cost_multiplier_follow_distance = 0.6
+    a_change_cost_multiplier_follow_distance = 0.2
   else:
     raise NotImplementedError("Longitudinal personality not supported")
 
   # stolen from @KRKeegan
   # values used for interpolation
   # start with a small a_change_multiplier_values during interpolation to allow for faster change in accel
-  v_ego_breakpoint = [0., 10.]  # m/s
-  a_change_multiplier_values = [.05, 1.]  # multiplier values
+  A_CHANGE_COST_MULTIPLIER_BP = [0., 10.]  # vEgo, in m/s
+  A_CHANGE_COST_MULTIPLIER_V = [.05, 1.]  # multiplier values
 
   # when lead is pulling away, and speed is between 0 and 10 m/s, interpolate a_change_cost_multiplier_v_ego
   a_change_cost_multiplier_v_ego = 1.
   if (v_lead0 - v_ego > 1e-3) and (v_lead1 - v_ego > 1e-3):
-    a_change_cost_multiplier_v_ego = interp(v_ego, v_ego_breakpoint, a_change_multiplier_values)
+    a_change_cost_multiplier_v_ego = interp(v_ego, A_CHANGE_COST_MULTIPLIER_BP, A_CHANGE_COST_MULTIPLIER_V)
 
   # get the minimum between a_change_multiplier based on driving personality, and a_change_multiplier based
   # on v_ego
@@ -108,11 +108,11 @@ def get_danger_zone_cost_multiplier(personality=log.LongitudinalPersonality.stan
 
 def get_T_FOLLOW(personality=log.LongitudinalPersonality.standard):
   if personality==log.LongitudinalPersonality.relaxed:
-    return 1.45
+    return 2.0
   elif personality==log.LongitudinalPersonality.standard:
-    return 1.25
+    return 1.5
   elif personality==log.LongitudinalPersonality.aggressive:
-    return 0.9
+    return 1.0
   else:
     raise NotImplementedError("Longitudinal personality not supported")
 
