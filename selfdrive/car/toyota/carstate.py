@@ -187,7 +187,7 @@ class CarState(CarStateBase):
     # 0x343 will be present on the ADAS Bus. PCM wants to resume when:
     # 1) the car is no longer sending standstill
     # 2) the car is still in standstill
-    if not self.CP.openpilotLongitudinalControl and self.CP.carFingerprint not in (TSS2_CAR, CAR.LEXUS_IS, CAR.LEXUS_RC):
+    if not self.CP.openpilotLongitudinalControl and self.CP.carFingerprint not in (TSS2_CAR, UNSUPPORTED_DSU_CAR, CAR.CHR):
       self.stock_resume_ready = cp.vl["ACC_CONTROL"]["RELEASE_STANDSTILL"] == 1
 
     # kinematics
@@ -238,6 +238,9 @@ class CarState(CarStateBase):
 
     if CP.flags & ToyotaFlags.SMART_DSU.value:
       messages.append(("SDSU", 0)),  # rate inconsistent
+
+    if not CP.openpilotLongitudinalControl and CP.carFingerprint not in (TSS2_CAR, UNSUPPORTED_DSU_CAR, CAR.CHR):
+      messages.append(("ACC_CONTROL", 33)),
 
     if CP.carFingerprint in RADAR_ACC_CAR and not CP.flags & ToyotaFlags.DISABLE_RADAR.value:
       if not CP.flags & ToyotaFlags.SMART_DSU.value:
