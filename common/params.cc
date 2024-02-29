@@ -206,7 +206,6 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"UpdaterLastFetchTime", PERSISTENT},
     {"Version", PERSISTENT},
     {"VisionRadarToggle", PERSISTENT},
-    {"WheeledBody", PERSISTENT},
 
     // Irene's stuff
     {"DisplayRadarInfo", PERSISTENT}, // display radar state on onroad UI
