@@ -49,6 +49,17 @@ class CarInterface(CarInterfaceBase):
     ret.stoppingControl = False  # Toyota starts braking more when it thinks you want to stop
 
 
+    # Detect smartDSU, which intercepts ACC_CMD from the DSU (or radar) allowing openpilot to send it
+    # 0x2AA is sent by a similar device which intercepts the radar instead of DSU on NO_DSU_CARs
+    if 0x2FF in fingerprint[0] or (0x2AA in fingerprint[0] and candidate in NO_DSU_CAR):
+      ret.flags |= ToyotaFlags.SMART_DSU.value
+
+    if (0x343 in fingerprint[2] or 0x4CB in fingerprint[2]) and candidate not in TSS2_CAR:
+      ret.flags |= ToyotaFlags.DSU_BYPASS.value
+
+    if 0x23 in fingerprint[0]:
+      ret.flags |= ToyotaFlags.SECONDARY_STEER_ANGLE.value
+
     if candidate == CAR.PRIUS:
       # Only give steer angle deadzone to for bad angle sensor prius
       for fw in car_fw:
@@ -56,6 +67,32 @@ class CarInterface(CarInterfaceBase):
           ret.steerActuatorDelay = 0.25
           CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, \
                                                  steering_angle_deadzone_deg=0.0 if 0x23 in fingerprint[0] else 0.2)
+
+    elif candidate == CAR.PRIUS_V:
+      stop_and_go = True
+
+    elif candidate in (CAR.RAV4, CAR.RAV4H):
+      stop_and_go = True if (candidate in CAR.RAV4H) else False
+
+    elif candidate in (CAR.LEXUS_RX, CAR.LEXUS_RX_TSS2):
+      stop_and_go = True
+      ret.wheelSpeedFactor = 1.035
+
+    elif candidate in (CAR.CHR, CAR.CHR_TSS2):
+      stop_and_go = True
+
+    elif candidate in (CAR.CAMRY, CAR.CAMRY_TSS2):
+      stop_and_go = True
+
+    elif candidate in (CAR.HIGHLANDER, CAR.HIGHLANDER_TSS2):
+      # TODO: TSS-P models can do stop and go, but unclear if it requires sDSU or unplugging DSU.
+      #  For now, don't list stop and go functionality in the docs
+      stop_and_go = stop_and_go or bool(ret.flags & ToyotaFlags.SMART_DSU.value)
+
+    elif candidate in (CAR.AVALON, CAR.AVALON_2019, CAR.AVALON_TSS2):
+      # starting from 2019, all Avalon variants have stop and go
+      # https://engage.toyota.com/static/images/toyota_safety_sense/TSS_Applicability_Chart.pdf
+      stop_and_go = candidate != CAR.AVALON
 
     elif candidate in (CAR.RAV4_TSS2, CAR.RAV4_TSS2_2022, CAR.RAV4_TSS2_2023):
       ret.lateralTuning.init('pid')
@@ -80,16 +117,6 @@ class CarInterface(CarInterfaceBase):
     # Detect flipped signals and enable for C-HR and others
     ret.enableBsm = 0x3F6 in fingerprint[0] and candidate in TSS2_CAR
 
-    # Detect smartDSU, which intercepts ACC_CMD from the DSU (or radar) allowing openpilot to send it
-    # 0x2AA is sent by a similar device which intercepts the radar instead of DSU on NO_DSU_CARs
-    if 0x2FF in fingerprint[0] or (0x2AA in fingerprint[0] and candidate in NO_DSU_CAR):
-      ret.flags |= ToyotaFlags.SMART_DSU.value
-
-    if (0x343 in fingerprint[2] or 0x4CB in fingerprint[2]) and candidate not in TSS2_CAR:
-      ret.flags |= ToyotaFlags.DSU_BYPASS.value
-
-    if 0x23 in fingerprint[0]:
-      ret.flags |= ToyotaFlags.SECONDARY_STEER_ANGLE.value
     # No radar dbc for cars without DSU which are not TSS 2.0
     # TODO: make an adas dbc file for dsu-less models
     ret.radarUnavailable = DBC[candidate]['radar'] is None or candidate in (NO_DSU_CAR - TSS2_CAR)
