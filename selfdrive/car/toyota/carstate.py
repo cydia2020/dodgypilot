@@ -239,10 +239,7 @@ class CarState(CarStateBase):
     if CP.flags & ToyotaFlags.SMART_DSU.value:
       messages.append(("SDSU", 0)),  # rate inconsistent
 
-    if not CP.openpilotLongitudinalControl and CP.carFingerprint not in (TSS2_CAR, UNSUPPORTED_DSU_CAR, CAR.CHR):
-      messages.append(("ACC_CONTROL", 33)),
-
-    if CP.carFingerprint in RADAR_ACC_CAR and not CP.flags & ToyotaFlags.DISABLE_RADAR.value:
+    if not CP.openpilotLongitudinalControl or (CP.carFingerprint in RADAR_ACC_CAR and not CP.flags & ToyotaFlags.DISABLE_RADAR.value):
       if not CP.flags & ToyotaFlags.SMART_DSU.value:
         messages += [
           ("ACC_CONTROL", 33),
