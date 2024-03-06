@@ -40,6 +40,9 @@ class CarState(CarStateBase):
     self.accurate_steer_angle_seen = False
     self.angle_offset = FirstOrderFilter(None, 60.0, DT_CTRL, initialized=False)
 
+    self.prev_distance_button = 0
+    self.distance_button = 0
+
     self.low_speed_lockout = False
     self.acc_type = 1
     self.lkas_hud = {}
@@ -193,6 +196,11 @@ class CarState(CarStateBase):
     ret.accelX = (cp.vl["KINEMATICS"]["ACCEL_X"])
     ret.accelY = (cp.vl["KINEMATICS"]["ACCEL_Y"])
     ret.yawRate = (cp.vl["KINEMATICS"]["YAW_RATE"])
+
+    # distance button is wired to the ACC module (camera or radar)
+    if self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR):
+      self.prev_distance_button = self.distance_button
+      self.distance_button = cp_acc.vl["ACC_CONTROL"]["DISTANCE"]
 
     return ret
 

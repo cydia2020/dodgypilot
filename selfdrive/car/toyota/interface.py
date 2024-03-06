@@ -3,12 +3,13 @@ from cereal import log
 from panda import Panda
 from panda.python import uds
 from openpilot.selfdrive.car.toyota.values import Ecu, CAR, DBC, ToyotaFlags, CarControllerParams, TSS2_CAR, RADAR_ACC_CAR, NO_DSU_CAR, \
-                                        MIN_ACC_SPEED, EPS_SCALE, UNSUPPORTED_DSU_CAR, NO_STOP_TIMER_CAR, ANGLE_CONTROL_CAR, STOP_AND_GO_CAR
-from openpilot.selfdrive.car import get_safety_config
+                                        MIN_ACC_SPEED, EPS_SCALE, UNSUPPORTED_DSU_CAR, NO_STOP_TIMER_CAR, ANGLE_CONTROL_CAR
+from openpilot.selfdrive.car import create_button_events, get_safety_config
 from openpilot.selfdrive.car.disable_ecu import disable_ecu
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase
 from openpilot.common.params import Params
 
+ButtonType = car.CarState.ButtonEvent.Type
 EventName = car.CarEvent.EventName
 SteerControlType = car.CarParams.SteerControlType
 
@@ -183,18 +184,11 @@ class CarInterface(CarInterfaceBase):
   def _update(self, c):
     ret = self.CS.update(self.cp, self.cp_cam)
 
+    if self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR):
+      ret.buttonEvents = create_button_events(self.CS.distance_button, self.CS.prev_distance_button, {1: ButtonType.gapAdjustCruise})
+
     # events
     events = self.create_common_events(ret)
-
-    if self.CS.pcmFollowDistance == 1 and self.pcmFollowDistancePrev != 1:
-      Params().put_nonblocking("LongitudinalPersonality", str(log.LongitudinalPersonality.relaxed))
-      self.pcmFollowDistancePrev = 1
-    if self.CS.pcmFollowDistance == 2 and self.pcmFollowDistancePrev != 2:
-      Params().put_nonblocking("LongitudinalPersonality", str(log.LongitudinalPersonality.standard))
-      self.pcmFollowDistancePrev = 2
-    if self.CS.pcmFollowDistance == 3 and self.pcmFollowDistancePrev != 3:
-      Params().put_nonblocking("LongitudinalPersonality", str(log.LongitudinalPersonality.aggressive))
-      self.pcmFollowDistancePrev = 3
 
     # LDA faults if user does not put their hands on the steering wheel
     # disallow engagement if LDA Steering Assist is ON
