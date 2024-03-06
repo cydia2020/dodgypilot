@@ -183,11 +183,10 @@ class CarState(CarStateBase):
       self.lda_right_lane = (cp_cam.vl["LKAS_HUD"]["RIGHT_LINE"] == 3)
       self.lda_sa_toggle = (cp_cam.vl["LKAS_HUD"]["LDA_SA_TOGGLE"])
 
-    # if openpilot does not control longitudinal and we are running on a TSS-P car, it is assumed that
-    # 0x343 will be present on the ADAS Bus. PCM wants to resume when:
+    # if openpilot does not control longitudinal, in this case, assume 0x343 is on bus0
     # 1) the car is no longer sending standstill
     # 2) the car is still in standstill
-    if not self.CP.openpilotLongitudinalControl and self.CP.carFingerprint not in (TSS2_CAR, UNSUPPORTED_DSU_CAR, CAR.CHR):
+    if not self.CP.openpilotLongitudinalControl:
       self.stock_resume_ready = cp.vl["ACC_CONTROL"]["RELEASE_STANDSTILL"] == 1
 
     # kinematics
