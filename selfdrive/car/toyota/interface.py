@@ -73,9 +73,6 @@ class CarInterface(CarInterfaceBase):
           CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, \
                                                  steering_angle_deadzone_deg=0.0 if 0x23 in fingerprint[0] else 0.2)
 
-    elif candidate == CAR.PRIUS_V:
-      stop_and_go = True
-
     elif candidate in (CAR.RAV4, CAR.RAV4H):
       stop_and_go = True if (candidate in CAR.RAV4H) else False
 
@@ -88,11 +85,6 @@ class CarInterface(CarInterfaceBase):
 
     elif candidate in (CAR.CAMRY, CAR.CAMRY_TSS2):
       stop_and_go = True
-
-    elif candidate in (CAR.HIGHLANDER, CAR.HIGHLANDER_TSS2):
-      # TODO: TSS-P models can do stop and go, but unclear if it requires sDSU or unplugging DSU.
-      #  For now, don't list stop and go functionality in the docs
-      stop_and_go = stop_and_go or bool(ret.flags & ToyotaFlags.SMART_DSU.value) or (ret.enableDsu and not docs)
 
     elif candidate in (CAR.AVALON, CAR.AVALON_2019, CAR.AVALON_TSS2):
       # starting from 2019, all Avalon variants have stop and go
@@ -115,6 +107,23 @@ class CarInterface(CarInterfaceBase):
           ret.lateralTuning.pid.kiV = [0.05]
           ret.lateralTuning.pid.kf = 0.00004
           break
+
+    elif candidate == CAR.SIENNA:
+      stop_and_go = True
+
+    elif candidate == CAR.LEXUS_CTH:
+      stop_and_go = True
+
+    elif candidate in (CAR.LEXUS_NX, CAR.LEXUS_NX_TSS2):
+      stop_and_go = True
+
+    elif candidate == CAR.MIRAI:
+      stop_and_go = True
+
+    # TODO: these models can do stop and go, but unclear if it requires sDSU or unplugging DSU.
+    #  For now, don't list stop and go functionality in the docs
+    if ret.flags & ToyotaFlags.SNG_WITHOUT_DSU:
+      stop_and_go = stop_and_go or bool(ret.flags & ToyotaFlags.SMART_DSU.value) or (ret.enableDsu and not docs)
 
     ret.centerToFront = ret.wheelbase * 0.44
 
