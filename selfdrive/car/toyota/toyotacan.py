@@ -33,12 +33,12 @@ def create_lta_steer_command(packer, steer_control_type, steer_angle, steer_req,
   return packer.make_can_msg("STEERING_LTA", 0, values)
 
 
-def create_accel_command(packer, accel, accel_raw, pcm_cancel, standstill_req, lead, acc_type, fcw_alert, adjust_distance):
+def create_accel_command(packer, accel, accel_raw, pcm_cancel, standstill_req, lead, acc_type, fcw_alert, distance):
   # TODO: find the exact canceling bit that does not create a chime
   values = {
     "ACCEL_CMD": accel,  # compensated accel command
     "ACC_TYPE": acc_type,
-    "DISTANCE": adjust_distance,
+    "DISTANCE": distance,
     "MINI_CAR": lead,
     "PERMIT_BRAKING": 1,
     "RELEASE_STANDSTILL": not standstill_req,
@@ -75,7 +75,7 @@ def create_fcw_command(packer, fcw):
 
 
 def create_ui_command(packer, steer, chime, left_line, right_line, enabled, stock_lkas_hud,
-                      lda_left_lane, lda_right_lane, sws_beeps, lda_sa_toggle, alert_prompt, 
+                      lda_left_lane, lda_right_lane, sws_beeps, lda_sa_toggle, alert_prompt,
                       alert_prompt_repeat, alert_immediate):
   values = {
     "TWO_BEEPS": chime or sws_beeps or alert_prompt,
