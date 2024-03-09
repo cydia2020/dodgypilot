@@ -681,6 +681,7 @@ class Controls:
     hudControl.lanesVisible = self.enabled
     hudControl.leadVisible = self.sm['longitudinalPlan'].hasLead
     hudControl.enableVehicleBuzzer = self.is_mute_enabled
+    hudControl.leadDistanceBars = self.sm['longitudinalPlan'].personality.raw + 1
 
     model_v2 = self.sm['modelV2']
     desire_prediction = model_v2.meta.desirePrediction

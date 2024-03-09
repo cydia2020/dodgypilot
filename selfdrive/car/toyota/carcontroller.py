@@ -208,9 +208,9 @@ class CarController(CarControllerBase):
       accel_raw = -2.5 if stopping else actuators.accel
 
       # Press distance button until we are at the correct bar length. Only change while enabled to avoid skipping startup popup
-      if self.frame % 6 == 0:
-        if CS.pcm_follow_distance_values.get(CS.pcm_follow_distance, "UNKNOWN") != "FAR" and CS.out.cruiseState.enabled and \
-          self.CP.carFingerprint not in UNSUPPORTED_DSU_CAR:
+      if self.frame % 6 == 0 and self.CP.openpilotLongitudinalControl:
+        desired_distance = 4 - hud_control.leadDistanceBars
+        if CS.out.cruiseState.enabled and CS.pcm_follow_distance != desired_distance:
           self.distance_button = not self.distance_button
         else:
           self.distance_button = 0
