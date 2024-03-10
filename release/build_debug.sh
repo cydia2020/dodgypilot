@@ -3,6 +3,7 @@
 # git diff --name-status origin/release3-staging | grep "^A" | less
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
+DEBUG_BRANCH=debug3-staging
 
 cd $DIR
 
