@@ -120,7 +120,7 @@ class CarState(CarStateBase):
     else:
       ret.pcmFollowDistance = cp.vl["PCM_CRUISE_2"]["PCM_FOLLOW_DISTANCE"]
 
-    if self.CP.carFingerprint in TSS2_CAR:
+    if self.CP.carFingerprint in TSS2_CAR or self.CP.flags & ToyotaFlags.DSU_BYPASS:
       self.acc_type = cp_cam.vl["ACC_CONTROL"]["ACC_TYPE"]
       self.distance_btn = 2 if (cp_cam.vl["ACC_CONTROL"]["DISTANCE"] == 1 and not self.allow_distance_adjustment) else 1 if (cp_cam.vl["ACC_CONTROL"]["DISTANCE"] == 1 and self.allow_distance_adjustment) else 0
     elif self.CP.smartDsu:
@@ -356,7 +356,7 @@ class CarState(CarStateBase):
         ("LKAS_HUD", 1),
       ]
 
-    if CP.carFingerprint in TSS2_CAR:
+    if CP.carFingerprint in TSS2_CAR or CP.flags & ToyotaFlags.DSU_BYPASS:
       signals.append(("ACC_TYPE", "ACC_CONTROL"))
       signals.append(("DISTANCE", "ACC_CONTROL"))
       checks.append(("ACC_CONTROL", 33))

@@ -39,6 +39,17 @@ class CarInterface(CarInterfaceBase):
     steering_angle_deadzone_deg = 0.0
     CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
 
+    # we can't use the fingerprint to detect this reliably, since
+    # the EV gas pedal signal can take a couple seconds to appear
+    if candidate in EV_HYBRID_CAR:
+      ret.flags |= ToyotaFlags.HYBRID.value
+
+    if params.get_bool("chrBsm"):
+      ret.flags |= ToyotaFlags.CHR_BSM.value
+
+    if 0x343 in fingerprint[2] and candidate not in TSS2_CAR:
+      ret.flags |= ToyotaFlags.DSU_BYPASS.value
+
     if candidate == CAR.PRIUS:
       stop_and_go = True
       ret.wheelbase = 2.70
@@ -62,13 +73,7 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 17.4
       tire_stiffness_factor = 0.5533
       ret.mass = 4387. * CV.LB_TO_KG + STD_CARGO_KG
-      if enableTorqueController:
-        # TODO override until there is enough data
-        ret.maxLateralAccel = 1.8
-        torque_params = CarInterfaceBase.get_torque_params(CAR.PRIUS)
-        CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
-      else:
-        set_lat_tune(ret.lateralTuning, LatTunes.LQR_RAV4)
+      set_lat_tune(ret.lateralTuning, LatTunes.LQR_RAV4)
 
 
     elif candidate in (CAR.RAV4, CAR.RAV4H):
@@ -299,20 +304,12 @@ class CarInterface(CarInterfaceBase):
     ret.enableDsu = (len(found_ecus) > 0) and (Ecu.dsu not in found_ecus) and (candidate not in NO_DSU_CAR) and (not ret.smartDsu)
     ret.enableGasInterceptor = 0x201 in fingerprint[0]
     # if the smartDSU is detected, openpilot can send ACC_CMD (and the smartDSU will block it from the DSU) or not (the DSU is "connected")
-    ret.openpilotLongitudinalControl = (ret.smartDsu or ret.enableDsu or candidate in TSS2_CAR or ret.radarInterceptor) and not params.get_bool("SmartDSULongToggle")
+    ret.openpilotLongitudinalControl = bool(ret.flags & ToyotaFlags.DSU_BYPASS.value) or (ret.smartDsu or ret.enableDsu or candidate in TSS2_CAR or ret.radarInterceptor) and not params.get_bool("SmartDSULongToggle")
     if ret.radarInterceptor:
       if Params().get_bool("ToyotaRadarACCTSS1_ObjectMode"):
         ret.radarTimeStep = 1.0 / 15.0
       else:
         ret.radarTimeStep = 1.0 / 10.0
-
-    # we can't use the fingerprint to detect this reliably, since
-    # the EV gas pedal signal can take a couple seconds to appear
-    if candidate in EV_HYBRID_CAR:
-      ret.flags |= ToyotaFlags.HYBRID.value
-
-    if params.get_bool("chrBsm"):
-      ret.flags |= ToyotaFlags.CHR_BSM.value
 
     # min speed to enable ACC. if car can do stop and go, then set enabling speed
     # to a negative value, so it won't matter.

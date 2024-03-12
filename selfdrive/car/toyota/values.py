@@ -33,6 +33,7 @@ class CarControllerParams:
 class ToyotaFlags(IntFlag):
   HYBRID = 1
   CHR_BSM = 2
+  DSU_BYPASS = 4
 
 
 class CAR:
