@@ -37,7 +37,7 @@ def create_accel_command(packer, accel, pcm_cancel, standstill_req, lead, accel_
     "MINI_CAR": lead,
     "PERMIT_BRAKING": permit_braking,
     "RELEASE_STANDSTILL": not standstill_req,
-    "CANCEL_REQ": 0,
+    "CANCEL_REQ": pcm_cancel,
     "ALLOW_LONG_PRESS": 1,
     "ACC_CUT_IN": fcw_alert,
     "ACCEL_CMD_ALT": at_raw,
@@ -58,11 +58,6 @@ def create_acc_cancel_command(packer):
   }
   return packer.make_can_msg("PCM_CRUISE", 0, values)
 
-def create_generic_cancel_command(packer):
-  values = {
-    "CANCEL_BTN": 1,
-  }
-  return packer.make_can_msg("PCM_BUTTONS", 0, values)
 
 def create_fcw_command(packer, fcw):
   values = {
