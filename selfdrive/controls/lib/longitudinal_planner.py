@@ -2,8 +2,6 @@
 import math
 import numpy as np
 from openpilot.common.numpy_fast import clip, interp
-from openpilot.common.params import Params
-from cereal import log
 
 import cereal.messaging as messaging
 from openpilot.common.conversions import Conversions as CV
@@ -59,16 +57,6 @@ class LongitudinalPlanner:
     self.a_desired_trajectory = np.zeros(CONTROL_N)
     self.j_desired_trajectory = np.zeros(CONTROL_N)
     self.solverExecutionTime = 0.0
-    self.params = Params()
-    self.param_read_counter = 0
-    self.personality = log.LongitudinalPersonality.standard
-    self.read_param()
-
-  def read_param(self):
-    try:
-      self.personality = int(self.params.get('LongitudinalPersonality'))
-    except (ValueError, TypeError):
-      self.personality = log.LongitudinalPersonality.standard
 
   @staticmethod
   def parse_model(model_msg, model_error):
@@ -87,9 +75,6 @@ class LongitudinalPlanner:
     return x, v, a, j
 
   def update(self, sm):
-    if self.param_read_counter % 50 == 0:
-      self.read_param()
-    self.param_read_counter += 1
     self.mpc.mode = 'blended' if sm['controlsState'].experimentalMode else 'acc'
 
     v_ego = sm['carState'].vEgo
@@ -128,7 +113,7 @@ class LongitudinalPlanner:
     accel_limits_turns[0] = min(accel_limits_turns[0], self.a_desired + 0.05)
     accel_limits_turns[1] = max(accel_limits_turns[1], self.a_desired - 0.05)
 
-    self.mpc.set_weights(prev_accel_constraint, personality=self.personality)
+    self.mpc.set_weights(prev_accel_constraint, personality=sm['controlsState'].personality)
     self.mpc.set_accel_limits(accel_limits_turns[0], accel_limits_turns[1])
     self.mpc.set_cur_state(self.v_desired_filter.x, self.a_desired)
     x, v, a, j = self.parse_model(sm['modelV2'], self.v_model_error)
@@ -142,7 +127,7 @@ class LongitudinalPlanner:
 
     # TODO counter is only needed because radar is glitchy, remove once radar is gone
     self.fcw = self.mpc.crash_cnt > 2 and sm['carState'].vEgo > 5. and \
-               (sm['carState'].steeringAngleDeg < 35. and sm['carState'].steeringAngleDeg > -35.) 
+               (sm['carState'].steeringAngleDeg < 35. and sm['carState'].steeringAngleDeg > -35.)
     if self.fcw:
       cloudlog.info("FCW triggered")
 
@@ -169,6 +154,5 @@ class LongitudinalPlanner:
     longitudinalPlan.fcw = self.fcw
 
     longitudinalPlan.solverExecutionTime = self.mpc.solve_time
-    longitudinalPlan.personality = self.personality
 
     pm.send('longitudinalPlan', plan_send)
