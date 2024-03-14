@@ -29,8 +29,8 @@ MAX_LTA_ANGLE = 94.9461  # deg
 MAX_LTA_DRIVER_TORQUE_ALLOWANCE = 150  # slightly above steering pressed allows some resistance when changing lanes
 
 # PCM compensatory force calculation threshold interpolation values
-COMPENSATORY_CALCULATION_THRESHOLD_V = [-0.3, -0.25, 0.]  # m/s^2
-COMPENSATORY_CALCULATION_THRESHOLD_BP = [0., 11., 23.]  # m/s
+COMPENSATORY_CALCULATION_THRESHOLD_V = [-0.2, 0.]  # m/s^2
+COMPENSATORY_CALCULATION_THRESHOLD_BP = [0., 23.]  # m/s
 
 # resume, lead, and lane lines hysteresis
 RESUME_HYSTERESIS_TIME = 3.  # seconds
@@ -227,7 +227,7 @@ class CarController(CarControllerBase):
     # doing so simplifies carcontroller logic and allows faster response from the vehicle's combination meter
     if self.frame % 3 == 0 and self.CP.carFingerprint != CAR.PRIUS_V:
       can_sends.append(toyotacan.create_ui_command(self.packer, steer_alert, cancel_chime, self.left_lane,
-                                                   self.right_lane, CC.enabled, CS.lkas_hud, CS.lda_left_lane, 
+                                                   self.right_lane, CC.enabled, CS.lkas_hud, CS.lda_left_lane,
                                                    CS.lda_right_lane, CS.sws_beeps, CS.lda_sa_toggle, alert_prompt,
                                                    alert_prompt_repeat, alert_immediate))
 
