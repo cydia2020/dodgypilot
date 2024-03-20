@@ -105,7 +105,7 @@ class CarState(CarStateBase):
     ret.leftBlinker = cp.vl["BLINKERS_STATE"]["TURN_SIGNALS"] == 1
     ret.rightBlinker = cp.vl["BLINKERS_STATE"]["TURN_SIGNALS"] == 2
 
-    if self.CP.carFingerprint != CAR.MIRAI:
+    if self.CP.carFingerprint != CAR.TOYOTA_MIRAI:
       ret.engineRpm = cp.vl["ENGINE_RPM"]["RPM"]
 
     ret.steeringTorque = cp.vl["STEER_TORQUE_SENSOR"]["STEER_TORQUE_DRIVER"]
@@ -177,7 +177,7 @@ class CarState(CarStateBase):
       ret.leftBlindspot = (cp.vl["BSM"]["L_ADJACENT"] == 1) or (cp.vl["BSM"]["L_APPROACHING"] == 1)
       ret.rightBlindspot = (cp.vl["BSM"]["R_ADJACENT"] == 1) or (cp.vl["BSM"]["R_APPROACHING"] == 1)
 
-    if self.CP.carFingerprint != CAR.PRIUS_V:
+    if self.CP.carFingerprint != CAR.TOYOTA_PRIUS_V:
       self.lkas_hud = copy.copy(cp_cam.vl["LKAS_HUD"])
       self.sws_beeps = (cp_cam.vl["LKAS_HUD"]["TWO_BEEPS"])
       self.lda_left_lane = (cp_cam.vl["LKAS_HUD"]["LEFT_LINE"] == 3)
@@ -227,7 +227,7 @@ class CarState(CarStateBase):
       ("KINEMATICS", 80),
     ]
 
-    if CP.carFingerprint != CAR.MIRAI:
+    if CP.carFingerprint != CAR.TOYOTA_MIRAI:
       messages.append(("ENGINE_RPM", 42))
 
     if CP.carFingerprint in UNSUPPORTED_DSU_CAR:
@@ -276,7 +276,7 @@ class CarState(CarStateBase):
   def get_cam_can_parser(CP):
     messages = []
 
-    if CP.carFingerprint != CAR.PRIUS_V:
+    if CP.carFingerprint != CAR.TOYOTA_PRIUS_V:
       messages += [
         ("LKAS_HUD", 1),
       ]
