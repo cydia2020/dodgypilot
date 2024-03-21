@@ -4,7 +4,6 @@ from collections.abc import Callable
 
 from cereal import car
 from openpilot.common.params import Params
-from openpilot.system.version import is_comma_remote, is_tested_branch
 from openpilot.selfdrive.car.interfaces import get_interface_attr
 from openpilot.selfdrive.car.fingerprints import eliminate_incompatible_cars, all_legacy_fingerprint_cars
 from openpilot.selfdrive.car.vin import get_vin, is_valid_vin, VIN_UNKNOWN
@@ -13,6 +12,7 @@ from openpilot.selfdrive.car.mock.values import CAR as MOCK
 from openpilot.common.swaglog import cloudlog
 import cereal.messaging as messaging
 from openpilot.selfdrive.car import gen_empty_fingerprint
+from openpilot.system.version import get_build_metadata
 
 FRAME_FINGERPRINT = 100  # 1s
 
