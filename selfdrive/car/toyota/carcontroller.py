@@ -32,6 +32,9 @@ MAX_LTA_DRIVER_TORQUE_ALLOWANCE = 150  # slightly above steering pressed allows 
 COMPENSATORY_CALCULATION_THRESHOLD_V = [-0.2, 0.]  # m/s^2
 COMPENSATORY_CALCULATION_THRESHOLD_BP = [0., 23.]  # m/s
 
+# Stay Stopped
+STAY_STOPPED_AFTER = 0.15 # seconds
+
 # resume, lead, and lane lines hysteresis
 RESUME_HYSTERESIS_TIME = 3.  # seconds
 UI_HYSTERESIS_TIME = 1.  # seconds
@@ -45,6 +48,8 @@ class CarController(CarControllerBase):
     self.last_angle = 0
     self.alert_active = False
     self.standstill_req = False
+    self.stopped_frames = 0
+    self.stay_stopped = False
     self.steer_rate_counter = 0
     self.prohibit_neg_calculation = True
 
@@ -63,7 +68,9 @@ class CarController(CarControllerBase):
     hud_control = CC.hudControl
     pcm_cancel_cmd = CC.cruiseControl.cancel
     lat_active = CC.latActive and abs(CS.out.steeringTorque) < MAX_USER_TORQUE
+
     stopping = actuators.longControlState == LongCtrlState.stopping
+    starting = actuators.longControlState == LongCtrlState.pid and CS.out.vEgo < self.CP.vEgoStopping
 
     # *** control msgs ***
     can_sends = []
@@ -143,6 +150,18 @@ class CarController(CarControllerBase):
     else:
       interceptor_gas_cmd = 0.
 
+    # record how many frames the vehicle has stopped for
+    if CS.out.vEgo < 1e-3:
+      self.stopped_frames += 1
+    else:
+      self.stopped_frames = 0
+
+    # upon coming to a complete stop, keep vehicle stopped by setting a high decel rate
+    if self.stopped_frames > STAY_STOPPED_AFTER * DT_CTRL:
+      self.stay_stopped = True
+    if actuators.accel > 1e-3 and starting:
+      self.stay_stopped = False
+
     # a variation in accel command is more pronounced at higher speeds, let compensatory forces ramp to zero before
     # applying when speed is high
     comp_thresh = interp(CS.out.vEgo, COMPENSATORY_CALCULATION_THRESHOLD_BP, COMPENSATORY_CALCULATION_THRESHOLD_V)
@@ -162,8 +181,10 @@ class CarController(CarControllerBase):
     else:
       accel_offset = 0.
     # only calculate pcm_accel_cmd when long is active to prevent disengagement from accelerator depression
-    if CC.longActive:
+    if CC.longActive and not self.stay_stopped:
       pcm_accel_cmd = clip(actuators.accel + accel_offset, self.params.ACCEL_MIN, self.params.ACCEL_MAX)
+    elif CC.longActive and self.stay_stopped:
+      pcm_accel_cmd = -2.5
     else:
       pcm_accel_cmd = 0.
 
