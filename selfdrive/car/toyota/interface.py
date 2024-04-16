@@ -85,7 +85,7 @@ class CarInterface(CarInterfaceBase):
     if 0x2FF in fingerprint[0] or (0x2AA in fingerprint[0] and candidate in NO_DSU_CAR):
       ret.flags |= ToyotaFlags.SMART_DSU.value
 
-    if 0x343 in fingerprint[2] and candidate not in TSS2_CAR:
+    if (0x343 in fingerprint[2] or 0x4CB in fingerprint[2]) and candidate not in TSS2_CAR:
       ret.flags |= ToyotaFlags.DSU_BYPASS.value
 
     if 0x23 in fingerprint[0]:
