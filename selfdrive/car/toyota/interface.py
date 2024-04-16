@@ -141,11 +141,13 @@ class CarInterface(CarInterfaceBase):
     tune = ret.longitudinalTuning
     tune.deadzoneBP = [0., 5., 12., 20.]
     tune.deadzoneV = [0., 0., .08, .1]
-    ret.stoppingDecelRate = 0.
-    tune.kpBP = [0., 1.]
-    tune.kpV = [0.3, 1.]
-    tune.kiBP = [0., 3.]
-    tune.kiV = [1.3, 1.]
+    ret.stoppingDecelRate = 0. # no decel rate is needed for TSS-P, keep current decel and PCM will handle the rest
+    if ret.autoResumeSng:
+      ret.stoppingDecelRate = 0.01
+    tune.kpBP = [0.]
+    tune.kpV = [1.]
+    tune.kiBP = [0.,]
+    tune.kiV = [1.]
 
     return ret
 
