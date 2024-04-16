@@ -70,7 +70,7 @@ class CarController(CarControllerBase):
     lat_active = CC.latActive and abs(CS.out.steeringTorque) < MAX_USER_TORQUE
 
     stopping = actuators.longControlState == LongCtrlState.stopping
-    starting = actuators.longControlState == LongCtrlState.pid and CS.out.vEgo < self.CP.vEgoStopping
+    starting = actuators.longControlState == LongCtrlState.pid
 
     # *** control msgs ***
     can_sends = []
