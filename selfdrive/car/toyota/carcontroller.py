@@ -33,7 +33,7 @@ COMPENSATORY_CALCULATION_THRESHOLD_V = [-0.2, 0.]  # m/s^2
 COMPENSATORY_CALCULATION_THRESHOLD_BP = [0., 23.]  # m/s
 
 # Stay Stopped
-STAY_STOPPED_AFTER = 0.5 # seconds
+STAY_STOPPED_AFTER = 1.5 # seconds
 
 # resume, lead, and lane lines hysteresis
 RESUME_HYSTERESIS_TIME = 3.  # seconds
