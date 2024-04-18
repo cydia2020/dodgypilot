@@ -140,15 +140,13 @@ class CarInterface(CarInterfaceBase):
 
     tune = ret.longitudinalTuning
     tune.deadzoneBP = [0., 5., 12., 20.]
-    tune.deadzoneV = [0., .03, .08, .1]
-    ret.stoppingDecelRate = 0.17  # This is okay for TSS-P
-    if candidate in TSS2_CAR:
-      ret.vEgoStopping = 0.25
-      ret.vEgoStarting = 0.25
-      ret.stoppingDecelRate = 0.1  # reach stopping target smoothly
+    tune.deadzoneV = [0., 0., .08, .1]
+    ret.stoppingDecelRate = 0. # no decel rate is needed for TSS-P, keep current decel and PCM will handle the rest
+    if ret.autoResumeSng:
+      ret.stoppingDecelRate = 0.01
     tune.kpBP = [0.]
     tune.kpV = [1.]
-    tune.kiBP = [0.]
+    tune.kiBP = [0.,]
     tune.kiV = [1.]
 
     return ret
