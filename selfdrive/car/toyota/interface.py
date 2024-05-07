@@ -97,7 +97,7 @@ class CarInterface(CarInterfaceBase):
     # In TSS2 cars, the camera does long control
     found_ecus = [fw.ecu for fw in car_fw]
     ret.enableDsu = len(found_ecus) > 0 and Ecu.dsu not in found_ecus and candidate not in (NO_DSU_CAR | UNSUPPORTED_DSU_CAR) \
-                                        and not (ret.flags & ToyotaFlags.SMART_DSU)
+                                        and not (ret.flags & ToyotaFlags.SMART_DSU) and not (ret.flags & ToyotaFlags.DSU_BYPASS)
 
     # if the smartDSU is detected, openpilot can send ACC_CONTROL and the smartDSU will block it from the DSU or radar.
     # since we don't yet parse radar on TSS2/TSS-P radar-based ACC cars, gate longitudinal behind experimental toggle
