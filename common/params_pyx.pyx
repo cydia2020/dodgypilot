@@ -17,7 +17,6 @@ cdef extern from "common/params.h":
     c_Params(string) except + nogil
     string get(string, bool) nogil
     bool getBool(string, bool) nogil
-    int getInt(string, bool) nogil
     int remove(string) nogil
     int put(string, string) nogil
     void putNonBlocking(string, string) nogil
@@ -76,13 +75,6 @@ cdef class Params:
     cdef bool r
     with nogil:
       r = self.p.getBool(k, block)
-    return r
-
-  def get_int(self, key, bool block=False):
-    cdef string k = self.check_key(key)
-    cdef int r
-    with nogil:
-      r = self.p.getInt(k, block)
     return r
 
   def put(self, key, dat):
