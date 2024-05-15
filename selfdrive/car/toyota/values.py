@@ -49,6 +49,7 @@ class ToyotaFlags(IntFlag):
   SECONDARY_STEER_ANGLE = 4096
   DSU_BYPASS = 2048
   RADAR_CAN_FILTER = 1024
+  TOYOTA_INTERCEPTOR_SNG = 8192
 
   # Static flags
   TSS2 = 8

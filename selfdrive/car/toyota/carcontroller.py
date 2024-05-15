@@ -118,7 +118,7 @@ class CarController(CarControllerBase):
                                                           lta_active, self.frame // 2, torque_wind_down))
 
     # *** gas and brake ***
-    if self.CP.enableGasInterceptor and CC.longActive and not self.CP.flags & ToyotaFlags.SNG_WITHOUT_DSU:
+    if self.CP.enableGasInterceptor and CC.longActive and not self.CP.flags & ToyotaFlags.TOYOTA_INTERCEPTOR_SNG:
       MAX_INTERCEPTOR_GAS = 0.5
       # RAV4 has very sensitive gas pedal
       if self.CP.carFingerprint == CAR.TOYOTA_RAV4:
@@ -135,10 +135,10 @@ class CarController(CarControllerBase):
     # Activated when these conditions are met:
     # 1. openpilot is controlling longitudinal, and is requesting more than 0.0 m/s^2 acceleration **OR:**
     #    openpilot is not controlling longitudinal, and the vehicle is no longer requesting standstill **WHEN**
-    # 2. the vehicle that openpilot is operating on a car with self.CP.flags & ToyotaFlags.SNG_WITHOUT_DSU flag,
+    # 2. the vehicle that openpilot is operating on a car with self.CP.flags & ToyotaFlags.TOYOTA_INTERCEPTOR_SNG flag,
     # 3. a comma pedal is detected on the CAN network **AND**
     # 4. the reported speed on the CAN network is larger than 0.001 m/s (Toyota starts reporting at 0.3 m/s)
-    elif (CC.longActive and actuators.accel > 0.) and self.CP.flags & ToyotaFlags.SNG_WITHOUT_DSU and self.CP.enableGasInterceptor and CS.out.vEgo < 1e-3:
+    elif (CC.longActive and actuators.accel > 0.) and self.CP.flags & ToyotaFlags.TOYOTA_INTERCEPTOR_SNG and self.CP.enableGasInterceptor and CS.out.vEgo < 1e-3:
       interceptor_gas_cmd = 0.12
     else:
       interceptor_gas_cmd = 0.
