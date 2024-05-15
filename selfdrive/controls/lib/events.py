@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import bisect
 import math
 import os
 from enum import IntEnum
@@ -62,8 +63,8 @@ class Events:
 
   def add(self, event_name: int, static: bool=False) -> None:
     if static:
-      self.static_events.add(event_name)
-    self.events.add(event_name)
+      bisect.insort(self.static_events, event_name)
+    bisect.insort(self.events, event_name)
 
   def clear(self) -> None:
     self.events_prev = {k: (v + 1 if k in self.events else 0) for k, v in self.events_prev.items()}
@@ -93,7 +94,7 @@ class Events:
 
   def add_from_msg(self, events):
     for e in events:
-      self.events.add(e.name.raw)
+      bisect.insort(self.events, e.name.raw)
 
   def to_msg(self):
     ret = []

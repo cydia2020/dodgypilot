@@ -14,12 +14,6 @@
 #include "selfdrive/ui/qt/widgets/prime.h"
 #include "selfdrive/ui/qt/widgets/scrollview.h"
 #include "selfdrive/ui/qt/widgets/ssh_keys.h"
-#include "selfdrive/ui/qt/widgets/toggle.h"
-#include "selfdrive/ui/ui.h"
-#include "selfdrive/ui/qt/util.h"
-#include "selfdrive/ui/qt/qt_window.h"
-// nav (stolen from frogpilot)
-#include "selfdrive/ui/qt/offroad/nav_settings.h"
 
 TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
   // param, title, desc, icon
@@ -50,6 +44,12 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       tr("Disengage on Accelerator Pedal"),
       tr("When enabled, pressing the accelerator pedal will disengage openpilot."),
       "../assets/offroad/icon_disengage_on_accelerator.svg",
+    },
+    {
+      "AlwaysOnDM",
+      tr("Always-On Driver Monitoring"),
+      tr("Enable driver monitoring even when openpilot is not engaged."),
+      "../assets/offroad/icon_monitoring.png",
     },
     {
       "AlwaysOnDM",

@@ -349,6 +349,9 @@ void Device::updateBrightness(const UIState &s) {
     }
   } else {
     float clipped_brightness = offroad_brightness;
+    if (s.scene.started && s.scene.light_sensor > 0) {
+      clipped_brightness = s.scene.light_sensor;
+
     if (s.scene.started) {
       // Scale to 0% to 100%
       clipped_brightness = 100.0 * s.scene.light_sensor;
