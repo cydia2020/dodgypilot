@@ -380,6 +380,8 @@ void Device::updateBrightness(const UIState &s) {
     }
   }
 }
+}
+
 
 
 void Device::updateWakefulness(const UIState &s) {
