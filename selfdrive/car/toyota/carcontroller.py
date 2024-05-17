@@ -167,11 +167,6 @@ class CarController(CarControllerBase):
     else:
       pcm_accel_cmd = 0.
 
-    # TODO: probably can delete this. CS.pcm_acc_status uses a different signal
-    # than CS.cruiseState.enabled. confirm they're not meaningfully different
-    if not CC.enabled and CS.pcm_acc_status:
-      pcm_cancel_cmd = 1
-
     # *** standstill entrance logic ***
     # mimic stock behaviour, set standstill_req to False only when openpilot wants to resume
     if not CC.cruiseControl.resume:
