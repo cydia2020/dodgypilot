@@ -7,7 +7,6 @@ from openpilot.selfdrive.car.toyota.values import Ecu, CAR, DBC, ToyotaFlags, Ca
 from openpilot.selfdrive.car import create_button_events, get_safety_config
 from openpilot.selfdrive.car.disable_ecu import disable_ecu
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase
-from openpilot.common.params import Params
 
 ButtonType = car.CarState.ButtonEvent.Type
 EventName = car.CarEvent.EventName
@@ -173,10 +172,9 @@ class CarInterface(CarInterfaceBase):
       ret.vEgoStopping = 0.25
       ret.vEgoStarting = 0.25
       ret.stoppingDecelRate = 0.1  # reach stopping target smoothly
-    tune.kpBP = [0.]
-    tune.kpV = [1.]
-    tune.kiBP = [0.]
-    tune.kiV = [1.]
+    tune.kpV = [0.88]
+    tune.kiBP = [0., 32.]
+    tune.kiV = [.4, .2]
 
     return ret
 

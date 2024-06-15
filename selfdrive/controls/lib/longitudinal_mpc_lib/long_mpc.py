@@ -71,9 +71,9 @@ def get_a_change_cost_multiplier(v_ego, v_lead0, v_lead1, personality=log.Longit
   if personality==log.LongitudinalPersonality.relaxed:
     a_change_cost_multiplier_follow_distance = 1.0
   elif personality==log.LongitudinalPersonality.standard:
-    a_change_cost_multiplier_follow_distance = 0.7
+    a_change_cost_multiplier_follow_distance = 0.5
   elif personality==log.LongitudinalPersonality.aggressive:
-    a_change_cost_multiplier_follow_distance = 0.2
+    a_change_cost_multiplier_follow_distance = 0.1
   else:
     raise NotImplementedError("Longitudinal personality not supported")
 
