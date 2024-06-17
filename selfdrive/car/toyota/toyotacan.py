@@ -40,7 +40,7 @@ def create_accel_command(packer, accel, accel_raw, aego, enabled, pcm_cancel, st
     "ACC_TYPE": acc_type,
     "DISTANCE": distance,
     "MINI_CAR": lead,
-    "PERMIT_BRAKING": 1,
+    "PERMIT_BRAKING": enabled,
     "RELEASE_STANDSTILL": not standstill_req,
     "CANCEL_REQ": pcm_cancel,
     "ALLOW_LONG_PRESS": 1,
