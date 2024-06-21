@@ -52,12 +52,6 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       "../assets/offroad/icon_monitoring.png",
     },
     {
-      "AlwaysOnDM",
-      tr("Always-On Driver Monitoring"),
-      tr("Enable driver monitoring even when openpilot is not engaged."),
-      "../assets/offroad/icon_monitoring.png",
-    },
-    {
       "RecordFront",
       tr("Record and Upload Driver Camera"),
       tr("Upload data from the driver facing camera and help improve the driver monitoring algorithm."),
@@ -87,20 +81,6 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       tr("Mute openpilot's alerts, and pass the alert sounds through to the vehicle."),
       "../assets/offroad/icon_volume_off.png",
     },
-#ifdef ENABLE_MAPS
-    {
-      "NavSettingTime24h",
-      tr("Show ETA in 24h Format"),
-      tr("Use 24h format instead of am/pm"),
-      "../assets/offroad/icon_metric.png",
-    },
-    {
-      "NavSettingLeftSide",
-      tr("Show Map on Left Side of UI"),
-      tr("Show map on left side when in split screen view."),
-      "../assets/offroad/icon_road.png",
-    },
-#endif
   };
 
 

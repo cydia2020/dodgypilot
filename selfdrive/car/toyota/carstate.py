@@ -143,10 +143,13 @@ class CarState(CarStateBase):
       ret.cruiseState.available = cp.vl["PCM_CRUISE_2"]["MAIN_ON"] != 0
       ret.cruiseState.speed = cp.vl["PCM_CRUISE_2"]["SET_SPEED"] * CV.KPH_TO_MS
 
+    # assume camera sends longitudinal signal when
+    # 1- TSS 2.0 cars, and not TSS 2.0 RADAR ACC cars
+    # 2- TSS-P cars with Irene's DSU bypass harness installed
     cp_acc = cp_cam if (self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or bool(self.CP.flags & ToyotaFlags.DSU_BYPASS.value)) else cp
 
     if (self.CP.flags & ToyotaFlags.DSU_BYPASS.value) or (self.CP.carFingerprint in TSS2_CAR and not self.CP.flags & ToyotaFlags.DISABLE_RADAR.value):
-      if not (self.CP.flags & ToyotaFlags.SMART_DSU.value):
+      if not (self.CP.flags & ToyotaFlags.SMART_DSU.value or self.CP.flags & ToyotaFlags.DSU_BYPASS.value): # do not passthrough acc type signal if tss-p
         self.acc_type = cp_acc.vl["ACC_CONTROL"]["ACC_TYPE"]
       ret.stockFcw = bool(cp_acc.vl["PCS_HUD"]["FCW"])
 
@@ -197,14 +200,13 @@ class CarState(CarStateBase):
     if self.CP.carFingerprint not in UNSUPPORTED_DSU_CAR:
       self.pcm_follow_distance = cp.vl["PCM_CRUISE_2"]["PCM_FOLLOW_DISTANCE"]
 
-    if self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or (self.CP.flags & ToyotaFlags.SMART_DSU and not self.CP.flags & ToyotaFlags.RADAR_CAN_FILTER) \
-      or (self.CP.flags & ToyotaFlags.DSU_BYPASS):
+    # gate distance button behind main on
+    if ret.cruiseState.available and (self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or (self.CP.flags & ToyotaFlags.SMART_DSU and not self.CP.flags & ToyotaFlags.RADAR_CAN_FILTER) \
+      or (self.CP.flags & ToyotaFlags.DSU_BYPASS)):
       # distance button is wired to the ACC module (camera or radar)
       self.prev_distance_button = self.distance_button
       if self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or self.CP.flags & ToyotaFlags.DSU_BYPASS:
         self.distance_button = cp_acc.vl["ACC_CONTROL"]["DISTANCE"]
-      else:
-        self.distance_button = cp.vl["SDSU"]["FD_BUTTON"]
 
     return ret
 
@@ -257,17 +259,13 @@ class CarState(CarStateBase):
         ]
       messages += [
         ("PCS_HUD", 1),
+        ("ACC_CONTROL", 33),
       ]
 
     if CP.carFingerprint not in (TSS2_CAR - RADAR_ACC_CAR) and not CP.enableDsu and \
        not (CP.flags & ToyotaFlags.DISABLE_RADAR.value or CP.flags & ToyotaFlags.DSU_BYPASS.value):
       messages += [
         ("PRE_COLLISION", 33),
-      ]
-
-    if CP.flags & ToyotaFlags.SMART_DSU and not CP.flags & ToyotaFlags.RADAR_CAN_FILTER:
-      messages += [
-        ("SDSU", 100),
       ]
 
     return CANParser(DBC[CP.carFingerprint]["pt"], messages, 0)

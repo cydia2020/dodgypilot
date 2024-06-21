@@ -77,14 +77,10 @@ void update_line_data(const UIState *s, const cereal::XYZTData::Reader &line,
 }
 
 void update_model(UIState *s,
-                  const cereal::ModelDataV2::Reader &model,
-                  const cereal::UiPlan::Reader &plan) {
+                  const cereal::ModelDataV2::Reader &model) {
   UIScene &scene = s->scene;
-  auto plan_position = plan.getPosition();
-  if (plan_position.getX().size() < model.getPosition().getX().size()) {
-    plan_position = model.getPosition();
-  }
-  float max_distance = std::clamp(*(plan_position.getX().end() - 1),
+  auto model_position = model.getPosition();
+  float max_distance = std::clamp(*(model_position.getX().end() - 1),
                                   MIN_DRAW_DISTANCE, MAX_DRAW_DISTANCE);
 
   // update lane lines
@@ -110,8 +106,8 @@ void update_model(UIState *s,
     const float lead_d = lead_one.getDRel() * 2.;
     max_distance = std::clamp((float)(lead_d - fmin(lead_d * 0.35, 10.)), 0.0f, max_distance);
   }
-  max_idx = get_path_length_idx(plan_position, max_distance);
-  update_line_data(s, plan_position, 0.9, 1.22, &scene.track_vertices, max_idx, false);
+  max_idx = get_path_length_idx(model_position, max_distance);
+  update_line_data(s, model_position, 0.9, 1.22, &scene.track_vertices, max_idx, false);
 }
 
 void update_dmonitoring(UIState *s, const cereal::DriverStateV2::Reader &driverstate, float dm_fade_state, bool is_rhd) {
@@ -125,25 +121,27 @@ void update_dmonitoring(UIState *s, const cereal::DriverStateV2::Reader &drivers
     scene.driver_pose_coss[i] = cosf(scene.driver_pose_vals[i]*(1.0-dm_fade_state));
   }
 
+  auto [sin_y, sin_x, sin_z] = scene.driver_pose_sins;
+  auto [cos_y, cos_x, cos_z] = scene.driver_pose_coss;
+
   const mat3 r_xyz = (mat3){{
-    scene.driver_pose_coss[1]*scene.driver_pose_coss[2],
-    scene.driver_pose_coss[1]*scene.driver_pose_sins[2],
-    -scene.driver_pose_sins[1],
+    cos_x * cos_z,
+    cos_x * sin_z,
+    -sin_x,
 
-    -scene.driver_pose_sins[0]*scene.driver_pose_sins[1]*scene.driver_pose_coss[2] - scene.driver_pose_coss[0]*scene.driver_pose_sins[2],
-    -scene.driver_pose_sins[0]*scene.driver_pose_sins[1]*scene.driver_pose_sins[2] + scene.driver_pose_coss[0]*scene.driver_pose_coss[2],
-    -scene.driver_pose_sins[0]*scene.driver_pose_coss[1],
+    -sin_y * sin_x * cos_z - cos_y * sin_z,
+    -sin_y * sin_x * sin_z + cos_y * cos_z,
+    -sin_y * cos_x,
 
-    scene.driver_pose_coss[0]*scene.driver_pose_sins[1]*scene.driver_pose_coss[2] - scene.driver_pose_sins[0]*scene.driver_pose_sins[2],
-    scene.driver_pose_coss[0]*scene.driver_pose_sins[1]*scene.driver_pose_sins[2] + scene.driver_pose_sins[0]*scene.driver_pose_coss[2],
-    scene.driver_pose_coss[0]*scene.driver_pose_coss[1],
+    cos_y * sin_x * cos_z - sin_y * sin_z,
+    cos_y * sin_x * sin_z + sin_y * cos_z,
+    cos_y * cos_x,
   }};
 
   // transform vertices
   for (int kpi = 0; kpi < std::size(default_face_kpts_3d); kpi++) {
-    vec3 kpt_this = default_face_kpts_3d[kpi];
-    kpt_this = matvecmul3(r_xyz, kpt_this);
-    scene.face_kpts_draw[kpi] = (vec3){{(float)kpt_this.v[0], (float)kpt_this.v[1], (float)(kpt_this.v[2] * (1.0-dm_fade_state) + 8 * dm_fade_state)}};
+    vec3 kpt_this = matvecmul3(r_xyz, default_face_kpts_3d[kpi]);
+    scene.face_kpts_draw[kpi] = (vec3){{kpt_this.v[0], kpt_this.v[1], (float)(kpt_this.v[2] * (1.0-dm_fade_state) + 8 * dm_fade_state)}};
   }
 }
 
@@ -213,8 +211,7 @@ static void update_state(UIState *s) {
   scene.world_objects_visible = scene.world_objects_visible ||
                                 (scene.started &&
                                  sm.rcv_frame("liveCalibration") > scene.started_frame &&
-                                 sm.rcv_frame("modelV2") > scene.started_frame &&
-                                 sm.rcv_frame("uiPlan") > scene.started_frame);
+                                 sm.rcv_frame("modelV2") > scene.started_frame);
 }
 
 void ui_update_params(UIState *s) {
@@ -252,7 +249,7 @@ UIState::UIState(QObject *parent) : QObject(parent) {
   sm = std::make_unique<SubMaster, const std::initializer_list<const char *>>({
     "modelV2", "controlsState", "liveCalibration", "radarState", "deviceState",
     "pandaStates", "carParams", "driverMonitoringState", "carState", "liveLocationKalman", "driverStateV2",
-    "wideRoadCameraState", "managerState", "navInstruction", "navRoute", "uiPlan",
+    "wideRoadCameraState", "managerState", "navInstruction", "navRoute", "clocks",
   });
 
   Params params;
@@ -272,6 +269,10 @@ void UIState::update() {
   update_sockets(this);
   update_state(this);
   updateStatus();
+
+  if (std::getenv("PRIME_TYPE")) {
+      setPrimeType((PrimeType)atoi(std::getenv("PRIME_TYPE")));
+  }
 
   if (sm->frame % UI_FREQ == 0) {
     watchdog_kick(nanos_since_boot());

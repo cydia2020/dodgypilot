@@ -110,7 +110,7 @@ class CarInterface(CarInterfaceBase):
     # TODO: these models can do stop and go, but unclear if it requires sDSU or unplugging DSU.
     #  For now, don't list stop and go functionality in the docs
     if ret.flags & ToyotaFlags.SNG_WITHOUT_DSU:
-      stop_and_go = stop_and_go or bool(ret.flags & ToyotaFlags.SMART_DSU.value) or (ret.enableDsu and not docs)
+      stop_and_go = stop_and_go or (ret.enableDsu and not docs)
 
     if stop_and_go:
       ret.flags |= ToyotaFlags.TOYOTA_INTERCEPTOR_SNG.value
@@ -126,8 +126,9 @@ class CarInterface(CarInterfaceBase):
     ret.radarUnavailable = DBC[candidate]['radar'] is None or candidate in (NO_DSU_CAR - TSS2_CAR)
 
     # if the smartDSU is detected, openpilot can send ACC_CONTROL and the smartDSU will block it from the DSU or radar.
-    # since we don't yet parse radar on TSS2/TSS-P radar-based ACC cars, gate longitudinal behind experimental toggle
     use_sdsu = bool(ret.flags & ToyotaFlags.SMART_DSU)
+
+    # since we don't yet parse radar on TSS2/TSS-P radar-based ACC cars, gate longitudinal behind experimental toggle
     if candidate in (RADAR_ACC_CAR | NO_DSU_CAR):
       ret.experimentalLongitudinalAvailable = use_sdsu or candidate in RADAR_ACC_CAR
 
@@ -139,7 +140,6 @@ class CarInterface(CarInterfaceBase):
         use_sdsu = use_sdsu and experimental_long
 
     # openpilot longitudinal enabled by default:
-    #  - non-(TSS2 radar ACC cars) w/ smartDSU installed
     #  - cars w/ DSU disconnected
     #  - TSS2 cars with camera sending ACC_CONTROL where we can block it
     # openpilot longitudinal behind experimental long toggle:
@@ -165,22 +165,21 @@ class CarInterface(CarInterfaceBase):
     ret.stopAccel = -2.5
 
     tune = ret.longitudinalTuning
-    tune.deadzoneBP = [0., 5., 12., 20.]
-    tune.deadzoneV = [0., .03, .08, .1]
-    ret.stoppingDecelRate = 0.17  # This is okay for TSS-P
     if candidate in TSS2_CAR:
+      tune.kpV = [0.0]
+      tune.kiV = [0.5]
       ret.vEgoStopping = 0.25
       ret.vEgoStarting = 0.25
-      ret.stoppingDecelRate = 0.1  # reach stopping target smoothly
-    tune.kpV = [0.88]
-    tune.kiBP = [0., 32.]
-    tune.kiV = [.4, .2]
+      ret.stoppingDecelRate = 0.3  # reach stopping target smoothly
+    else:
+      tune.kiBP = [0., 5., 35.]
+      tune.kiV = [3.6, 2.4, 1.5]
 
     return ret
 
   @staticmethod
   def init(CP, logcan, sendcan):
-    # disable radar if alpha longitudinal toggled on radar-ACC car without CAN filter/smartDSU
+    # disable radar if alpha longitudinal toggled on radar-ACC car
     if CP.flags & ToyotaFlags.DISABLE_RADAR.value:
       communication_control = bytes([uds.SERVICE_TYPE.COMMUNICATION_CONTROL, uds.CONTROL_TYPE.ENABLE_RX_DISABLE_TX, uds.MESSAGE_TYPE.NORMAL])
       disable_ecu(logcan, sendcan, bus=0, addr=0x750, sub_addr=0xf, com_cont_req=communication_control)

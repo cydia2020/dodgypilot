@@ -41,8 +41,6 @@ function install_ubuntu_common_requirements() {
     libgles2-mesa-dev \
     libglfw3-dev \
     libglib2.0-0 \
-    libomp-dev \
-    libpng16-16 \
     libqt5charts5-dev \
     libncurses5-dev \
     libssl-dev \
@@ -56,8 +54,7 @@ function install_ubuntu_common_requirements() {
     ocl-icd-opencl-dev \
     portaudio19-dev \
     qtmultimedia5-dev \
-    qtlocation5-dev \
-    qtpositioning5-dev \
+    qtdeclarative5-dev \
     qttools5-dev-tools \
     libqt5svg5-dev \
     libqt5serialbus5-dev  \
@@ -95,7 +92,8 @@ function install_ubuntu_lts_latest_requirements() {
     qtchooser \
     qt5-qmake \
     qtbase5-dev-tools \
-    python3-dev
+    python3-dev \
+    python3-venv
 }
 
 # Install Ubuntu 20.04 packages

@@ -44,7 +44,6 @@ class CarControllerParams:
 class ToyotaFlags(IntFlag):
   # Detected flags
   HYBRID = 1
-  SMART_DSU = 2
   DISABLE_RADAR = 4
   SECONDARY_STEER_ANGLE = 4096
   DSU_BYPASS = 2048
@@ -59,7 +58,7 @@ class ToyotaFlags(IntFlag):
   # these cars use the Lane Tracing Assist (LTA) message for lateral control
   ANGLE_CONTROL = 128
   NO_STOP_TIMER = 256
-  # these cars are speculated to allow stop and go when the DSU is unplugged or disabled with sDSU
+  # these cars are speculated to allow stop and go when the DSU is unplugged
   SNG_WITHOUT_DSU = 512
 
 
@@ -164,7 +163,7 @@ class CAR(Platforms):
       ToyotaCarDocs("Toyota Corolla Hatchback 2019-22", video_link="https://www.youtube.com/watch?v=_66pXk0CBYA"),
       # Hybrid platforms
       ToyotaCarDocs("Toyota Corolla Hybrid 2020-22"),
-      ToyotaCarDocs("Toyota Corolla Hybrid (Non-US only) 2020-23", min_enable_speed=7.5),
+      ToyotaCarDocs("Toyota Corolla Hybrid (South America only) 2020-23", min_enable_speed=7.5),
       ToyotaCarDocs("Toyota Corolla Cross Hybrid (Non-US only) 2020-22", min_enable_speed=7.5),
       ToyotaCarDocs("Lexus UX Hybrid 2019-23"),
     ],
