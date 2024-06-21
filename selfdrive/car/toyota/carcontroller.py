@@ -64,7 +64,6 @@ class CarController(CarControllerBase):
     hud_control = CC.hudControl
     pcm_cancel_cmd = CC.cruiseControl.cancel
     lat_active = CC.latActive and abs(CS.out.steeringTorque) < MAX_USER_TORQUE
-    stopping = actuators.longControlState == LongCtrlState.stopping
 
     # *** control msgs ***
     can_sends = []
@@ -152,12 +151,8 @@ class CarController(CarControllerBase):
     # don't reset until a reasonable compensatory value is reached
     if CS.pcm_neutral_force > comp_thresh * self.CP.mass:
       self.prohibit_neg_calculation = False
-    # NO_STOP_TIMER_CAR will creep if compensation is applied when stopping or stopped, don't compensate when stopped or stopping
-    should_compensate = True
-    if self.CP.carFingerprint in NO_STOP_TIMER_CAR and ((CS.out.vEgo <  1e-3 and actuators.accel < 1e-3) or stopping):
-      should_compensate = False
     # limit minimum to only positive until first positive is reached after engagement, don't calculate when long isn't active
-    if CC.longActive and should_compensate and not self.prohibit_neg_calculation:
+    if CC.longActive and not self.prohibit_neg_calculation:
       accel_offset = CS.pcm_neutral_force / self.CP.mass
     else:
       accel_offset = 0.
@@ -197,9 +192,7 @@ class CarController(CarControllerBase):
 
     # we can spam can to cancel the system even if we are using lat only control
     if (self.frame % 3 == 0 and self.CP.openpilotLongitudinalControl) or pcm_cancel_cmd:
-      # when stopping, send -2.5 raw acceleration immediately to prevent vehicle from creeping, else send actuators.accel
       lead = self.lead or CS.out.vEgo < 12.  # at low speed we always assume the lead is present so ACC can be engaged
-      accel_raw = -2.5 if stopping else actuators.accel
 
       # Press distance button until we are at the correct bar length. Only change while enabled to avoid skipping startup popup
       if self.frame % 6 == 0 and self.CP.openpilotLongitudinalControl:
@@ -213,8 +206,8 @@ class CarController(CarControllerBase):
       if pcm_cancel_cmd and self.CP.carFingerprint in UNSUPPORTED_DSU_CAR:
         can_sends.append(toyotacan.create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(toyotacan.create_accel_command(self.packer, pcm_accel_cmd, accel_raw, CS.out.aEgo, CC.longActive, pcm_cancel_cmd, standstill, lead,
-                                                        CS.acc_type, fcw_alert, self.distance_button))
+        can_sends.append(toyotacan.create_accel_command(self.packer, pcm_accel_cmd, actuators.accel, CS.out.aEgo, CC.longActive, pcm_cancel_cmd, standstill,
+                                                        lead, CS.acc_type, fcw_alert, self.distance_button))
         self.accel = pcm_accel_cmd
       else:
         can_sends.append(toyotacan.create_accel_command(self.packer, 0, 0, 0, False, pcm_cancel_cmd, False, lead, CS.acc_type, False, self.distance_button))

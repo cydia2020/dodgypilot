@@ -148,7 +148,7 @@ class CarState(CarStateBase):
     # 2- TSS-P cars with Irene's DSU bypass harness installed
     cp_acc = cp_cam if (self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or bool(self.CP.flags & ToyotaFlags.DSU_BYPASS.value)) else cp
 
-    if (self.CP.flags & ToyotaFlags.DSU_BYPASS.value) or (self.CP.carFingerprint in TSS2_CAR and not self.CP.flags & ToyotaFlags.DISABLE_RADAR.value):
+    if self.CP.flags & ToyotaFlags.DSU_BYPASS.value or (self.CP.carFingerprint in TSS2_CAR and not self.CP.flags & ToyotaFlags.DISABLE_RADAR.value):
       if not (self.CP.flags & ToyotaFlags.SMART_DSU.value or self.CP.flags & ToyotaFlags.DSU_BYPASS.value): # do not passthrough acc type signal if tss-p
         self.acc_type = cp_acc.vl["ACC_CONTROL"]["ACC_TYPE"]
       ret.stockFcw = bool(cp_acc.vl["PCS_HUD"]["FCW"])
@@ -186,12 +186,6 @@ class CarState(CarStateBase):
       self.lda_right_lane = (cp_cam.vl["LKAS_HUD"]["RIGHT_LINE"] == 3)
       self.lda_sa_toggle = (cp_cam.vl["LKAS_HUD"]["LDA_SA_TOGGLE"])
 
-    # if openpilot does not control longitudinal, in this case, assume 0x343 is on bus0
-    # 1) the car is no longer sending standstill
-    # 2) the car is still in standstill
-    if not self.CP.openpilotLongitudinalControl:
-      self.stock_resume_ready = cp.vl["ACC_CONTROL"]["RELEASE_STANDSTILL"] == 1
-
     # kinematics
     ret.accelX = (cp.vl["KINEMATICS"]["ACCEL_X"])
     ret.accelY = (cp.vl["KINEMATICS"]["ACCEL_Y"])
@@ -207,6 +201,8 @@ class CarState(CarStateBase):
       self.prev_distance_button = self.distance_button
       if self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or self.CP.flags & ToyotaFlags.DSU_BYPASS:
         self.distance_button = cp_acc.vl["ACC_CONTROL"]["DISTANCE"]
+      else:
+        self.distance_button = cp.vl["SDSU"]["FD_BUTTON"]
 
     return ret
 
@@ -249,23 +245,24 @@ class CarState(CarStateBase):
     if CP.enableBsm:
       messages.append(("BSM", 1))
 
-    if CP.flags & ToyotaFlags.SMART_DSU.value:
-      messages.append(("SDSU", 0)),  # rate inconsistent
-
-    if not CP.openpilotLongitudinalControl or (CP.carFingerprint in RADAR_ACC_CAR and not CP.flags & ToyotaFlags.DISABLE_RADAR.value):
+    if CP.carFingerprint in RADAR_ACC_CAR and not CP.flags & ToyotaFlags.DISABLE_RADAR.value:
       if not CP.flags & ToyotaFlags.SMART_DSU.value:
         messages += [
           ("ACC_CONTROL", 33),
         ]
       messages += [
         ("PCS_HUD", 1),
-        ("ACC_CONTROL", 33),
       ]
 
     if CP.carFingerprint not in (TSS2_CAR - RADAR_ACC_CAR) and not CP.enableDsu and \
        not (CP.flags & ToyotaFlags.DISABLE_RADAR.value or CP.flags & ToyotaFlags.DSU_BYPASS.value):
       messages += [
         ("PRE_COLLISION", 33),
+      ]
+
+    if CP.flags & ToyotaFlags.SMART_DSU and not CP.flags & ToyotaFlags.RADAR_CAN_FILTER:
+      messages += [
+        ("SDSU", 100),
       ]
 
     return CANParser(DBC[CP.carFingerprint]["pt"], messages, 0)
