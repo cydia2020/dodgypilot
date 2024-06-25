@@ -33,7 +33,7 @@ COMPENSATORY_CALCULATION_THRESHOLD_V = [-0.2, -0.2, -0.05]  # m/s^2
 COMPENSATORY_CALCULATION_THRESHOLD_BP = [0., 20., 32.]  # m/s
 
 # resume, lead, and lane lines hysteresis
-RESUME_HYSTERESIS_TIME = 3.  # seconds
+RESUME_HYSTERESIS_TIME = 1.5  # seconds
 UI_HYSTERESIS_TIME = 1.  # seconds
 
 class CarController(CarControllerBase):
@@ -44,7 +44,11 @@ class CarController(CarControllerBase):
     self.last_steer = 0
     self.last_angle = 0
     self.alert_active = False
+    self.resume_off_frames = 0.
     self.standstill_req = False
+    self.lead = False
+    self.left_lane = False
+    self.right_lane = False
     self.steer_rate_counter = 0
     self.prohibit_neg_calculation = True
     self.distance_button = 0
@@ -52,12 +56,6 @@ class CarController(CarControllerBase):
     self.packer = CANPacker(dbc_name)
     self.gas = 0
     self.accel = 0
-
-    # hysteresis
-    self.resume_off_frames = 0.
-    self.lead = False
-    self.left_lane = False
-    self.right_lane = False
 
   def update(self, CC, CS, now_nanos):
     actuators = CC.actuators
@@ -162,11 +160,11 @@ class CarController(CarControllerBase):
     else:
       pcm_accel_cmd = 0.
 
-    # *** standstill entrance logic ***
+    # *** standstill logic ***
     # mimic stock behaviour, set standstill_req to False only when openpilot wants to resume
     if not CC.cruiseControl.resume:
         self.resume_off_frames += 1  # frame counter for hysteresis
-        # add a 3 second hysteresis to when CC.cruiseControl.resume turns off in order to prevent
+        # add a 1.5 second hysteresis to when CC.cruiseControl.resume turns off in order to prevent
         # vehicle's dash from blinking
         if self.resume_off_frames >= RESUME_HYSTERESIS_TIME / DT_CTRL:
             self.standstill_req = True
@@ -174,7 +172,7 @@ class CarController(CarControllerBase):
         self.resume_off_frames = 0
         self.standstill_req = False
     # ignore standstill on NO_STOP_TIMER_CAR, and never ignore if self.CP.enableGasInterceptor
-    standstill = self.standstill_req and (self.CP.carFingerprint not in NO_STOP_TIMER_CAR or self.CP.enableGasInterceptor)
+    self.standstill_req = self.standstill_req and (self.CP.carFingerprint not in NO_STOP_TIMER_CAR or self.CP.enableGasInterceptor)
 
     # handle UI messages
     fcw_alert = hud_control.visualAlert == VisualAlert.fcw
@@ -206,8 +204,8 @@ class CarController(CarControllerBase):
       if pcm_cancel_cmd and self.CP.carFingerprint in UNSUPPORTED_DSU_CAR:
         can_sends.append(toyotacan.create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(toyotacan.create_accel_command(self.packer, pcm_accel_cmd, actuators.accel, CS.out.aEgo, CC.longActive, pcm_cancel_cmd, standstill,
-                                                        lead, CS.acc_type, fcw_alert, self.distance_button))
+        can_sends.append(toyotacan.create_accel_command(self.packer, pcm_accel_cmd, actuators.accel, CS.out.aEgo, CC.longActive, pcm_cancel_cmd,
+                                                        self.standstill_req, lead, CS.acc_type, fcw_alert, self.distance_button))
         self.accel = pcm_accel_cmd
       else:
         can_sends.append(toyotacan.create_accel_command(self.packer, 0, 0, 0, False, pcm_cancel_cmd, False, lead, CS.acc_type, False, self.distance_button))
