@@ -22,7 +22,6 @@ private:
   float speed;
   QString speedUnit;
   float setSpeed;
-  float speedLimit;
   bool is_cruise_set = false;
   bool is_metric = false;
   bool dmActive = false;
@@ -30,8 +29,6 @@ private:
   bool hideBottomIcons = false;
   bool rightHandDM = false;
   float dm_fade_state = 1.0;
-  bool has_us_speed_limit = false;
-  bool has_eu_speed_limit = false;
   bool v_ego_cluster_seen = false;
   int status = STATUS_DISENGAGED;
   std::unique_ptr<PubMaster> pm;
