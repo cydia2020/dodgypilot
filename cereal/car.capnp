@@ -227,7 +227,7 @@ struct CarState {
   # process meta
   cumLagMs @50 :Float32;
   # combination meter dimmer states
-  meterBrightness @51 :Float32;
+  meterBrightness @54 :Float32;
 
   # kinematics
   accelX @52 :Float32;
