@@ -130,12 +130,12 @@ class CarController(CarControllerBase):
       interceptor_gas_cmd = clip(pedal_command, 0., MAX_INTERCEPTOR_GAS)
     # Full-speed Dynamic RADAR Cruise Control automatic resume logic using a comma pedal
     # Activated when these conditions are met:
-    # 1. openpilot is controlling longitudinal, and is requesting more than 0.0 m/s^2 acceleration **OR:**
-    #    openpilot is not controlling longitudinal, and the vehicle is no longer requesting standstill **WHEN**
+    # 1. openpilot is controlling longitudinal, and is requesting more than 0.0 m/s^2 acceleration **WHEN**
     # 2. the vehicle that openpilot is operating on a car with self.CP.flags & ToyotaFlags.TOYOTA_INTERCEPTOR_SNG flag,
     # 3. a comma pedal is detected on the CAN network **AND**
     # 4. the reported speed on the CAN network is larger than 0.001 m/s (Toyota starts reporting at 0.3 m/s)
-    elif (CC.longActive and actuators.accel > 0.) and self.CP.flags & ToyotaFlags.TOYOTA_INTERCEPTOR_SNG and self.CP.enableGasInterceptor and CS.out.vEgo < 1e-3:
+    elif (CC.longActive and actuators.accel > 0.) and self.CP.flags & ToyotaFlags.TOYOTA_INTERCEPTOR_SNG \
+         and self.CP.enableGasInterceptor and CS.out.vEgo < 1e-3:
       interceptor_gas_cmd = 0.12
     else:
       interceptor_gas_cmd = 0.

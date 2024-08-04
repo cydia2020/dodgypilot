@@ -1,5 +1,4 @@
 from cereal import car
-from cereal import log
 from panda import Panda
 from panda.python import uds
 from openpilot.selfdrive.car.toyota.values import Ecu, CAR, DBC, ToyotaFlags, CarControllerParams, TSS2_CAR, RADAR_ACC_CAR, NO_DSU_CAR, \
@@ -54,16 +53,15 @@ class CarInterface(CarInterfaceBase):
     if 0x2FF in fingerprint[0] or (0x2AA in fingerprint[0] and candidate in NO_DSU_CAR):
       ret.flags |= ToyotaFlags.SMART_DSU.value
 
+    # Detect 0x343 and 0x4CB on bus 2, if detected on bus 2 and is not TSS 2, it means DSU is bypassed
     if (0x343 in fingerprint[2] or 0x4CB in fingerprint[2]) and candidate not in TSS2_CAR:
       ret.flags |= ToyotaFlags.DSU_BYPASS.value
 
+    # Detect 0x23, the CAN ID used by ZSS
     if 0x23 in fingerprint[0]:
       ret.flags |= ToyotaFlags.SECONDARY_STEER_ANGLE.value
 
-    if 0x2AA in fingerprint[0] and candidate in NO_DSU_CAR:
-      ret.flags |= ToyotaFlags.RADAR_CAN_FILTER.value
-
-    # In TSS2 cars, the camera does long control
+    # In TSS2 and DSU bypass cars, the camera does long control, do not set simulated DSU on these cars
     found_ecus = [fw.ecu for fw in car_fw]
     ret.enableDsu = len(found_ecus) > 0 and Ecu.dsu not in found_ecus and candidate not in (NO_DSU_CAR | UNSUPPORTED_DSU_CAR) \
                                         and not (ret.flags & ToyotaFlags.SMART_DSU) and not (ret.flags & ToyotaFlags.DSU_BYPASS)
@@ -188,8 +186,7 @@ class CarInterface(CarInterfaceBase):
   def _update(self, c):
     ret = self.CS.update(self.cp, self.cp_cam)
 
-    if self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or (self.CP.flags & ToyotaFlags.SMART_DSU and not self.CP.flags & ToyotaFlags.RADAR_CAN_FILTER) \
-      or self.CP.flags & ToyotaFlags.DSU_BYPASS:
+    if self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or self.CP.flags & ToyotaFlags.SMART_DSU or self.CP.flags & ToyotaFlags.DSU_BYPASS:
       ret.buttonEvents = create_button_events(self.CS.distance_button, self.CS.prev_distance_button, {1: ButtonType.gapAdjustCruise})
 
     # events

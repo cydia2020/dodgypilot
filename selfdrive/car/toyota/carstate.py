@@ -148,9 +148,12 @@ class CarState(CarStateBase):
     # 2- TSS-P cars with Irene's DSU bypass harness installed
     cp_acc = cp_cam if (self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or bool(self.CP.flags & ToyotaFlags.DSU_BYPASS.value)) else cp
 
+    # if TSS 2.0 or bypassing DSU, longitudinal messages (ACC, PCS) will be available for panda to read before it's filtered
     if self.CP.flags & ToyotaFlags.DSU_BYPASS.value or (self.CP.carFingerprint in TSS2_CAR and not self.CP.flags & ToyotaFlags.DISABLE_RADAR.value):
+    # do not pass through ACC_TYPE on TSS-P cars regardless of 0x343 interceptor
       if not (self.CP.flags & ToyotaFlags.SMART_DSU.value or self.CP.flags & ToyotaFlags.DSU_BYPASS.value): # do not passthrough acc type signal if tss-p
         self.acc_type = cp_acc.vl["ACC_CONTROL"]["ACC_TYPE"]
+    # alert signal for stock FCW, available when PCS is sent before panda's filter
       ret.stockFcw = bool(cp_acc.vl["PCS_HUD"]["FCW"])
 
     # some TSS2 cars have low speed lockout permanently set, so ignore on those cars
@@ -195,8 +198,8 @@ class CarState(CarStateBase):
       self.pcm_follow_distance = cp.vl["PCM_CRUISE_2"]["PCM_FOLLOW_DISTANCE"]
 
     # gate distance button behind main on
-    if ret.cruiseState.available and (self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or (self.CP.flags & ToyotaFlags.SMART_DSU and not self.CP.flags & ToyotaFlags.RADAR_CAN_FILTER) \
-      or (self.CP.flags & ToyotaFlags.DSU_BYPASS)):
+    if ret.cruiseState.available and (self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or (self.CP.flags & ToyotaFlags.SMART_DSU) \
+       or (self.CP.flags & ToyotaFlags.DSU_BYPASS)):
       # distance button is wired to the ACC module (camera or radar)
       self.prev_distance_button = self.distance_button
       if self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or self.CP.flags & ToyotaFlags.DSU_BYPASS:
@@ -260,7 +263,7 @@ class CarState(CarStateBase):
         ("PRE_COLLISION", 33),
       ]
 
-    if CP.flags & ToyotaFlags.SMART_DSU and not CP.flags & ToyotaFlags.RADAR_CAN_FILTER:
+    if CP.flags & ToyotaFlags.SMART_DSU:
       messages += [
         ("SDSU", 100),
       ]
