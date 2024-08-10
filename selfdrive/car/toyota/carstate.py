@@ -149,9 +149,10 @@ class CarState(CarStateBase):
     cp_acc = cp_cam if (self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or bool(self.CP.flags & ToyotaFlags.DSU_BYPASS.value)) else cp
 
     # if TSS 2.0 or bypassing DSU, longitudinal messages (ACC, PCS) will be available for panda to read before it's filtered
-    if self.CP.flags & ToyotaFlags.DSU_BYPASS.value or (self.CP.carFingerprint in TSS2_CAR and not self.CP.flags & ToyotaFlags.DISABLE_RADAR.value):
+    if self.CP.flags & ToyotaFlags.DSU_BYPASS.value or (self.CP.carFingerprint in TSS2_CAR and not self.CP.flags & ToyotaFlags.DISABLE_RADAR.value) \
+      and not self.CP.flags & ToyotaFlags.SMART_DSU.value:
     # do not pass through ACC_TYPE on TSS-P cars regardless of 0x343 interceptor
-      if not (self.CP.flags & ToyotaFlags.SMART_DSU.value or self.CP.flags & ToyotaFlags.DSU_BYPASS.value): # do not passthrough acc type signal if tss-p
+      if not self.CP.flags & ToyotaFlags.DSU_BYPASS.value: # do not passthrough acc type signal if tss-p
         self.acc_type = cp_acc.vl["ACC_CONTROL"]["ACC_TYPE"]
     # alert signal for stock FCW, available when PCS is sent before panda's filter
       ret.stockFcw = bool(cp_acc.vl["PCS_HUD"]["FCW"])
@@ -189,11 +190,6 @@ class CarState(CarStateBase):
       self.lda_right_lane = (cp_cam.vl["LKAS_HUD"]["RIGHT_LINE"] == 3)
       self.lda_sa_toggle = (cp_cam.vl["LKAS_HUD"]["LDA_SA_TOGGLE"])
 
-    # kinematics
-    ret.accelX = (cp.vl["KINEMATICS"]["ACCEL_X"])
-    ret.accelY = (cp.vl["KINEMATICS"]["ACCEL_Y"])
-    ret.yawRate = (cp.vl["KINEMATICS"]["YAW_RATE"])
-
     if self.CP.carFingerprint not in UNSUPPORTED_DSU_CAR:
       self.pcm_follow_distance = cp.vl["PCM_CRUISE_2"]["PCM_FOLLOW_DISTANCE"]
 
@@ -202,7 +198,8 @@ class CarState(CarStateBase):
        or (self.CP.flags & ToyotaFlags.DSU_BYPASS)):
       # distance button is wired to the ACC module (camera or radar)
       self.prev_distance_button = self.distance_button
-      if self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or self.CP.flags & ToyotaFlags.DSU_BYPASS:
+      if not self.CP.flags & ToyotaFlags.SMART_DSU and \
+          (self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) or self.CP.flags & ToyotaFlags.DSU_BYPASS):
         self.distance_button = cp_acc.vl["ACC_CONTROL"]["DISTANCE"]
       else:
         self.distance_button = cp.vl["SDSU"]["FD_BUTTON"]
@@ -225,7 +222,6 @@ class CarState(CarStateBase):
       ("PCM_CRUISE", 33),
       ("PCM_CRUISE_SM", 1),
       ("STEER_TORQUE_SENSOR", 50),
-      ("KINEMATICS", 80),
     ]
 
     if CP.carFingerprint != CAR.TOYOTA_MIRAI:

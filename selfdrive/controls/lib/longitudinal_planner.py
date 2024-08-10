@@ -111,7 +111,7 @@ class LongitudinalPlanner:
 
     if self.mpc.mode == 'acc':
       accel_limits = [A_CRUISE_MIN, get_max_accel(v_ego)]
-      accel_limits_turns = limit_accel_in_turns(v_ego, sm['carState'].accelY, accel_limits)
+      accel_limits_turns = limit_accel_in_turns(v_ego, 0., accel_limits)
     else:
       accel_limits = [ACCEL_MIN, ACCEL_MAX]
       accel_limits_turns = [ACCEL_MIN, ACCEL_MAX]

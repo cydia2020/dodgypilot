@@ -54,7 +54,8 @@ class CarInterface(CarInterfaceBase):
       ret.flags |= ToyotaFlags.SMART_DSU.value
 
     # Detect 0x343 and 0x4CB on bus 2, if detected on bus 2 and is not TSS 2, it means DSU is bypassed
-    if (0x343 in fingerprint[2] or 0x4CB in fingerprint[2]) and candidate not in TSS2_CAR:
+    if ((0x343 in fingerprint[2] and 0x343 not in fingerprint[0]) or (0x4CB in fingerprint[2] and 0x4CB not in fingerprint[0])) \
+       and candidate not in TSS2_CAR and not (ret.flags & ToyotaFlags.SMART_DSU):
       ret.flags |= ToyotaFlags.DSU_BYPASS.value
 
     # Detect 0x23, the CAN ID used by ZSS
@@ -108,7 +109,7 @@ class CarInterface(CarInterfaceBase):
     # TODO: these models can do stop and go, but unclear if it requires sDSU or unplugging DSU.
     #  For now, don't list stop and go functionality in the docs
     if ret.flags & ToyotaFlags.SNG_WITHOUT_DSU:
-      stop_and_go = stop_and_go or bool(ret.flags & ToyotaFlags.SMART_DSU.value) or (ret.enableDsu and not docs)
+      stop_and_go = bool(ret.flags & ToyotaFlags.SMART_DSU.value) or (ret.enableDsu and not docs)
 
     if stop_and_go:
       ret.flags |= ToyotaFlags.TOYOTA_INTERCEPTOR_SNG.value

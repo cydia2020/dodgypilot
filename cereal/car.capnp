@@ -227,11 +227,7 @@ struct CarState {
   # process meta
   cumLagMs @50 :Float32;
   # combination meter dimmer states
-  meterBrightness @54 :Float32;
-
-  # kinematics
-  accelX @52 :Float32;
-  accelY @53 :Float32;
+  meterBrightness @52 :Float32;
 
   struct WheelSpeeds {
     # optional wheel speeds
