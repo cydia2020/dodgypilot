@@ -54,8 +54,7 @@ class CarInterface(CarInterfaceBase):
       ret.flags |= ToyotaFlags.SMART_DSU.value
 
     # Detect 0x343 and 0x4CB on bus 2, if detected on bus 2 and is not TSS 2, it means DSU is bypassed
-    if ((0x343 in fingerprint[2] and 0x343 not in fingerprint[0]) or (0x4CB in fingerprint[2] and 0x4CB not in fingerprint[0])) \
-       and candidate not in TSS2_CAR and not (ret.flags & ToyotaFlags.SMART_DSU):
+    if 0x343 in fingerprint[2] and candidate not in TSS2_CAR and not ret.flags & ToyotaFlags.SMART_DSU:
       ret.flags |= ToyotaFlags.DSU_BYPASS.value
 
     # Detect 0x23, the CAN ID used by ZSS

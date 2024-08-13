@@ -122,7 +122,7 @@ class CarState(CarStateBase):
     ret.brakeLights = bool(cp.vl["ESP_CONTROL"]['BRAKE_LIGHTS_ACC'] or cp.vl["BRAKE_MODULE"]["BRAKE_PRESSED"] != 0)
 
     # combination meter dimmer states
-    ret.meterBrightness = cp.vl["BODY_CONTROL_STATE_2"]['METER_SLIDER_BRIGHTNESS_PCT'] * 0.6 if \
+    ret.meterBrightness = cp.vl["BODY_CONTROL_STATE_2"]['METER_SLIDER_BRIGHTNESS_PCT'] * 0.5 if \
                           cp.vl["BODY_CONTROL_STATE"]['METER_DIMMED'] == 1 else 1.0 if \
                           cp.vl["BODY_CONTROL_STATE_2"]["METER_SLIDER_LOW_BRIGHTNESS"] == 1 else 100.
 
@@ -179,9 +179,6 @@ class CarState(CarStateBase):
 
     ret.genericToggle = bool(cp.vl["LIGHT_STALK"]["AUTO_HIGH_BEAM"])
     ret.espDisabled = cp.vl["ESP_CONTROL"]["TC_DISABLED"] != 0
-
-    if not self.CP.enableDsu and not self.CP.flags & ToyotaFlags.DISABLE_RADAR.value:
-      ret.stockAeb = bool(cp_acc.vl["PRE_COLLISION"]["PRECOLLISION_ACTIVE"] and cp_acc.vl["PRE_COLLISION"]["FORCE"] < -1e-5)
 
     if self.CP.enableBsm:
       ret.leftBlindspot = (cp.vl["BSM"]["L_ADJACENT"] == 1) or (cp.vl["BSM"]["L_APPROACHING"] == 1)
@@ -257,12 +254,6 @@ class CarState(CarStateBase):
         ("PCS_HUD", 1),
       ]
 
-    if CP.carFingerprint not in (TSS2_CAR - RADAR_ACC_CAR) and not CP.enableDsu and \
-       not (CP.flags & ToyotaFlags.DISABLE_RADAR.value or CP.flags & ToyotaFlags.DSU_BYPASS.value):
-      messages += [
-        ("PRE_COLLISION", 33),
-      ]
-
     if CP.flags & ToyotaFlags.SMART_DSU:
       messages += [
         ("SDSU", 100),
@@ -281,7 +272,6 @@ class CarState(CarStateBase):
 
     if CP.flags & ToyotaFlags.DSU_BYPASS.value or CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR):
       messages += [
-        ("PRE_COLLISION", 33),
         ("ACC_CONTROL", 33),
         ("PCS_HUD", 1),
       ]
