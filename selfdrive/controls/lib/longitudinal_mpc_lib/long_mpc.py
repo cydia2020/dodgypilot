@@ -3,12 +3,12 @@ import os
 import time
 import numpy as np
 from cereal import log
+from opendbc.car.interfaces import ACCEL_MIN
 from openpilot.common.numpy_fast import clip, interp
 from openpilot.common.realtime import DT_MDL
 from openpilot.common.swaglog import cloudlog
 # WARNING: imports outside of constants will not trigger a rebuild
 from openpilot.selfdrive.modeld.constants import index_function
-from openpilot.selfdrive.car.interfaces import ACCEL_MIN
 from openpilot.selfdrive.controls.radard import _LEAD_ACCEL_TAU
 
 if __name__ == '__main__':  # generating code
@@ -117,7 +117,7 @@ def get_T_FOLLOW(personality=log.LongitudinalPersonality.standard):
   else:
     raise NotImplementedError("Longitudinal personality not supported")
 
-# stolen from @KRKeegan - this offset rapidly decreases the following distance 
+# stolen from @KRKeegan - this offset rapidly decreases the following distance
 # when the lead pulls away, resulting in an early demand for acceleration.
 def get_stopped_equivalence_factor(v_lead, v_ego):
   v_diff_offset = 0

@@ -123,8 +123,8 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
 void TogglesPanel::updateState(const UIState &s) {
   const SubMaster &sm = *(s.sm);
 
-  if (sm.updated("controlsState")) {
-    auto personality = sm["controlsState"].getControlsState().getPersonality();
+  if (sm.updated("selfdriveState")) {
+    auto personality = sm["selfdriveState"].getSelfdriveState().getPersonality();
     if (personality != s.scene.personality && s.scene.started && isVisible()) {
       long_personality_setting->setCheckedButton(static_cast<int>(personality));
     }
@@ -260,7 +260,7 @@ DevicePanel::DevicePanel(SettingsWindow *parent) : ListWidget(parent) {
   addItem(translateBtn);
 
   QObject::connect(uiState(), &UIState::primeTypeChanged, [this] (PrimeType type) {
-    pair_device->setVisible(type == PrimeType::UNPAIRED);
+    pair_device->setVisible(type == PrimeType::PRIME_TYPE_UNPAIRED);
   });
   QObject::connect(uiState(), &UIState::offroadTransition, [=](bool offroad) {
     for (auto btn : findChildren<ButtonControl *>()) {
@@ -348,7 +348,7 @@ void DevicePanel::poweroff() {
 }
 
 void DevicePanel::showEvent(QShowEvent *event) {
-  pair_device->setVisible(uiState()->primeType() == PrimeType::UNPAIRED);
+  pair_device->setVisible(uiState()->primeType() == PrimeType::PRIME_TYPE_UNPAIRED);
   ListWidget::showEvent(event);
 }
 
