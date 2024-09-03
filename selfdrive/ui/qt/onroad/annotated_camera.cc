@@ -46,7 +46,6 @@ void AnnotatedCameraWidget::updateState(const UIState &s) {
   speed *= is_metric ? MS_TO_KPH : MS_TO_MPH;
 
   speedUnit = is_metric ? tr("km/h") : tr("mph");
-  hideBottomIcons = (cs.getAlertSize() != cereal::ControlsState::AlertSize::NONE);
   brakeLights = car_state.getBrakeLights();
   status = s.status;
 

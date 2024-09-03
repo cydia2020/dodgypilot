@@ -183,7 +183,7 @@ void ui_update_params(UIState *s) {
   auto params = Params();
   s->scene.is_metric = params.getBool("IsMetric");
   s->scene.radar_state = params.getBool("DisplayRadarInfo");
-  s->scene.car_brightness = Params().getBool("CarBrightnessControl");
+  s->scene.car_brightness = params.getBool("CarBrightnessControl");
 }
 
 void UIState::updateStatus() {
