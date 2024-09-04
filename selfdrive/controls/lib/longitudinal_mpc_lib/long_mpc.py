@@ -68,44 +68,43 @@ def get_jerk_factor(personality=log.LongitudinalPersonality.standard):
     raise NotImplementedError("Longitudinal personality not supported")
 
 # multiplier for A_CHANGE_COST = 200.
-def get_a_change_cost_multiplier(v_ego, v_lead0, v_lead1, personality=log.LongitudinalPersonality.standard):
+def get_a_change_factor(v_ego, v_lead0, v_lead1, personality=log.LongitudinalPersonality.standard):
   if personality==log.LongitudinalPersonality.relaxed:
     a_change_cost_multiplier_follow = 1.0
-    high_speed_multiplier = 1.
+    a_change_cost_high_speed_factor = 1.0
   elif personality==log.LongitudinalPersonality.standard:
     a_change_cost_multiplier_follow = 0.5
-    high_speed_multiplier = 1.5
+    a_change_cost_high_speed_factor = 1.5
   elif personality==log.LongitudinalPersonality.aggressive:
     a_change_cost_multiplier_follow = 0.1
-    high_speed_multiplier = 5.
+    a_change_cost_high_speed_factor = 5.
   else:
     raise NotImplementedError("Longitudinal personality not supported")
 
   # stolen from @KRKeegan
   # values used for interpolation
-  # start with a small a_change_multiplier_values during interpolation to allow for faster change in accel
-  A_CHANGE_COST_MULTIPLIER_BP = [0., 5.]  # vEgo, in m/s
-  A_CHANGE_COST_MULTIPLIER_V = [.05, 1.]  # multiplier values
+  # start with a small A_CHANGE_COST_MULTIPLIER_V during interpolation to allow for faster change in accel
+  LEAD_AUGMENTATION_BP = [0., 5.]  # vEgo, in m/s
+  LEAD_AUGMENTATION_V = [.05, 1.]  # multiplier values
 
   # increase a_change_cost at higher speed to reduce abrupt braking
-  HIGH_SPEED_MULTIPLIER_BP = [0., 5., 20.]
-  HIGH_SPEED_MULTIPLIER_V = [1., 1., high_speed_multiplier]
+  SPEED_AUGMENTATION_BP = [0., 5., 10.]
+  SPEED_AUGMENTATION_V = [1., 1., a_change_cost_high_speed_factor]
 
   # when lead is pulling away, and speed is between 0 and 5 m/s, interpolate a_change_cost_multiplier_v_ego
-  a_change_cost_multiplier_v_ego = 1.
+  lead_augmented_a_change_cost = 1.
   if (v_lead0 - v_ego > 1e-3) and (v_lead1 - v_ego > 1e-3):
-    a_change_cost_multiplier_v_ego = interp(v_ego, A_CHANGE_COST_MULTIPLIER_BP, A_CHANGE_COST_MULTIPLIER_V)
+    lead_augmented_a_change_cost = interp(v_ego, LEAD_AUGMENTATION_BP, LEAD_AUGMENTATION_V)
 
-  a_change_cost_multiplier_follow_distance = a_change_cost_multiplier_follow * interp(v_ego, HIGH_SPEED_MULTIPLIER_BP, HIGH_SPEED_MULTIPLIER_V)
-  # get the minimum between a_change_multiplier based on driving personality, and a_change_multiplier based
-  # on v_ego
-  a_change_multiplier = min(a_change_cost_multiplier_follow_distance, a_change_cost_multiplier_v_ego)
+  speed_augmented_a_change_cost = a_change_cost_multiplier_follow * interp(v_ego, SPEED_AUGMENTATION_BP, SPEED_AUGMENTATION_V)
+  # get the minimum between a_change_factor based on driving personality, and a_change_factor based on v_ego
+  a_change_factor = min(speed_augmented_a_change_cost, lead_augmented_a_change_cost)
 
   # and pass it on as the final result
-  return a_change_multiplier
+  return a_change_factor
 
 # multiplier for DANGER_ZONE_COST = 100.
-def get_danger_zone_cost_multiplier(personality=log.LongitudinalPersonality.standard):
+def get_danger_zone_factor(personality=log.LongitudinalPersonality.standard):
   if personality==log.LongitudinalPersonality.relaxed:
     return 1.6
   elif personality==log.LongitudinalPersonality.standard:
@@ -331,13 +330,12 @@ class LongitudinalMpc:
   def set_weights(self, prev_accel_constraint=True, v_lead0 = 0., v_lead1 = 0., personality=log.LongitudinalPersonality.standard):
     v_ego = self.x0[1]
     jerk_factor = get_jerk_factor(personality)
-    a_change_cost_multiplier = get_a_change_cost_multiplier(v_ego, v_lead0, v_lead1, personality)
-    danger_zone_cost_multiplier = get_danger_zone_cost_multiplier(personality)
+    a_change_factor = get_a_change_factor(v_ego, v_lead0, v_lead1, personality)
+    danger_zone_factor = get_danger_zone_factor(personality)
     if self.mode == 'acc':
       a_change_cost = A_CHANGE_COST if prev_accel_constraint else 0
-      cost_weights = [X_EGO_OBSTACLE_COST, X_EGO_COST, V_EGO_COST, A_EGO_COST, jerk_factor * a_change_cost_multiplier \
-                      * a_change_cost, jerk_factor * J_EGO_COST]
-      constraint_cost_weights = [LIMIT_COST, LIMIT_COST, LIMIT_COST, DANGER_ZONE_COST * danger_zone_cost_multiplier]
+      cost_weights = [X_EGO_OBSTACLE_COST, X_EGO_COST, V_EGO_COST, A_EGO_COST, a_change_factor * a_change_cost, jerk_factor * J_EGO_COST]
+      constraint_cost_weights = [LIMIT_COST, LIMIT_COST, LIMIT_COST, DANGER_ZONE_COST * danger_zone_factor]
     elif self.mode == 'blended':
       a_change_cost = 40.0 if prev_accel_constraint else 0
       cost_weights = [0., 0.1, 0.2, 5.0, a_change_cost, 1.0]
