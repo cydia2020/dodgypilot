@@ -70,25 +70,33 @@ def get_jerk_factor(personality=log.LongitudinalPersonality.standard):
 # multiplier for A_CHANGE_COST = 200.
 def get_a_change_cost_multiplier(v_ego, v_lead0, v_lead1, personality=log.LongitudinalPersonality.standard):
   if personality==log.LongitudinalPersonality.relaxed:
-    a_change_cost_multiplier_follow_distance = 1.0
+    a_change_cost_multiplier_follow = 1.0
+    high_speed_multiplier = 1.
   elif personality==log.LongitudinalPersonality.standard:
-    a_change_cost_multiplier_follow_distance = 0.5
+    a_change_cost_multiplier_follow = 0.5
+    high_speed_multiplier = 1.5
   elif personality==log.LongitudinalPersonality.aggressive:
-    a_change_cost_multiplier_follow_distance = 0.1
+    a_change_cost_multiplier_follow = 0.1
+    high_speed_multiplier = 5.
   else:
     raise NotImplementedError("Longitudinal personality not supported")
 
   # stolen from @KRKeegan
   # values used for interpolation
   # start with a small a_change_multiplier_values during interpolation to allow for faster change in accel
-  A_CHANGE_COST_MULTIPLIER_BP = [0., 10.]  # vEgo, in m/s
+  A_CHANGE_COST_MULTIPLIER_BP = [0., 5.]  # vEgo, in m/s
   A_CHANGE_COST_MULTIPLIER_V = [.05, 1.]  # multiplier values
 
-  # when lead is pulling away, and speed is between 0 and 10 m/s, interpolate a_change_cost_multiplier_v_ego
+  # increase a_change_cost at higher speed to reduce abrupt braking
+  HIGH_SPEED_MULTIPLIER_BP = [0., 5., 20.]
+  HIGH_SPEED_MULTIPLIER_V = [1., 1., high_speed_multiplier]
+
+  # when lead is pulling away, and speed is between 0 and 5 m/s, interpolate a_change_cost_multiplier_v_ego
   a_change_cost_multiplier_v_ego = 1.
   if (v_lead0 - v_ego > 1e-3) and (v_lead1 - v_ego > 1e-3):
     a_change_cost_multiplier_v_ego = interp(v_ego, A_CHANGE_COST_MULTIPLIER_BP, A_CHANGE_COST_MULTIPLIER_V)
 
+  a_change_cost_multiplier_follow_distance = a_change_cost_multiplier_follow * interp(v_ego, HIGH_SPEED_MULTIPLIER_BP, HIGH_SPEED_MULTIPLIER_V)
   # get the minimum between a_change_multiplier based on driving personality, and a_change_multiplier based
   # on v_ego
   a_change_multiplier = min(a_change_cost_multiplier_follow_distance, a_change_cost_multiplier_v_ego)
