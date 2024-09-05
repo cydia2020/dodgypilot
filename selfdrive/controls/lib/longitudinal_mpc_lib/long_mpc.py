@@ -84,11 +84,13 @@ def get_a_change_factor(v_ego, v_lead0, v_lead1, personality=log.LongitudinalPer
   # stolen from @KRKeegan
   # values used for interpolation
   # start with a small A_CHANGE_COST_MULTIPLIER_V during interpolation to allow for faster change in accel
-  LEAD_AUGMENTATION_BP = [0., 5.]  # vEgo, in m/s
+  LEAD_AUGMENTATION_BP_MAX = 5.    # max vEgo for rapid acceleration
+
+  LEAD_AUGMENTATION_BP = [0., LEAD_AUGMENTATION_BP_MAX]  # vEgo, in m/s
   LEAD_AUGMENTATION_V = [.05, 1.]  # multiplier values
 
   # increase a_change_cost at higher speed to reduce abrupt braking
-  SPEED_AUGMENTATION_BP = [0., 5., 10.]
+  SPEED_AUGMENTATION_BP = [0., LEAD_AUGMENTATION_BP_MAX, 10.]
   SPEED_AUGMENTATION_V = [1., 1., a_change_cost_high_speed_factor]
 
   # when lead is pulling away, and speed is between 0 and 5 m/s, interpolate a_change_cost_multiplier_v_ego
@@ -98,7 +100,7 @@ def get_a_change_factor(v_ego, v_lead0, v_lead1, personality=log.LongitudinalPer
 
   speed_augmented_a_change_cost = a_change_cost_multiplier_follow * interp(v_ego, SPEED_AUGMENTATION_BP, SPEED_AUGMENTATION_V)
   # get the minimum between a_change_factor based on driving personality, and a_change_factor based on v_ego
-  a_change_factor = min(speed_augmented_a_change_cost, lead_augmented_a_change_cost)
+  a_change_factor = lead_augmented_a_change_cost if v_ego <= LEAD_AUGMENTATION_BP_MAX else speed_augmented_a_change_cost
 
   # and pass it on as the final result
   return a_change_factor
