@@ -58,6 +58,12 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       "../assets/offroad/icon_monitoring.png",
     },
     {
+      "DisableLogging",
+      tr("Disable Data Recording and Uploading"),
+      tr("Disable the recording of CAN Data and cameras, and disable the uploader."),
+      "../assets/offroad/icon_upload_off.png",
+    },
+    {
       "IsMetric",
       tr("Use Metric System"),
       tr("Display speed in km/h instead of mph."),
