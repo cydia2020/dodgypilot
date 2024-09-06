@@ -16,35 +16,35 @@ def notcar(started: bool, params: Params, CP: car.CarParams) -> bool:
 def iscar(started: bool, params: Params, CP: car.CarParams) -> bool:
   return started and not CP.notCar
 
-def logging(started, params, CP: car.CarParams) -> bool:
+def logging(started, params: Params, CP: car.CarParams) -> bool:
   run = (not CP.notCar) or not params.get_bool("DisableLogging")
   return started and run
 
 def ublox_available() -> bool:
   return os.path.exists('/dev/ttyHS0') and not os.path.exists('/persist/comma/use-quectel-gps')
 
-def ublox(started, params, CP: car.CarParams) -> bool:
+def ublox(started, params: Params, CP: car.CarParams) -> bool:
   use_ublox = ublox_available()
   if use_ublox != params.get_bool("UbloxAvailable"):
     params.put_bool("UbloxAvailable", use_ublox)
   return started and use_ublox
 
-def qcomgps(started, params, CP: car.CarParams) -> bool:
+def qcomgps(started, params: Params, CP: car.CarParams) -> bool:
   return started and not ublox_available()
 
-def always_run(started, params, CP: car.CarParams) -> bool:
+def always_run(started, params: Params, CP: car.CarParams) -> bool:
   return True
 
-def only_onroad(started: bool, params, CP: car.CarParams) -> bool:
+def only_onroad(started: bool, params: Params, CP: car.CarParams) -> bool:
   return started
 
-def only_offroad(started, params, CP: car.CarParams) -> bool:
+def only_offroad(started, params: Params, CP: car.CarParams) -> bool:
   return not started
 
 # don't run soundd if disabled
-def soundd_enabled(started, params, CP: car.CarParams) -> bool:
+def soundd_enabled(started, params: Params, CP: car.CarParams) -> bool:
   run = not params.get_bool("MuteAlerts")
-  return started and run
+  return run
 
 procs = [
   DaemonProcess("manage_athenad", "system.athena.manage_athenad", "AthenadPid"),
@@ -63,7 +63,7 @@ procs = [
   NativeProcess("modeld", "selfdrive/modeld", ["./modeld"], only_onroad),
   NativeProcess("sensord", "system/sensord", ["./sensord"], only_onroad, enabled=not PC),
   NativeProcess("ui", "selfdrive/ui", ["./ui"], always_run, watchdog_max_dt=(5 if not PC else None)),
-  PythonProcess("soundd", "selfdrive.ui.soundd", soundd_enabled and only_onroad),
+  PythonProcess("soundd", "selfdrive.ui.soundd", only_onroad and soundd_enabled),
   PythonProcess("locationd", "selfdrive.locationd.locationd", only_onroad),
   NativeProcess("pandad", "selfdrive/pandad", ["./pandad"], always_run, enabled=False),
   PythonProcess("calibrationd", "selfdrive.locationd.calibrationd", only_onroad),
