@@ -37,7 +37,7 @@ protected:
   void paintGL() override;
   void initializeGL() override;
   void showEvent(QShowEvent *event) override;
-  void updateFrameMat() override;
+  mat4 calcFrameMatrix() override;
   void drawLaneLines(QPainter &painter, const UIState *s);
   void drawLead(QPainter &painter, const UIScene &scene, const cereal::RadarState::LeadData::Reader &lead_data, const QPointF &vd, float vego);
   void drawHud(QPainter &p);
