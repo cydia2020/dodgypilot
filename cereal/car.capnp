@@ -338,12 +338,10 @@ struct CarControl {
   latActive @11: Bool;
   longActive @12: Bool;
 
-  # Actuator commands as computed by controlsd
+  # Final actuator commands
   actuators @6 :Actuators;
 
-  # moved to CarOutput
-  actuatorsOutputDEPRECATED @10 :Actuators;
-
+  # Blinker controls
   leftBlinker @15: Bool;
   rightBlinker @16: Bool;
 
@@ -434,6 +432,7 @@ struct CarControl {
   activeDEPRECATED @7 :Bool;
   rollDEPRECATED @8 :Float32;
   pitchDEPRECATED @9 :Float32;
+  actuatorsOutputDEPRECATED @10 :Actuators;
 }
 
 struct CarOutput {
