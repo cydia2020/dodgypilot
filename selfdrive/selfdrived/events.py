@@ -370,7 +370,7 @@ EVENTS: dict[int, dict[str, Alert | AlertCallbackType]] = {
   },
 
   EventName.startupMaster: {
-    ET.PERMANENT: startup_master_alert,
+    ET.PERMANENT: StartupAlert("Be ready to take over at any time")
   },
 
   EventName.startupNoControl: {
