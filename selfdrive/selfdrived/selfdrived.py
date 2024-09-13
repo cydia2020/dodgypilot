@@ -78,7 +78,6 @@ class SelfdriveD:
     # read params
     self.is_metric = self.params.get_bool("IsMetric")
     self.is_ldw_enabled = False
-    self.is_mute_enabled = self.params.get_bool("MuteAlerts")
     self.is_fcw_enabled = False
 
     # detect sound card presence and ensure successful init
