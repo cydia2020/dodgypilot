@@ -1,6 +1,6 @@
 [submodule "panda"]
   path = panda
-  url = https://github.com/cydia2020/panda.git
+	url = git@github.com:commaai/panda.git
 [submodule "opendbc"]
   path = opendbc_repo
   url = https://github.com/cydia2020/opendbc.git
