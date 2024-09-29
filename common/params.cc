@@ -199,7 +199,6 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"UpdaterTargetBranch", CLEAR_ON_MANAGER_START},
     {"UpdaterLastFetchTime", PERSISTENT},
     {"Version", PERSISTENT},
-    {"VisionRadarToggle", PERSISTENT},
 
     // Irene's stuff
     {"DisplayRadarInfo", PERSISTENT}, // display radar state on onroad UI
