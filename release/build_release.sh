@@ -51,7 +51,7 @@ export PYTHONPATH="$BUILD_DIR"
 scons -j$(nproc) --minimal
 
 # release panda fw
-CERT="$BUILD_DIR/panda/certs/debug" RELEASE=0 scons -j$(nproc) panda/
+CERT="$BUILD_DIR/panda/certs/debug" RELEASE=1 scons -j$(nproc) panda/
 
 # Ensure no submodules in release
 if test "$(git submodule--helper list | wc -l)" -gt "0"; then
