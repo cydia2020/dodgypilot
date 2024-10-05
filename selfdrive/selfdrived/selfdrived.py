@@ -90,7 +90,7 @@ class SelfdriveD:
     self.is_fcw_enabled = False
 
     # detect sound card presence and ensure successful init
-    sounds_available = HARDWARE.get_sound_card_online()
+    sounds_available = HARDWARE.get_sound_card_online() and not self.params.get_bool("MuteAlerts")
 
     car_recognized = self.CP.carName != 'mock'
 
