@@ -92,7 +92,7 @@ class CarSpecificEvents:
       if CS.lda_sa_toggle == 1:
         events.add(EventName.invalidLkasSetting)
       if self.CP.openpilotLongitudinalControl:
-        if CS.cruiseState.standstill and not CS.brakePressed and not CC.standstill_req:
+        if CS.cruiseState.standstill and not CS.brakePressed:
           events.add(EventName.resumeRequired)
         if CS.vEgo < self.CP.minEnableSpeed:
           events.add(EventName.belowEngageSpeed)
