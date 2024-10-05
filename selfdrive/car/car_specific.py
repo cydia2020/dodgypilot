@@ -89,8 +89,6 @@ class CarSpecificEvents:
     elif self.CP.carName == 'toyota':
       events = self.create_common_events(CS, CS_prev)
 
-      if CS.lda_sa_toggle == 1:
-        events.add(EventName.invalidLkasSetting)
       if self.CP.openpilotLongitudinalControl:
         if CS.cruiseState.standstill and not CS.brakePressed:
           events.add(EventName.resumeRequired)
