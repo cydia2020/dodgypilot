@@ -99,7 +99,7 @@ class CarSpecificEvents:
       if CS.lda_sa_toggle == 1:
         events.add(EventName.invalidLkasSetting)
       if self.CP.openpilotLongitudinalControl:
-        if CS.out.cruiseState.standstill and not CS.out.brakePressed and not CC.standstill_req:
+        if CS.out.cruiseState.standstill and not CS.out.brakePressed:
           events.add(EventName.resumeRequired)
         if CS.low_speed_lockout:  # type: ignore[attr-defined]
           events.add(EventName.lowSpeedLockout)
