@@ -15,6 +15,8 @@ static int get_path_length_idx(const cereal::XYZTData::Reader &line, const float
 
 void ModelRenderer::draw(QPainter &painter, const QRect &surface_rect) {
   auto &sm = *(uiState()->sm);
+  UIState *s = uiState();
+
   if (sm.updated("carParams")) {
     longitudinal_control = sm["carParams"].getCarParams().getOpenpilotLongitudinalControl();
   }
@@ -144,6 +146,9 @@ void ModelRenderer::drawPath(QPainter &painter, const cereal::ModelDataV2::Reade
 
 void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadData::Reader &lead_data,
                              const QPointF &vd, const QRect &surface_rect, const UIScene &scene, float vego) {
+
+  painter.save();
+
   const float speedBuff = 10.;
   const float leadBuff = 40.;
   const float d_rel = lead_data.getDRel();
@@ -166,6 +171,9 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
   float g_xo = sz / 5;
   float g_yo = sz / 10;
 
+  int x_int = (int)x;
+  int y_int = (int)y;
+
   QPointF glow[] = {{x + (sz * 1.35) + g_xo, y + sz + g_yo}, {x, y - g_yo}, {x - (sz * 1.35) - g_xo, y + sz + g_yo}};
   painter.setBrush(QColor(218, 202, 37, 255));
   painter.drawPolygon(glow, std::size(glow));
@@ -187,6 +195,7 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
     painter.setFont(InterFont(60, QFont::DemiBold));
     painter.drawText(x_int - 72, y_int + 182, d_rel_str);
   }
+  painter.restore();
 }
 
 // Projects a point in car to space to the corresponding point in full frame image space.
