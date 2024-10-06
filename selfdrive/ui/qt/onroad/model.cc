@@ -1,5 +1,7 @@
 #include "selfdrive/ui/qt/onroad/model.h"
 
+#include "selfdrive/ui/qt/util.h"
+
 constexpr int CLIP_MARGIN = 500;
 constexpr float MIN_DRAW_DISTANCE = 10.0;
 constexpr float MAX_DRAW_DISTANCE = 100.0;
@@ -42,7 +44,6 @@ void ModelRenderer::draw(QPainter &painter, const QRect &surface_rect) {
 
   if (longitudinal_control && sm.alive("radarState")) {
     update_leads(radar_state, model.getPosition());
-    const auto &lead_two = radar_state.getLeadTwo();
     if (lead_one.getStatus()) {
       drawLead(painter, lead_one, lead_vertices[0], surface_rect, s->scene, vego);
     }
