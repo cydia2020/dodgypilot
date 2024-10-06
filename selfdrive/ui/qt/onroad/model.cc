@@ -29,10 +29,10 @@ void ModelRenderer::draw(QPainter &painter, const QRect &surface_rect) {
 
   painter.save();
 
+  float vego = sm["carState"].getCarState().getVEgo();
   const auto &model = sm["modelV2"].getModelV2();
   const auto &radar_state = sm["radarState"].getRadarState();
   const auto &lead_one = radar_state.getLeadOne();
-  float vego = (*s->sm)["carState"].getCarState().getVEgo();
 
   update_model(model, lead_one);
   drawLaneLines(painter);
