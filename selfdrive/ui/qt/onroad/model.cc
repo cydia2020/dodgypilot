@@ -196,7 +196,7 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
     QString combined velocity_distance = v_abs_str + "\n" + d_rel_str;
 
     // set font and pen
-    painter.setPen(QColour(255, 255, 255, 255));
+    painter.setPen(QColor(255, 255, 255, 255));
     painter.setFont(InterFont(60, QFont::DemiBold));
 
     // measure size of texts
