@@ -188,12 +188,10 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
     // lead radar information
     const float v_abs = vego + lead_data.getVRel();
 
-    // convert lead distance + speed
+    // handle QStrings
     QString v_abs_str = QString::number(std::nearbyint(v_abs * (scene.is_metric ? 3.6 : 2.2369362912))) + (scene.is_metric ? " km/h" : " mph");
     QString d_rel_str = QString::number(std::nearbyint(d_rel * (scene.is_metric ? 1.0 : 3.28084))) + (scene.is_metric ? " m" : " in");
-
-    // combined texts
-    QString combined_velocity_distance = v_abs_str + "\n" + d_rel_str;
+    QString combined_velocity_distance = v_abs_str + "\n" + d_rel_str; // combined texts
 
     // set font and pen
     painter.setPen(QColor(255, 255, 255, 255));
@@ -209,18 +207,15 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
     int radar_box_padding_horizontal = 60; // horizontal padding
     int radar_box_padding_vertical = 10; // vertical padding
     int radar_box_offset = 80; // offset below the chevron
-    int radar_box_x = x - ((radar_text_width + radar_box_padding_horizontal) / 2);
-    int radar_box_y = y + radar_box_offset;
-    int radar_box_w = radar_text_width + radar_box_padding_horizontal;
-    int radar_box_h = radar_text_height + radar_box_padding_vertical;
-
-    // align texts
-    QRect radar_box(radar_box_x, radar_box_y, radar_box_w, radar_box_h);
+    QRect radar_box(x - ((radar_text_width + radar_box_padding_horizontal) / 2),
+                    y + radar_box_offset,
+                    radar_text_width + radar_box_padding_horizontal,
+                    radar_text_height + radar_box_padding_vertical);
 
     // draw the radar text box
     painter.setPen(QPen(QColor(255, 255, 255, 75), radar_box_border)); // stolen from set speed
     painter.setBrush(QColor(0, 0, 0, 166));
-    painter.drawRoundedRect(radar_box_x, radar_box_y, radar_box_w, radar_box_h, 32, 32);
+    painter.drawRoundedRect(radar_box, 32, 32);
 
     // draw radar readings inside box
     painter.setPen(QColor(255, 255, 255, 255));
