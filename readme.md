@@ -19,7 +19,7 @@ For comma two users:
 Choose "Custom Software" when setting up your comma device, and type "https://installer.comma.ai/cydia2020/release2-staging" in the input box.
 
 For comma three users:
-Choose "Custom Software" when setting up your comma device, and type "https://installer.comma.ai/cydia2020/release2-staging" in the input box.
+Choose "Custom Software" when setting up your comma device, and type "https://installer.comma.ai/cydia2020/release3-staging" in the input box.
 
 Alternatively, ssh into your comma device, run `cd /data/openpilot`, `git remote add cydia2020 https://github.com/cydia2020/dodgypilot`, and `git checkout cydia2020/release2-staging` or `git checkout cydia2020/release3-staging`
 
