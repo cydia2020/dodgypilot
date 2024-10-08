@@ -2,6 +2,7 @@
 
 #include <QPainter>
 #include <QPolygonF>
+#include <QFontMetrics>
 
 #include "selfdrive/ui/ui.h"
 
