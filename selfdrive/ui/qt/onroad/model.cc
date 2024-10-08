@@ -193,7 +193,7 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
     QString d_rel_str = QString::number(std::nearbyint(d_rel * (scene.is_metric ? 1.0 : 1.093613))) + (scene.is_metric ? " m" : " yd");
 
     // measure the width of the radar texts
-    QString combined velocity_distance = v_abs_str + "\n" + d_rel_str;
+    QString combined_velocity_distance = v_abs_str + "\n" + d_rel_str;
 
     // set font and pen
     painter.setPen(QColor(255, 255, 255, 255));
@@ -201,11 +201,11 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
 
     // measure size of texts
     QFontMetrics fontMetrics(painter.font());
-    int radar_text_width = fontMetrics.horizontalAdvance(v_abs_str);
-    int radar_text_height = 2 * fontMetrics.height(); // x2 since two lines
+    int radar_text_width = fontMetrics.horizontalAdvance(combined_velocity_distance);
+    int radar_text_height = fontMetrics.height(combined_velocity_distance);
 
     // calculate the radar text box
-    int radar_box_padding = 20; // padding
+    int radar_box_padding = 30; // padding
     int radar_box_offset = 50; // offset below the chevron
     int radar_box_x = x - radar_text_width / 2;
     int radar_box_y = y + radar_box_offset;
@@ -214,7 +214,7 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
 
     // draw the radar text box
     painter.setBrush(QColor(0x72, 0x72, 0x72, 0xff));
-    painter.setPen(QPen(QColor(255, 255, 255, 75), 3)); // stolen from set speed
+    painter.setPen(QPen(QColor(255, 255, 255, 75), 6)); // stolen from set speed
     painter.drawRoundedRect(radar_box_x, radar_box_y, radar_box_w, radar_box_h, 10, 10);
 
     // draw radar readings inside box
