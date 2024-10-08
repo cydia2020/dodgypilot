@@ -150,7 +150,7 @@ void ModelRenderer::drawPath(QPainter &painter, const cereal::ModelDataV2::Reade
 }
 
 void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadData::Reader &lead_data,
-                             const QPointF &vd, const QRect &surface_rect, const UIScene &scene, float vego, bool drawInfo) {
+                             const QPointF &vd, const QRect &surface_rect, const UIScene &scene, float vego, bool shouldDrawRadarInfor) {
 
   painter.save();
 
@@ -184,7 +184,7 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
   painter.setBrush(QColor(201, 34, 49, fillAlpha));
   painter.drawPolygon(chevron, std::size(chevron));
 
-  if (scene.radar_state && drawInfo) {
+  if (scene.radar_state && shouldDrawRadarInfor) {
     // lead radar information
     const float v_abs = vego + lead_data.getVRel();
 
@@ -202,7 +202,7 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
     // measure size of texts
     QFontMetrics fontMetrics(painter.font());
     int radar_text_width = fontMetrics.horizontalAdvance(combined_velocity_distance);
-    int radar_text_height = fontMetrics.height(combined_velocity_distance);
+    int radar_text_height = 2 * fontMetrics.height();
 
     // calculate the radar text box
     int radar_box_padding = 30; // padding
