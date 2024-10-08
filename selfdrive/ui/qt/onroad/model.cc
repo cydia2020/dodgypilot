@@ -44,8 +44,12 @@ void ModelRenderer::draw(QPainter &painter, const QRect &surface_rect) {
 
   if (longitudinal_control && sm.alive("radarState")) {
     update_leads(radar_state, model.getPosition());
+    const auto &lead_two = radar_state.getLeadTwo();
     if (lead_one.getStatus()) {
-      drawLead(painter, lead_one, lead_vertices[0], surface_rect, s->scene, vego);
+      drawLead(painter, lead_one, lead_vertices[0], surface_rect, s->scene, vego, true);
+    }
+    if (lead_two.getStatus() && (std::abs(lead_one.getDRel() - lead_two.getDRel()) > 3.0)) {
+      drawLead(painter, lead_two, lead_vertices[1], surface_rect, s->scene, vego, false);
     }
   }
 
@@ -146,7 +150,7 @@ void ModelRenderer::drawPath(QPainter &painter, const cereal::ModelDataV2::Reade
 }
 
 void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadData::Reader &lead_data,
-                             const QPointF &vd, const QRect &surface_rect, const UIScene &scene, float vego) {
+                             const QPointF &vd, const QRect &surface_rect, const UIScene &scene, float vego, bool shouldDrawRadarInfor) {
 
   painter.save();
 
@@ -154,7 +158,6 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
   const float leadBuff = 40.;
   const float d_rel = lead_data.getDRel();
   const float v_rel = lead_data.getVRel();
-  const float v_abs = vego + lead_data.getVRel();
 
   float fillAlpha = 0;
   if (d_rel < leadBuff) {
@@ -172,9 +175,6 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
   float g_xo = sz / 5;
   float g_yo = sz / 10;
 
-  int x_int = (int)x;
-  int y_int = (int)y;
-
   QPointF glow[] = {{x + (sz * 1.35) + g_xo, y + sz + g_yo}, {x, y - g_yo}, {x - (sz * 1.35) - g_xo, y + sz + g_yo}};
   painter.setBrush(QColor(218, 202, 37, 255));
   painter.drawPolygon(glow, std::size(glow));
@@ -184,17 +184,42 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
   painter.setBrush(QColor(201, 34, 49, fillAlpha));
   painter.drawPolygon(chevron, std::size(chevron));
 
-  // convert lead distance + speed
-  QString v_abs_str = QString::number(std::nearbyint(v_abs * (scene.is_metric ? 3.6 : 2.2369362912))) + (scene.is_metric ? " km/h" : " mph");
-  QString d_rel_str = QString::number(std::nearbyint(d_rel * (scene.is_metric ? 1.0 : 1.093613))) + (scene.is_metric ? " m" : " yd");
+  if (scene.radar_state && shouldDrawRadarInfor) {
+    // lead radar information
+    const float v_abs = vego + lead_data.getVRel();
 
-  if (scene.radar_state) {
-    painter.setPen(QColor(10, 255, 226, 255));
+    // handle QStrings
+    QString v_abs_str = QString::number(std::nearbyint(v_abs * (scene.is_metric ? 3.6 : 2.2369362912))) + (scene.is_metric ? " km/h" : " mph");
+    QString d_rel_str = QString::number(std::nearbyint(d_rel * (scene.is_metric ? 1.0 : 3.28084))) + (scene.is_metric ? " m" : " in");
+    QString combined_velocity_distance = v_abs_str + "\n" + d_rel_str; // combined texts
+
+    // set font and pen
+    painter.setPen(QColor(255, 255, 255, 255));
     painter.setFont(InterFont(60, QFont::DemiBold));
-    painter.drawText(x_int - 104, y_int + 118, v_abs_str);
-    painter.setPen(QColor(10, 255, 226, 255));
-    painter.setFont(InterFont(60, QFont::DemiBold));
-    painter.drawText(x_int - 72, y_int + 182, d_rel_str);
+
+    // measure size of texts
+    QFontMetrics fontMetrics(painter.font());
+    int radar_text_width = std::max(fontMetrics.horizontalAdvance(v_abs_str), fontMetrics.horizontalAdvance(d_rel_str));
+    int radar_text_height = 2 * fontMetrics.height();
+
+    // calculate the radar text box
+    int radar_box_border = 6;
+    int radar_box_padding_horizontal = 60; // horizontal padding
+    int radar_box_padding_vertical = 10; // vertical padding
+    int radar_box_offset = 80; // offset below the chevron
+    QRect radar_box(x - ((radar_text_width + radar_box_padding_horizontal) / 2),
+                    y + radar_box_offset,
+                    radar_text_width + radar_box_padding_horizontal,
+                    radar_text_height + radar_box_padding_vertical);
+
+    // draw the radar text box
+    painter.setPen(QPen(QColor(255, 255, 255, 75), radar_box_border)); // stolen from set speed
+    painter.setBrush(QColor(0, 0, 0, 166));
+    painter.drawRoundedRect(radar_box, 32, 32);
+
+    // draw radar readings inside box
+    painter.setPen(QColor(255, 255, 255, 255));
+    painter.drawText(radar_box, Qt::AlignVCenter | Qt::AlignHCenter, combined_velocity_distance);
   }
   painter.restore();
 }
