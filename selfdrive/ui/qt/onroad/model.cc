@@ -190,7 +190,7 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
 
     // convert lead distance + speed
     QString v_abs_str = QString::number(std::nearbyint(v_abs * (scene.is_metric ? 3.6 : 2.2369362912))) + (scene.is_metric ? " km/h" : " mph");
-    QString d_rel_str = QString::number(std::nearbyint(d_rel * (scene.is_metric ? 1.0 : 1.093613))) + (scene.is_metric ? " m" : " yd");
+    QString d_rel_str = QString::number(std::nearbyint(d_rel * (scene.is_metric ? 1.0 : 3.28084))) + (scene.is_metric ? " m" : " in");
 
     // combined texts
     QString combined_velocity_distance = v_abs_str + "\n" + d_rel_str;
