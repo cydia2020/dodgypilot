@@ -202,14 +202,14 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
     // measure size of texts
     QFontMetrics fontMetrics(painter.font());
     int radar_text_width = std::max(fontMetrics.horizontalAdvance(v_abs_str), fontMetrics.horizontalAdvance(d_rel_str));
-    int radar_text_height = 1.5 * fontMetrics.height();
+    int radar_text_height = 2 * fontMetrics.height();
 
     // calculate the radar text box
     int radar_box_border = 6;
     int radar_box_padding_horizontal = 60; // horizontal padding
-    int radar_box_padding_vertical = 30; // vertical padding
+    int radar_box_padding_vertical = 0; // vertical padding
     int radar_box_offset = 80; // offset below the chevron
-    int radar_box_x = x - ((radar_text_width / 2) - radar_box_padding_horizontal - radar_box_border);
+    int radar_box_x = x - ((radar_text_width + radar_box_padding_horizontal + radar_box_border) / 2);
     int radar_box_y = y + radar_box_offset;
     int radar_box_w = radar_text_width + radar_box_padding_horizontal;
     int radar_box_h = radar_text_height + radar_box_padding_vertical;
