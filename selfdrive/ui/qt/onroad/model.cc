@@ -213,7 +213,7 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
     int radar_box_h = radar_text_height + radar_box_padding;
 
     // align texts
-    QRect radar_box(rect_x, rect_y, rect_w, rect_h);
+    QRect radar_box(radar_box_x, radar_box_y, radar_box_w, radar_box_h);
 
     // draw the radar text box
     painter.setPen(QPen(QColor(255, 255, 255, 75), 6)); // stolen from set speed
