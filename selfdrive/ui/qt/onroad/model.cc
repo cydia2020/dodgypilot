@@ -202,26 +202,29 @@ void ModelRenderer::drawLead(QPainter &painter, const cereal::RadarState::LeadDa
     // measure size of texts
     QFontMetrics fontMetrics(painter.font());
     int radar_text_width = std::max(fontMetrics.horizontalAdvance(v_abs_str), fontMetrics.horizontalAdvance(d_rel_str));
-    int radar_text_height = 2 * fontMetrics.height();
+    int radar_text_height = fontMetrics.height();
 
     // calculate the radar text box
-    int radar_box_padding = 60; // padding
+    int radar_box_border = 6;
+    int radar_box_padding_horizontal = 60; // horizontal padding
+    int radar_box_padding_vertical = 30; // vertical padding
     int radar_box_offset = 60; // offset below the chevron
-    int radar_box_x = x - radar_text_width / 2;
+    int radar_box_x = x - ((radar_text_width / 2) + radar_box_padding_horizontal + radar_box_border);
     int radar_box_y = y + radar_box_offset;
-    int radar_box_w = radar_text_width + radar_box_padding;
-    int radar_box_h = radar_text_height + radar_box_padding;
+    int radar_box_w = radar_text_width + radar_box_padding_horizontal;
+    int radar_box_h = radar_text_height + radar_box_padding_vertical;
 
     // align texts
     QRect radar_box(radar_box_x, radar_box_y, radar_box_w, radar_box_h);
 
     // draw the radar text box
-    painter.setPen(QPen(QColor(255, 255, 255, 75), 6)); // stolen from set speed
+    painter.setPen(QPen(QColor(255, 255, 255, 75), radar_box_border)); // stolen from set speed
     painter.setBrush(QColor(0, 0, 0, 166));
     painter.drawRoundedRect(radar_box_x, radar_box_y, radar_box_w, radar_box_h, 32, 32);
 
     // draw radar readings inside box
-    painter.drawText(radar_box, Qt::AlignTop | Qt::AlignHCenter, combined_velocity_distance);
+    painter.setPen(QColor(255, 255, 255, 255));
+    painter.drawText(radar_box, Qt::AlignHCenter, combined_velocity_distance);
   }
   painter.restore();
 }
