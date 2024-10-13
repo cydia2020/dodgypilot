@@ -8,7 +8,7 @@ export VECLIB_MAXIMUM_THREADS=1
 export ZMQ=1
 
 if [ -z "$AGNOS_VERSION" ]; then
-  export AGNOS_VERSION="10.1"
+  export AGNOS_VERSION="11"
 fi
 
 export STAGING_ROOT="/data/safe_staging"
