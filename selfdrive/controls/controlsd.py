@@ -144,9 +144,19 @@ class Controls:
     CC.cruiseControl.override = CC.enabled and not CC.longActive and self.CP.openpilotLongitudinalControl
     CC.cruiseControl.cancel = CS.cruiseState.enabled and (not CC.enabled or not self.CP.pcmCruise)
 
+    # Irene's suspension stuff
+    # If using experiment long, lead is always not stopped, else if lead is seen and speed < 0.1, lead stopped
+    if self.sm['selfdriveState'].experimentalMode:
+      lead_stopped = False
+    else:
+      if self.sm['longitudinalPlan'].hasLead:
+        lead_stopped = self.sm['radarState'].leadOne.vLeadK < 0.1
+      else:
+        lead_stopped = False
+
     speeds = self.sm['longitudinalPlan'].speeds
     if len(speeds):
-      CC.cruiseControl.resume = CC.enabled and CS.cruiseState.standstill and speeds[-1] > 0.1
+      CC.cruiseControl.resume = CC.enabled and CS.cruiseState.standstill and speeds[-1] > 0.1 and not lead_stopped
 
     hudControl = CC.hudControl
     hudControl.setSpeed = float(CS.vCruiseCluster * CV.KPH_TO_MS)
