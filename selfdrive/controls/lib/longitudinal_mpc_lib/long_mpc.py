@@ -4,7 +4,7 @@ import time
 import numpy as np
 from cereal import log
 from opendbc.car.interfaces import ACCEL_MIN
-from openpilot.common.numpy_fast import clip
+from openpilot.common.numpy_fast import clip, interp
 from openpilot.common.realtime import DT_MDL
 from openpilot.common.swaglog import cloudlog
 # WARNING: imports outside of constants will not trigger a rebuild
@@ -61,25 +61,81 @@ def get_jerk_factor(personality=log.LongitudinalPersonality.standard):
   if personality==log.LongitudinalPersonality.relaxed:
     return 1.0
   elif personality==log.LongitudinalPersonality.standard:
-    return 1.0
+    return 0.8
   elif personality==log.LongitudinalPersonality.aggressive:
-    return 0.5
+    return 0.6
   else:
     raise NotImplementedError("Longitudinal personality not supported")
 
+# multiplier for A_CHANGE_COST = 200.
+def get_a_change_factor(v_ego, v_lead0, v_lead1, personality=log.LongitudinalPersonality.standard):
+  if personality==log.LongitudinalPersonality.relaxed:
+    a_change_cost_multiplier_follow = 1.0
+    a_change_cost_high_speed_factor = 1.0
+  elif personality==log.LongitudinalPersonality.standard:
+    a_change_cost_multiplier_follow = 0.5
+    a_change_cost_high_speed_factor = 1.5
+  elif personality==log.LongitudinalPersonality.aggressive:
+    a_change_cost_multiplier_follow = 0.1
+    a_change_cost_high_speed_factor = 5.
+  else:
+    raise NotImplementedError("Longitudinal personality not supported")
+
+  # stolen from @KRKeegan
+  # values used for interpolation
+  # start with a small A_CHANGE_COST_MULTIPLIER_V during interpolation to allow for faster change in accel
+  LEAD_AUGMENTATION_BP_MAX = 5.    # max vEgo for rapid acceleration
+
+  LEAD_AUGMENTATION_BP = [0., LEAD_AUGMENTATION_BP_MAX]  # vEgo, in m/s
+  LEAD_AUGMENTATION_V = [.05, 1.]  # multiplier values
+
+  # increase a_change_cost at higher speed to reduce abrupt braking
+  SPEED_AUGMENTATION_BP = [0., LEAD_AUGMENTATION_BP_MAX, 10.]
+  SPEED_AUGMENTATION_V = [1., 1., a_change_cost_high_speed_factor]
+
+  # when lead is pulling away, and speed is between 0 and 5 m/s, interpolate a_change_cost_multiplier_v_ego
+  lead_augmented_a_change_cost = 1.
+  if (v_lead0 - v_ego > 1e-3) and (v_lead1 - v_ego > 1e-3):
+    lead_augmented_a_change_cost = interp(v_ego, LEAD_AUGMENTATION_BP, LEAD_AUGMENTATION_V)
+
+  speed_augmented_a_change_cost = a_change_cost_multiplier_follow * interp(v_ego, SPEED_AUGMENTATION_BP, SPEED_AUGMENTATION_V)
+  # get the minimum between a_change_factor based on driving personality, and a_change_factor based on v_ego
+  a_change_factor = lead_augmented_a_change_cost if v_ego <= LEAD_AUGMENTATION_BP_MAX else speed_augmented_a_change_cost
+
+  # and pass it on as the final result
+  return a_change_factor
+
+# multiplier for DANGER_ZONE_COST = 100.
+def get_danger_zone_factor(personality=log.LongitudinalPersonality.standard):
+  if personality==log.LongitudinalPersonality.relaxed:
+    return 1.6
+  elif personality==log.LongitudinalPersonality.standard:
+    return 1.3
+  elif personality==log.LongitudinalPersonality.aggressive:
+    return 1.0
+  else:
+    raise NotImplementedError("Longitudinal personality not supported")
 
 def get_T_FOLLOW(personality=log.LongitudinalPersonality.standard):
   if personality==log.LongitudinalPersonality.relaxed:
-    return 1.75
+    return 2.0
   elif personality==log.LongitudinalPersonality.standard:
-    return 1.45
+    return 1.5
   elif personality==log.LongitudinalPersonality.aggressive:
-    return 1.25
+    return 1.0
   else:
     raise NotImplementedError("Longitudinal personality not supported")
 
-def get_stopped_equivalence_factor(v_lead):
-  return (v_lead**2) / (2 * COMFORT_BRAKE)
+# stolen from @KRKeegan - this offset rapidly decreases the following distance
+# when the lead pulls away, resulting in an early demand for acceleration.
+def get_stopped_equivalence_factor(v_lead, v_ego):
+  v_diff_offset = 0
+  if np.all(v_lead - v_ego > 0):
+    v_diff_offset = ((v_lead - v_ego) * 1.)
+    v_diff_offset = np.clip(v_diff_offset, 0, STOP_DISTANCE / 2)
+    v_diff_offset = np.maximum(v_diff_offset * ((10 - v_ego)/10), 0)
+  distance = (v_lead**2) / (2 * COMFORT_BRAKE) + v_diff_offset
+  return distance
 
 def get_safe_obstacle_distance(v_ego, t_follow):
   return (v_ego**2) / (2 * COMFORT_BRAKE) + t_follow * v_ego + STOP_DISTANCE
@@ -87,7 +143,7 @@ def get_safe_obstacle_distance(v_ego, t_follow):
 def desired_follow_distance(v_ego, v_lead, t_follow=None):
   if t_follow is None:
     t_follow = get_T_FOLLOW()
-  return get_safe_obstacle_distance(v_ego, t_follow) - get_stopped_equivalence_factor(v_lead)
+  return get_safe_obstacle_distance(v_ego, t_follow) - get_stopped_equivalence_factor(v_lead, v_ego)
 
 
 def gen_long_model():
@@ -273,12 +329,15 @@ class LongitudinalMpc:
     for i in range(N):
       self.solver.cost_set(i, 'Zl', Zl)
 
-  def set_weights(self, prev_accel_constraint=True, personality=log.LongitudinalPersonality.standard):
+  def set_weights(self, prev_accel_constraint=True, v_lead0 = 0., v_lead1 = 0., personality=log.LongitudinalPersonality.standard):
+    v_ego = self.x0[1]
     jerk_factor = get_jerk_factor(personality)
+    a_change_factor = get_a_change_factor(v_ego, v_lead0, v_lead1, personality)
+    danger_zone_factor = get_danger_zone_factor(personality)
     if self.mode == 'acc':
       a_change_cost = A_CHANGE_COST if prev_accel_constraint else 0
-      cost_weights = [X_EGO_OBSTACLE_COST, X_EGO_COST, V_EGO_COST, A_EGO_COST, jerk_factor * a_change_cost, jerk_factor * J_EGO_COST]
-      constraint_cost_weights = [LIMIT_COST, LIMIT_COST, LIMIT_COST, DANGER_ZONE_COST]
+      cost_weights = [X_EGO_OBSTACLE_COST, X_EGO_COST, V_EGO_COST, A_EGO_COST, a_change_factor * a_change_cost, jerk_factor * J_EGO_COST]
+      constraint_cost_weights = [LIMIT_COST, LIMIT_COST, LIMIT_COST, DANGER_ZONE_COST * danger_zone_factor]
     elif self.mode == 'blended':
       a_change_cost = 40.0 if prev_accel_constraint else 0
       cost_weights = [0., 0.1, 0.2, 5.0, a_change_cost, 1.0]
@@ -332,7 +391,7 @@ class LongitudinalMpc:
     self.cruise_min_a = min_a
     self.max_a = max_a
 
-  def update(self, radarstate, v_cruise, x, v, a, j, personality=log.LongitudinalPersonality.standard):
+  def update(self, radarstate, v_cruise, prev_accel_constraint, x, v, a, j, personality=log.LongitudinalPersonality.standard):
     t_follow = get_T_FOLLOW(personality)
     v_ego = self.x0[1]
     self.status = radarstate.leadOne.status or radarstate.leadTwo.status
@@ -340,15 +399,16 @@ class LongitudinalMpc:
     lead_xv_0 = self.process_lead(radarstate.leadOne)
     lead_xv_1 = self.process_lead(radarstate.leadTwo)
 
+    self.set_weights(prev_accel_constraint=prev_accel_constraint, v_lead0=lead_xv_0[0, 1], v_lead1=lead_xv_1[0, 1], personality=personality)
+
     # To estimate a safe distance from a moving lead, we calculate how much stopping
     # distance that lead needs as a minimum. We can add that to the current distance
     # and then treat that as a stopped car/obstacle at this new distance.
-    lead_0_obstacle = lead_xv_0[:,0] + get_stopped_equivalence_factor(lead_xv_0[:,1])
-    lead_1_obstacle = lead_xv_1[:,0] + get_stopped_equivalence_factor(lead_xv_1[:,1])
+    lead_0_obstacle = lead_xv_0[:,0] + get_stopped_equivalence_factor(lead_xv_0[:,1], v_ego)
+    lead_1_obstacle = lead_xv_1[:,0] + get_stopped_equivalence_factor(lead_xv_1[:,1], v_ego)
 
     self.params[:,0] = ACCEL_MIN
-    # negative accel constraint causes problems because negative speed is not allowed
-    self.params[:,1] = max(0.0, self.max_a)
+    self.params[:,1] = self.max_a
 
     # Update in ACC mode or ACC/e2e blend
     if self.mode == 'acc':
