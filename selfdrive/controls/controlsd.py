@@ -29,6 +29,10 @@ ACTUATOR_FIELDS = tuple(car.CarControl.Actuators.schema.fields.keys())
 class Controls:
   def __init__(self) -> None:
     self.params = Params()
+
+    # read params
+    self.is_mute_enabled = self.params.get_bool("MuteAlerts")
+
     cloudlog.info("controlsd is waiting for CarParams")
     self.CP = messaging.log_from_bytes(self.params.get("CarParams", block=True), car.CarParams)
     cloudlog.info("controlsd got CarParams")
@@ -149,11 +153,22 @@ class Controls:
     hudControl.speedVisible = CC.enabled
     hudControl.lanesVisible = CC.enabled
     hudControl.leadVisible = self.sm['longitudinalPlan'].hasLead
+    hudControl.enableVehicleBuzzer = self.is_mute_enabled
     hudControl.leadDistanceBars = self.sm['selfdriveState'].personality.raw + 1
     hudControl.visualAlert = self.sm['selfdriveState'].alertHudVisual
+    hudControl.audibleAlert = self.sm['selfdriveState'].alertSound
 
-    hudControl.rightLaneVisible = True
-    hudControl.leftLaneVisible = True
+    model_v2 = self.sm['modelV2']
+    desire_prediction = model_v2.meta.desirePrediction
+    right_lane_visible = False
+    left_lane_visible = False
+    if len(desire_prediction):
+      right_lane_visible = model_v2.laneLineProbs[2] > 0.5
+      left_lane_visible = model_v2.laneLineProbs[1] > 0.5
+
+    hudControl.rightLaneVisible = bool(right_lane_visible) and CS.vEgo > 125/9
+    hudControl.leftLaneVisible = bool(left_lane_visible) and CS.vEgo > 125/9
+
     if self.sm.valid['driverAssistance']:
       hudControl.leftLaneDepart = self.sm['driverAssistance'].leftLaneDeparture
       hudControl.rightLaneDepart = self.sm['driverAssistance'].rightLaneDeparture
