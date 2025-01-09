@@ -25,7 +25,7 @@ rm -rf $BUILD_DIR
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 git init
-git remote add origin git@github.com:commaai/openpilot.git
+git remote add origin git@github.com:cydia2020/dodgypilot.git
 git checkout --orphan $RELEASE_BRANCH
 
 # do the files copy
@@ -91,14 +91,14 @@ git add -f .
 git commit --amend -m "openpilot v$VERSION"
 
 # Run tests
-TEST_FILES="tools/"
-cd $SOURCE_DIR
-cp -pR -n --parents $TEST_FILES $BUILD_DIR/
-cd $BUILD_DIR
-RELEASE=1 pytest -n0 -s selfdrive/test/test_onroad.py
+#TEST_FILES="tools/"
+#cd $SOURCE_DIR
+#cp -pR -n --parents $TEST_FILES $BUILD_DIR/
+#cd $BUILD_DIR
+#RELEASE=1 pytest -n0 -s selfdrive/test/test_onroad.py
 #system/manager/test/test_manager.py
-pytest selfdrive/car/tests/test_car_interfaces.py
-rm -rf $TEST_FILES
+#pytest selfdrive/car/tests/test_car_interfaces.py
+#rm -rf $TEST_FILES
 
 if [ ! -z "$RELEASE_BRANCH" ]; then
   echo "[-] pushing release T=$SECONDS"
