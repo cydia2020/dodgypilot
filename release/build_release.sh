@@ -52,7 +52,7 @@ scons -j$(nproc) --minimal
 
 if [ -z "$PANDA_DEBUG_BUILD" ]; then
   # release panda fw
-  CERT=/data/pandaextra/certs/release RELEASE=1 scons -j$(nproc) panda/
+  scons -j$(nproc) panda/
 else
   # build with ALLOW_DEBUG=1 to enable features like experimental longitudinal
   scons -j$(nproc) panda/
