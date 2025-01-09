@@ -1,4 +1,12 @@
 [lfs]
+	pushurl = ssh://git@github.com/cydia2020/dodgypilot.git
 	url = https://gitlab.com/commaai/openpilot-lfs.git/info/lfs
-	pushurl = ssh://git@gitlab.com/commaai/openpilot-lfs.git
 	locksverify = false
+	[remote]
+		searchall = true
+		autodetect = true
+[remote "origin"]
+	lfsurl = https://github.com/cydia2020/dodgypilot.git/info/lfs
+[remote "upstream"]
+	lfsurl = https://gitlab.com/commaai/openpilot-lfs.git/info/lfs
+
