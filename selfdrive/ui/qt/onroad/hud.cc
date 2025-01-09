@@ -26,6 +26,7 @@ void HudRenderer::updateState(const UIState &s) {
   // Handle older routes where vCruiseCluster is not set
   set_speed = car_state.getVCruiseCluster() == 0.0 ? controls_state.getVCruiseDEPRECATED() : car_state.getVCruiseCluster();
   is_cruise_set = set_speed > 0 && set_speed != SET_SPEED_NA;
+  brake_lights = car_state.getBrakeLights();
 
   if (is_cruise_set && !is_metric) {
     set_speed *= KM_TO_MILE;
@@ -42,7 +43,7 @@ void HudRenderer::draw(QPainter &p, const QRect &surface_rect) {
 
   // Draw header gradient
   QLinearGradient bg(0, UI_HEADER_HEIGHT - (UI_HEADER_HEIGHT / 2.5), 0, UI_HEADER_HEIGHT);
-  bg.setColorAt(0, QColor::fromRgbF(0, 0, 0, 0.45));
+  bg.setColorAt(0, brake_lights ? QColor::fromRgbF(1.0, 0.25, 0.3, 0.45) : (QColor::fromRgbF(0, 0, 0, 0.45)));
   bg.setColorAt(1, QColor::fromRgbF(0, 0, 0, 0));
   p.fillRect(0, 0, surface_rect.width(), UI_HEADER_HEIGHT, bg);
 

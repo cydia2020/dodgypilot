@@ -21,5 +21,6 @@ private:
   bool is_cruise_set = false;
   bool is_metric = false;
   bool v_ego_cluster_seen = false;
+  bool brake_lights = false;
   int status = STATUS_DISENGAGED;
 };

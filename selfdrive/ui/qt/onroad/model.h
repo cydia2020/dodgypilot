@@ -2,6 +2,7 @@
 
 #include <QPainter>
 #include <QPolygonF>
+#include <QFontMetrics>
 
 #include "selfdrive/ui/ui.h"
 
@@ -15,7 +16,8 @@ private:
   bool mapToScreen(float in_x, float in_y, float in_z, QPointF *out);
   void mapLineToPolygon(const cereal::XYZTData::Reader &line, float y_off, float z_off,
                         QPolygonF *pvd, int max_idx, bool allow_invert = true);
-  void drawLead(QPainter &painter, const cereal::RadarState::LeadData::Reader &lead_data, const QPointF &vd, const QRect &surface_rect);
+  void drawLead(QPainter &painter, const cereal::RadarState::LeadData::Reader &lead_data, const QPointF &vd,
+                const QRect &surface_rect, const UIScene &scene, float vego, bool shouldDrawRadarInfor);
   void update_leads(const cereal::RadarState::Reader &radar_state, const cereal::XYZTData::Reader &line);
   void update_model(const cereal::ModelDataV2::Reader &model, const cereal::RadarState::LeadData::Reader &lead);
   void drawLaneLines(QPainter &painter);
@@ -29,7 +31,6 @@ private:
   bool prev_allow_throttle = true;
   float lane_line_probs[4] = {};
   float road_edge_stds[2] = {};
-  float path_offset_z = 1.22f;
   QPolygonF track_vertices;
   QPolygonF lane_line_vertices[4] = {};
   QPolygonF road_edge_vertices[2] = {};

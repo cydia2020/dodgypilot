@@ -60,11 +60,14 @@ static void update_state(UIState *s) {
     scene.light_sensor = -1;
   }
   scene.started = sm["deviceState"].getDeviceState().getStarted() && scene.ignition;
+  scene.car_meter_brightness = sm["carState"].getCarState().getMeterBrightness();
 }
 
 void ui_update_params(UIState *s) {
   auto params = Params();
   s->scene.is_metric = params.getBool("IsMetric");
+  s->scene.radar_state = params.getBool("DisplayRadarInfo");
+  s->scene.car_brightness = params.getBool("CarBrightnessControl");
 }
 
 void UIState::updateStatus() {
@@ -144,33 +147,63 @@ void Device::resetInteractiveTimeout(int timeout) {
 }
 
 void Device::updateBrightness(const UIState &s) {
-  float clipped_brightness = offroad_brightness;
-  if (s.scene.started && s.scene.light_sensor >= 0) {
-    clipped_brightness = s.scene.light_sensor;
+  if (s.scene.car_brightness) {
+    int brightness = offroad_brightness;
 
-    // CIE 1931 - https://www.photonstophotos.net/GeneralTopics/Exposure/Psychometric_Lightness_and_Gamma.htm
-    if (clipped_brightness <= 8) {
-      clipped_brightness = (clipped_brightness / 903.3);
-    } else {
-      clipped_brightness = std::pow((clipped_brightness + 16.0) / 116.0, 3.0);
+    if (!s.scene.started) {
+      brightness = offroad_brightness;
     }
 
-    // Scale back to 10% to 100%
-    clipped_brightness = std::clamp(100.0f * clipped_brightness, 10.0f, 100.0f);
-  }
+    if (s.scene.started) {
+      brightness = s.scene.car_meter_brightness;
+    }
 
-  int brightness = brightness_filter.update(clipped_brightness);
-  if (!awake) {
-    brightness = 0;
-  }
+    if (!awake) {
+      brightness = 0;
+    }
 
-  if (brightness != last_brightness) {
-    if (!brightness_future.isRunning()) {
-      brightness_future = QtConcurrent::run(Hardware::set_brightness, brightness);
-      last_brightness = brightness;
+    if (brightness != last_brightness) {
+      if (!brightness_future.isRunning()) {
+        brightness_future = QtConcurrent::run(Hardware::set_brightness, brightness);
+        last_brightness = brightness;
+      }
+    }
+  } else {
+    float clipped_brightness = offroad_brightness;
+    if (s.scene.started && s.scene.light_sensor >= 0) {
+      clipped_brightness = s.scene.light_sensor;
+
+    if (s.scene.started) {
+      // Scale to 0% to 100%
+      clipped_brightness = 100.0 * s.scene.light_sensor;
+
+      // CIE 1931 - https://www.photonstophotos.net/GeneralTopics/Exposure/Psychometric_Lightness_and_Gamma.htm
+      if (clipped_brightness <= 8) {
+        clipped_brightness = (clipped_brightness / 903.3);
+      } else {
+        clipped_brightness = std::pow((clipped_brightness + 16.0) / 116.0, 3.0);
+      }
+
+      // Scale back to 10% to 100%
+      clipped_brightness = std::clamp(100.0f * clipped_brightness, 10.0f, 100.0f);
+    }
+
+    int brightness = brightness_filter.update(clipped_brightness);
+    if (!awake) {
+      brightness = 0;
+    }
+
+    if (brightness != last_brightness) {
+      if (!brightness_future.isRunning()) {
+        brightness_future = QtConcurrent::run(Hardware::set_brightness, brightness);
+        last_brightness = brightness;
+      }
     }
   }
 }
+}
+
+
 
 void Device::updateWakefulness(const UIState &s) {
   bool ignition_just_turned_off = !s.scene.ignition && ignition_on;

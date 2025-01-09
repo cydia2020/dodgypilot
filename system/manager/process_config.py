@@ -54,6 +54,11 @@ def only_onroad(started: bool, params: Params, CP: car.CarParams) -> bool:
 def only_offroad(started: bool, params: Params, CP: car.CarParams) -> bool:
   return not started
 
+# don't run soundd if disabled
+def soundd_enabled(started, params: Params, CP: car.CarParams) -> bool:
+  run = not params.get_bool("MuteAlerts")
+  return run
+
 def or_(*fns):
   return lambda *args: operator.or_(*(fn(*args) for fn in fns))
 
@@ -68,7 +73,7 @@ procs = [
   NativeProcess("logcatd", "system/logcatd", ["./logcatd"], only_onroad),
   NativeProcess("proclogd", "system/proclogd", ["./proclogd"], only_onroad),
   PythonProcess("logmessaged", "system.logmessaged", always_run),
-  PythonProcess("micd", "system.micd", iscar),
+  PythonProcess("micd", "system.micd", iscar and soundd_enabled),
   PythonProcess("timed", "system.timed", always_run, enabled=not PC),
 
   # TODO Make python process once TG allows opening QCOM from child proc

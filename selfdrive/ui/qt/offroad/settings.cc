@@ -47,12 +47,6 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       "../assets/offroad/icon_disengage_on_accelerator.svg",
     },
     {
-      "IsLdwEnabled",
-      tr("Enable Lane Departure Warnings"),
-      tr("Receive alerts to steer back into the lane when your vehicle drifts over a detected lane line without a turn signal activated while driving over 31 mph (50 km/h)."),
-      "../assets/offroad/icon_warning.png",
-    },
-    {
       "AlwaysOnDM",
       tr("Always-On Driver Monitoring"),
       tr("Enable driver monitoring even when openpilot is not engaged."),
@@ -65,10 +59,34 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       "../assets/offroad/icon_monitoring.png",
     },
     {
+      "DisableLogging",
+      tr("Disable Data Recording and Uploading"),
+      tr("Disable the recording of CAN Data and cameras, and disable the uploader."),
+      "../assets/offroad/icon_upload_off.png",
+    },
+    {
       "IsMetric",
       tr("Use Metric System"),
       tr("Display speed in km/h instead of mph."),
       "../assets/offroad/icon_metric.png",
+    },
+    {
+      "DisplayRadarInfo",
+      tr("Display Lead Info"),
+      tr("Display speed and distance of lead on onroad UI."),
+      "../assets/offroad/icon_radar.png",
+    },
+    {
+      "CarBrightnessControl",
+      tr("Use Vehicle Settings For Backlight Control"),
+      tr("Use the car's meter dimmer state for brightness control."),
+      "../assets/offroad/icon_brightness.png",
+    },
+    {
+      "MuteAlerts",
+      tr("Passthrough and Mute openpilot Alerts"),
+      tr("Mute openpilot's alerts, and pass the alert sounds through to the vehicle."),
+      "../assets/offroad/icon_volume_off.png",
     },
   };
 
