@@ -4,7 +4,6 @@ import time
 import numpy as np
 from cereal import log
 from opendbc.car.interfaces import ACCEL_MIN
-from openpilot.common.numpy_fast import clip, interp
 from openpilot.common.realtime import DT_MDL
 from openpilot.common.swaglog import cloudlog
 # WARNING: imports outside of constants will not trigger a rebuild
@@ -96,9 +95,9 @@ def get_a_change_factor(v_ego, v_lead0, v_lead1, personality=log.LongitudinalPer
   # when lead is pulling away, and speed is between 0 and 5 m/s, interpolate a_change_cost_multiplier_v_ego
   lead_augmented_a_change_cost = 1.
   if (v_lead0 - v_ego > 1e-3) and (v_lead1 - v_ego > 1e-3):
-    lead_augmented_a_change_cost = interp(v_ego, LEAD_AUGMENTATION_BP, LEAD_AUGMENTATION_V)
+    lead_augmented_a_change_cost = np.interp(v_ego, LEAD_AUGMENTATION_BP, LEAD_AUGMENTATION_V)
 
-  speed_augmented_a_change_cost = a_change_cost_multiplier_follow * interp(v_ego, SPEED_AUGMENTATION_BP, SPEED_AUGMENTATION_V)
+  speed_augmented_a_change_cost = a_change_cost_multiplier_follow * np.interp(v_ego, SPEED_AUGMENTATION_BP, SPEED_AUGMENTATION_V)
   # get the minimum between a_change_factor based on driving personality, and a_change_factor based on v_ego
   a_change_factor = lead_augmented_a_change_cost if v_ego <= LEAD_AUGMENTATION_BP_MAX else speed_augmented_a_change_cost
 
@@ -379,9 +378,9 @@ class LongitudinalMpc:
     # MPC will not converge if immediate crash is expected
     # Clip lead distance to what is still possible to brake for
     min_x_lead = ((v_ego + v_lead)/2) * (v_ego - v_lead) / (-ACCEL_MIN * 2)
-    x_lead = clip(x_lead, min_x_lead, 1e8)
-    v_lead = clip(v_lead, 0.0, 1e8)
-    a_lead = clip(a_lead, -10., 5.)
+    x_lead = np.clip(x_lead, min_x_lead, 1e8)
+    v_lead = np.clip(v_lead, 0.0, 1e8)
+    a_lead = np.clip(a_lead, -10., 5.)
     lead_xv = self.extrapolate_lead(x_lead, v_lead, a_lead, a_lead_tau)
     return lead_xv
 
