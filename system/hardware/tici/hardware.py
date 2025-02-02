@@ -76,7 +76,7 @@ def sudo_write(val, path):
 
 def sudo_read(path: str) -> str:
   try:
-    return subprocess.check_output(f"sudo cat {path}", shell=True, encoding='utf8')
+    return subprocess.check_output(f"sudo cat {path}", shell=True, encoding='utf8').strip()
   except Exception:
     return ""
 
@@ -205,6 +205,8 @@ class Tici(HardwareBase):
     return str(self.get_modem().Get(MM_MODEM, 'EquipmentIdentifier', dbus_interface=DBUS_PROPS, timeout=TIMEOUT))
 
   def get_network_info(self):
+    if self.get_device_type() == "mici":
+      return None
     try:
       modem = self.get_modem()
       info = modem.Command("AT+QNWINFO", math.ceil(TIMEOUT), dbus_interface=MM_MODEM, timeout=TIMEOUT)
@@ -295,6 +297,8 @@ class Tici(HardwareBase):
       return None
 
   def get_modem_temperatures(self):
+    if self.get_device_type() == "mici":
+      return []
     timeout = 0.2  # Default timeout is too short
     try:
       modem = self.get_modem()
