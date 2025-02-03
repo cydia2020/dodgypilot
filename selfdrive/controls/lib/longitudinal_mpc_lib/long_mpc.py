@@ -90,7 +90,7 @@ def get_a_change_factor(v_ego, v_lead0, v_lead1, personality=log.LongitudinalPer
 
   # increase a_change_cost at higher speed to reduce abrupt braking
   SPEED_AUGMENTATION_BP = [0., LEAD_AUGMENTATION_BP_MAX, 10.]
-  SPEED_AUGMENTATION_V = [1., np.min(1, a_change_cost_high_speed_factor / 2), a_change_cost_high_speed_factor]
+  SPEED_AUGMENTATION_V = [1., 1., a_change_cost_high_speed_factor]
 
   # when lead is pulling away, and speed is between 0 and 5 m/s, interpolate a_change_cost_multiplier_v_ego
   lead_augmented_a_change_cost = 1.
