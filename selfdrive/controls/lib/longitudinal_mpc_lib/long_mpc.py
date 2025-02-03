@@ -83,13 +83,13 @@ def get_a_change_factor(v_ego, v_lead0, v_lead1, personality=log.LongitudinalPer
   # stolen from @KRKeegan
   # values used for interpolation
   # start with a small A_CHANGE_COST_MULTIPLIER_V during interpolation to allow for faster change in accel
-  LEAD_AUGMENTATION_BP_MAX = 5.    # max vEgo for rapid acceleration
+  LEAD_AUGMENTATION_BP_MAX = 7.    # max vEgo for rapid acceleration
 
   LEAD_AUGMENTATION_BP = [0., LEAD_AUGMENTATION_BP_MAX]  # vEgo, in m/s
   LEAD_AUGMENTATION_V = [.05, 1.]  # multiplier values
 
   # increase a_change_cost at higher speed to reduce abrupt braking
-  SPEED_AUGMENTATION_BP = [0., LEAD_AUGMENTATION_BP_MAX, 10.]
+  SPEED_AUGMENTATION_BP = [0., LEAD_AUGMENTATION_BP_MAX, 12.]
   SPEED_AUGMENTATION_V = [1., 1., a_change_cost_high_speed_factor]
 
   # when lead is pulling away, and speed is between 0 and 5 m/s, interpolate a_change_cost_multiplier_v_ego
