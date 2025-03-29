@@ -74,10 +74,10 @@ def get_a_change_factor(v_ego, v_lead0, v_lead1, personality=log.LongitudinalPer
     a_change_cost_multiplier_follow = 1.0
     a_change_cost_high_speed_factor = 1.0
   elif personality==log.LongitudinalPersonality.standard:
-    a_change_cost_multiplier_follow = 0.5
+    a_change_cost_multiplier_follow = 0.7
     a_change_cost_high_speed_factor = 1.5
   elif personality==log.LongitudinalPersonality.aggressive:
-    a_change_cost_multiplier_follow = 0.1
+    a_change_cost_multiplier_follow = 0.3
     a_change_cost_high_speed_factor = 5.
   else:
     raise NotImplementedError("Longitudinal personality not supported")
