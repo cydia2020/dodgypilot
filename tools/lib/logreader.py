@@ -21,6 +21,7 @@ from openpilot.tools.lib.comma_car_segments import get_url as get_comma_segments
 from openpilot.tools.lib.openpilotci import get_url
 from openpilot.tools.lib.filereader import FileReader, file_exists, internal_source_available
 from openpilot.tools.lib.route import Route, SegmentRange
+from openpilot.tools.lib.log_time_series import msgs_to_time_series
 
 LogMessage = type[capnp._DynamicStructReader]
 LogIterable = Iterable[LogMessage]
@@ -299,11 +300,11 @@ class LogReader:
   def _run_on_segment(self, func, i):
     return func(self._get_lr(i))
 
-  def run_across_segments(self, num_processes, func, desc=None):
+  def run_across_segments(self, num_processes, func, disable_tqdm=False, desc=None):
     with multiprocessing.Pool(num_processes) as pool:
       ret = []
       num_segs = len(self.logreader_identifiers)
-      for p in tqdm.tqdm(pool.imap(partial(self._run_on_segment, func), range(num_segs)), total=num_segs, desc=desc):
+      for p in tqdm.tqdm(pool.imap(partial(self._run_on_segment, func), range(num_segs)), total=num_segs, disable=disable_tqdm, desc=desc):
         ret.extend(p)
       return ret
 
@@ -322,6 +323,9 @@ class LogReader:
   def first(self, msg_type: str):
     return next(self.filter(msg_type), None)
 
+  @property
+  def time_series(self):
+    return msgs_to_time_series(self)
 
 if __name__ == "__main__":
   import codecs

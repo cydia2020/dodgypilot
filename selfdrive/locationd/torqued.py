@@ -4,11 +4,11 @@ from collections import deque, defaultdict
 
 import cereal.messaging as messaging
 from cereal import car, log
+from opendbc.car.vehicle_model import ACCELERATION_DUE_TO_GRAVITY
 from openpilot.common.params import Params
 from openpilot.common.realtime import config_realtime_process, DT_MDL
 from openpilot.common.filter_simple import FirstOrderFilter
 from openpilot.common.swaglog import cloudlog
-from openpilot.selfdrive.controls.lib.vehicle_model import ACCELERATION_DUE_TO_GRAVITY
 from openpilot.selfdrive.locationd.helpers import PointBuckets, ParameterEstimator, PoseCalibrator, Pose
 
 HISTORY = 5  # secs
@@ -32,7 +32,7 @@ MIN_BUCKET_POINTS = np.array([100, 300, 500, 500, 500, 500, 300, 100])
 MIN_ENGAGE_BUFFER = 2  # secs
 
 VERSION = 1  # bump this to invalidate old parameter caches
-ALLOWED_CARS = ['toyota', 'hyundai']
+ALLOWED_CARS = ['toyota', 'hyundai', 'rivian']
 
 
 def slope2rot(slope):
@@ -167,7 +167,7 @@ class TorqueEstimator(ParameterEstimator):
       self.raw_points["lat_active"].append(msg.latActive)
     elif which == "carOutput":
       self.raw_points["carOutput_t"].append(t + self.lag)
-      self.raw_points["steer_torque"].append(-msg.actuatorsOutput.steer)
+      self.raw_points["steer_torque"].append(-msg.actuatorsOutput.torque)
     elif which == "carState":
       self.raw_points["carState_t"].append(t + self.lag)
       # TODO: check if high aEgo affects resulting lateral accel
