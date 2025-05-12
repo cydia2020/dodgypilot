@@ -339,7 +339,7 @@ Firehoseモードを有効にすると、学習データを最大限アップロ
     </message>
     <message>
         <source>&lt;span stylesheet=&apos;font-size: 60px; font-weight: bold; color: #e74c3c;&apos;&gt;INACTIVE&lt;/span&gt;: connect to an unmetered network</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;span stylesheet=&apos;font-size: 60px; font-weight: bold; color: #e74c3c;&apos;&gt;動作停止&lt;/span&gt;: 大容量のネットワークに接続してください</translation>
     </message>
 </context>
 <context>
@@ -572,14 +572,6 @@ Firehoseモードを有効にすると、学習データを最大限アップロ
 </context>
 <context>
     <name>QObject</name>
-    <message>
-        <source>Reboot</source>
-        <translation>再起動</translation>
-    </message>
-    <message>
-        <source>Exit</source>
-        <translation>閉じる</translation>
-    </message>
     <message>
         <source>openpilot</source>
         <translation>openpilot</translation>
