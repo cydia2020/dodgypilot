@@ -17,37 +17,42 @@
 #include "selfdrive/ui/qt/offroad/firehose.h"
 
 TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
-  // param, title, desc, icon
-  std::vector<std::tuple<QString, QString, QString, QString>> toggle_defs{
+  // param, title, desc, icon, restart needed
+  std::vector<std::tuple<QString, QString, QString, QString, bool>> toggle_defs{
     {
       "OpenpilotEnabledToggle",
       tr("Enable openpilot"),
-      tr("Use the openpilot system for adaptive cruise control and lane keep driver assistance. Your attention is required at all times to use this feature. Changing this setting takes effect when the car is powered off."),
-      "../assets/img_chffr_wheel.png",
+      tr("Use the openpilot system for adaptive cruise control and lane keep driver assistance. Your attention is required at all times to use this feature."),
+      "../assets/icons/chffr_wheel.png",
+      true,
     },
     {
       "ExperimentalMode",
       tr("Experimental Mode"),
       "",
-      "../assets/img_experimental_white.svg",
+      "../assets/icons/experimental_white.svg",
+      false,
     },
     {
       "DisengageOnAccelerator",
       tr("Disengage on Accelerator Pedal"),
       tr("When enabled, pressing the accelerator pedal will disengage openpilot."),
-      "../assets/offroad/icon_disengage_on_accelerator.svg",
+      "../assets/icons/disengage_on_accelerator.svg",
+      false,
     },
     {
       "AlwaysOnDM",
       tr("Always-On Driver Monitoring"),
       tr("Enable driver monitoring even when openpilot is not engaged."),
-      "../assets/offroad/icon_monitoring.png",
+      "../assets/icons/monitoring.png",
+      false,
     },
     {
       "RecordFront",
       tr("Record and Upload Driver Camera"),
       tr("Upload data from the driver facing camera and help improve the driver monitoring algorithm."),
-      "../assets/offroad/icon_monitoring.png",
+      "../assets/icons/monitoring.png",
+      true,
     },
     {
       "DisableLogging",
@@ -59,7 +64,8 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       "IsMetric",
       tr("Use Metric System"),
       tr("Display speed in km/h instead of mph."),
-      "../assets/offroad/icon_metric.png",
+      "../assets/icons/metric.png",
+      false,
     },
     {
       "DisplayRadarInfo",
@@ -87,17 +93,29 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
                                           tr("Standard is recommended. In aggressive mode, openpilot will follow lead cars closer and be more aggressive with the gas and brake. "
                                              "In relaxed mode openpilot will stay further away from lead cars. On supported cars, you can cycle through these personalities with "
                                              "your steering wheel distance button."),
-                                          "../assets/offroad/icon_speed_limit.png",
+                                          "../assets/icons/speed_limit.png",
                                           longi_button_texts);
 
   // set up uiState update for personality setting
   QObject::connect(uiState(), &UIState::uiUpdate, this, &TogglesPanel::updateState);
 
-  for (auto &[param, title, desc, icon] : toggle_defs) {
+  for (auto &[param, title, desc, icon, needs_restart] : toggle_defs) {
     auto toggle = new ParamControl(param, title, desc, icon, this);
 
     bool locked = params.getBool((param + "Lock").toStdString());
     toggle->setEnabled(!locked);
+
+    if (needs_restart && !locked) {
+      toggle->setDescription(toggle->getDescription() + tr(" Changing this setting will restart openpilot if the car is powered on."));
+
+      QObject::connect(uiState(), &UIState::engagedChanged, [toggle](bool engaged) {
+        toggle->setEnabled(!engaged);
+      });
+
+      QObject::connect(toggle, &ParamControl::toggleFlipped, [=](bool state) {
+        params.putBool("OnroadCycleRequested", true);
+      });
+    }
 
     addItem(toggle);
     toggles[param.toStdString()] = toggle;
@@ -109,7 +127,7 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
   }
 
   // Toggles with confirmation dialogs
-  toggles["ExperimentalMode"]->setActiveIcon("../assets/img_experimental.svg");
+  toggles["ExperimentalMode"]->setActiveIcon("../assets/icons/experimental.svg");
   toggles["ExperimentalMode"]->setConfirmation(true, true);
 }
 
@@ -209,9 +227,20 @@ DevicePanel::DevicePanel(SettingsWindow *parent) : ListWidget(parent) {
   auto resetCalibBtn = new ButtonControl(tr("Reset Calibration"), tr("RESET"), "");
   connect(resetCalibBtn, &ButtonControl::showDescriptionEvent, this, &DevicePanel::updateCalibDescription);
   connect(resetCalibBtn, &ButtonControl::clicked, [&]() {
-    if (ConfirmationDialog::confirm(tr("Are you sure you want to reset calibration?"), tr("Reset"), this)) {
-      params.remove("CalibrationParams");
-      params.remove("LiveTorqueParameters");
+    if (!uiState()->engaged()) {
+      if (ConfirmationDialog::confirm(tr("Are you sure you want to reset calibration?"), tr("Reset"), this)) {
+        // Check engaged again in case it changed while the dialog was open
+        if (!uiState()->engaged()) {
+          params.remove("CalibrationParams");
+          params.remove("LiveTorqueParameters");
+          params.remove("LiveParameters");
+          params.remove("LiveParametersV2");
+          params.remove("LiveDelay");
+          params.putBool("OnroadCycleRequested", true);
+        }
+      }
+    } else {
+      ConfirmationDialog::alert(tr("Disengage to Reset Calibration"), this);
     }
   });
   addItem(resetCalibBtn);
@@ -251,7 +280,7 @@ DevicePanel::DevicePanel(SettingsWindow *parent) : ListWidget(parent) {
   });
   QObject::connect(uiState(), &UIState::offroadTransition, [=](bool offroad) {
     for (auto btn : findChildren<ButtonControl *>()) {
-      if (btn != pair_device) {
+      if (btn != pair_device && btn != resetCalibBtn) {
         btn->setEnabled(offroad);
       }
     }
@@ -305,6 +334,7 @@ void DevicePanel::updateCalibDescription() {
       qInfo() << "invalid CalibrationParams";
     }
   }
+  desc += tr(" Resetting calibration will restart openpilot if the car is powered on.");
   qobject_cast<ButtonControl *>(sender())->setDescription(desc);
 }
 
