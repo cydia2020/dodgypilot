@@ -84,27 +84,27 @@
     </message>
     <message>
         <source>Prevent large data uploads when on a metered cellular connection</source>
-        <translation type="unfinished"></translation>
+        <translation>モバイルデータ回線を使用しているときは大容量データをアップロードしません</translation>
     </message>
     <message>
         <source>default</source>
-        <translation type="unfinished"></translation>
+        <translation>標準設定</translation>
     </message>
     <message>
         <source>metered</source>
-        <translation type="unfinished"></translation>
+        <translation>従量制</translation>
     </message>
     <message>
         <source>unmetered</source>
-        <translation type="unfinished"></translation>
+        <translation>定額制</translation>
     </message>
     <message>
         <source>Wi-Fi Network Metered</source>
-        <translation type="unfinished"></translation>
+        <translation>従量制のWi-Fiネットワーク</translation>
     </message>
     <message>
         <source>Prevent large data uploads when on a metered Wi-Fi connection</source>
-        <translation type="unfinished"></translation>
+        <translation>通信制限のあるWi-Fi接続では大容量データをアップロードしません</translation>
     </message>
 </context>
 <context>
@@ -247,10 +247,6 @@
         <translation>パワーオフ</translation>
     </message>
     <message>
-        <source>openpilot requires the device to be mounted within 4° left or right and within 5° up or 9° down. openpilot is continuously calibrating, resetting is rarely required.</source>
-        <translation>openpilotの本体は左右4°以内、上5°下9°以内の角度で取付ける必要があります。常にキャリブレーションされておりリセットはほとんど必要ありません。</translation>
-    </message>
-    <message>
         <source> Your device is pointed %1° %2 and %3° %4.</source>
         <translation> このデバイスは%2 %1°、%4 %3°の向きに設置されています。</translation>
     </message>
@@ -306,6 +302,34 @@
         <source>PAIR</source>
         <translation>OK</translation>
     </message>
+    <message>
+        <source>Disengage to Reset Calibration</source>
+        <translation>キャリブレーションをリセットするには運転支援を解除して下さい。</translation>
+    </message>
+    <message>
+        <source>openpilot requires the device to be mounted within 4° left or right and within 5° up or 9° down.</source>
+        <translation>openpilotの本体は左右4°以内、上5°下9°以内の角度で取付ける必要があります。</translation>
+    </message>
+    <message>
+        <source>Steering lag calibration is %1% complete.</source>
+        <translation>ステアリング遅延のキャリブレーションが%1％完了。</translation>
+    </message>
+    <message>
+        <source>Steering lag calibration is complete.</source>
+        <translation>ステアリング遅延のキャリブレーション完了。</translation>
+    </message>
+    <message>
+        <source>Steering torque response calibration is %1% complete.</source>
+        <translation>ステアリングトルク応答のキャリブレーションが%1％完了。</translation>
+    </message>
+    <message>
+        <source>Steering torque response calibration is complete.</source>
+        <translation>ステアリングトルク応答のキャリブレーション完了。</translation>
+    </message>
+    <message>
+        <source>openpilot is continuously calibrating, resetting is rarely required. Resetting calibration will restart openpilot if the car is powered on.</source>
+        <translation>openpilot は継続的にキャリブレーションを行っており、リセットが必要になることはほとんどありません。キャリブレーションをリセットすると、車の電源が入っている場合はopenpilotが再起動します。</translation>
+    </message>
 </context>
 <context>
     <name>DriverViewWindow</name>
@@ -328,16 +352,12 @@
 <context>
     <name>FirehosePanel</name>
     <message>
-        <source>🔥 Firehose Mode 🔥</source>
-        <translation>🔥 Firehoseモード 🔥</translation>
-    </message>
-    <message>
         <source>openpilot learns to drive by watching humans, like you, drive.
 
 Firehose Mode allows you to maximize your training data uploads to improve openpilot&apos;s driving models. More data means bigger models, which means better Experimental Mode.</source>
         <translation>openpilotは人間であるあなたの運転から学び、AI学習します。
 
-Firehoseモードを有効にすると、学習データを最大限アップロードし、openpilotの運転モデルを向上させることができます。より多くのデータはより大きなモデルとなり、Experimentalモードの精度を向上させます。</translation>
+Firehoseモードを有効にすると学習データを最大限アップロードし、openpilotの運転モデルを改善することができます。より多くのデータはより大きなモデルとなり、Experimentalモードの精度を向上させます。</translation>
     </message>
     <message>
         <source>Firehose Mode: ACTIVE</source>
@@ -360,6 +380,10 @@ Firehoseモードを有効にすると、学習データを最大限アップロ
     <message>
         <source>&lt;span stylesheet=&apos;font-size: 60px; font-weight: bold; color: #e74c3c;&apos;&gt;INACTIVE&lt;/span&gt;: connect to an unmetered network</source>
         <translation>&lt;span stylesheet=&apos;font-size: 60px; font-weight: bold; color: #e74c3c;&apos;&gt;動作停止&lt;/span&gt;: 大容量のネットワークに接続してください</translation>
+    </message>
+    <message>
+        <source>Firehose Mode</source>
+        <translation>Firehoseモード</translation>
     </message>
 </context>
 <context>
@@ -778,6 +802,16 @@ This may take up to a minute.</source>
         <source>Custom Software</source>
         <translation>カスタムソフトウェア</translation>
     </message>
+    <message>
+        <source>WARNING: Custom Software</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use caution when installing third-party software. Third-party software has not been tested by comma, and may cause damage to your device and/or vehicle.
+
+If you&apos;d like to proceed, use https://flash.comma.ai to restore your device to a factory state later.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SetupWidget</name>
@@ -1016,10 +1050,6 @@ This may take up to a minute.</source>
         <translation>openpilotを有効化</translation>
     </message>
     <message>
-        <source>Use the openpilot system for adaptive cruise control and lane keep driver assistance. Your attention is required at all times to use this feature. Changing this setting takes effect when the car is powered off.</source>
-        <translation>openpilotによるアダプティブクルーズコントロールとレーンキープアシストを利用します。この機能を利用する際は常に前方への注意が必要です。この設定を変更は車の電源が必要です。</translation>
-    </message>
-    <message>
         <source>Enable Lane Departure Warnings</source>
         <translation>車線逸脱警報の有効化</translation>
     </message>
@@ -1118,6 +1148,14 @@ This may take up to a minute.</source>
     <message>
         <source>Enable driver monitoring even when openpilot is not engaged.</source>
         <translation>openpilotが作動していない場合でも運転者モニタリングを有効にする。</translation>
+    </message>
+    <message>
+        <source>Use the openpilot system for adaptive cruise control and lane keep driver assistance. Your attention is required at all times to use this feature.</source>
+        <translation>openpilotシステムを使用してアダプティブクルーズコントロールおよび車線維持支援を行います。システム使用中は常にドライバーが事故を起こさないように注意を払ってください。</translation>
+    </message>
+    <message>
+        <source> Changing this setting will restart openpilot if the car is powered on.</source>
+        <translation>この設定を変更すると車の電源が入っている場合はopenpilotが再起動します。</translation>
     </message>
 </context>
 <context>
