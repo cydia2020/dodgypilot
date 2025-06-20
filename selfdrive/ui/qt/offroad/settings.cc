@@ -59,6 +59,7 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       tr("Disable Data Recording and Uploading"),
       tr("Disable the recording of CAN Data and cameras, and disable the uploader."),
       "../assets/offroad/icon_upload_off.png",
+      true,
     },
     {
       "IsMetric",
