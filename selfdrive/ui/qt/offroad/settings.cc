@@ -72,18 +72,21 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       tr("Display Lead Info"),
       tr("Display speed and distance of lead on onroad UI."),
       "../assets/offroad/icon_radar.png",
+      false,
     },
     {
       "CarBrightnessControl",
       tr("Use Vehicle Settings For Backlight Control"),
       tr("Use the car's meter dimmer state for brightness control."),
       "../assets/offroad/icon_brightness.png",
+      true,
     },
     {
       "MuteAlerts",
       tr("Passthrough and Mute openpilot Alerts"),
       tr("Mute openpilot's alerts, and pass the alert sounds through to the vehicle."),
       "../assets/offroad/icon_volume_off.png",
+      true,
     },
   };
 
