@@ -53,8 +53,8 @@ T_IDXS_LST = [index_function(idx, max_val=MAX_T, max_idx=N) for idx in range(N+1
 T_IDXS = np.array(T_IDXS_LST)
 FCW_IDXS = T_IDXS < 5.0
 T_DIFFS = np.diff(T_IDXS, prepend=[0.])
-COMFORT_BRAKE = 2.5
-STOP_DISTANCE = 6.0
+COMFORT_BRAKE = 1.75
+STOP_DISTANCE = 5.0
 CRUISE_MIN_ACCEL = -1.2
 CRUISE_MAX_ACCEL = 1.6
 
