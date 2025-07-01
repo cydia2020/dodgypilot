@@ -59,7 +59,7 @@ typedef struct UIScene {
 
   float light_sensor = -1;
   float car_meter_brightness;
-  bool started, ignition, is_metric, radar_state, car_brightness;
+  bool started, ignition, is_metric, recording_audio, radar_state, car_brightness;
   uint64_t started_frame;
 } UIScene;
 
