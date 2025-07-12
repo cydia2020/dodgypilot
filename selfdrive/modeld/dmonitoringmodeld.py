@@ -7,14 +7,13 @@ if TICI:
   from openpilot.selfdrive.modeld.runners.tinygrad_helpers import qcom_tensor_from_opencl_address
   os.environ['QCOM'] = '1'
 else:
-  os.environ['LLVM'] = '1'
+  from openpilot.selfdrive.modeld.runners.tinygrad_helpers import backend_from_jit
 import math
 import time
 import pickle
 import ctypes
 import numpy as np
 from pathlib import Path
-from setproctitle import setproctitle
 
 from cereal import messaging
 from cereal.messaging import PubMaster, SubMaster
@@ -25,7 +24,6 @@ from openpilot.common.transformations.model import dmonitoringmodel_intrinsics, 
 from openpilot.common.transformations.camera import _ar_ox_fisheye, _os_fisheye
 from openpilot.selfdrive.modeld.models.commonmodel_pyx import CLContext, MonitoringModelFrame
 from openpilot.selfdrive.modeld.parse_model_outputs import sigmoid
-from openpilot.system import sentry
 
 MODEL_WIDTH, MODEL_HEIGHT = DM_INPUT_SIZE
 CALIB_LEN = 3
@@ -81,6 +79,11 @@ class ModelState:
     with open(MODEL_PKL_PATH, "rb") as f:
       self.model_run = pickle.load(f)
 
+    if not TICI:
+      backend = backend_from_jit(self.model_run)
+      os.environ[backend] = '1'
+      cloudlog.warning(f"dmonitoringmodeld backend set to {backend}")
+
   def run(self, buf: VisionBuf, calib: np.ndarray, transform: np.ndarray) -> tuple[np.ndarray, float]:
     self.numpy_inputs['calib'][0,:] = calib
 
@@ -133,11 +136,7 @@ def get_driverstate_packet(model_output: np.ndarray, frame_id: int, location_ts:
 
 
 def main():
-  setproctitle(PROCESS_NAME)
   config_realtime_process(7, 5)
-
-  sentry.set_tag("daemon", PROCESS_NAME)
-  cloudlog.bind(daemon=PROCESS_NAME)
 
   cl_context = CLContext()
   model = ModelState(cl_context)
@@ -180,7 +179,4 @@ if __name__ == "__main__":
   try:
     main()
   except KeyboardInterrupt:
-    cloudlog.warning(f"child {PROCESS_NAME} got SIGINT")
-  except Exception:
-    sentry.capture_exception()
-    raise
+    cloudlog.warning("got SIGINT")
