@@ -49,8 +49,46 @@ def decompress_stream(data: bytes):
 
   return decompressed_data
 
+
+class CachedEventReader:
+  __slots__ = ('_evt', '_enum')
+
+  def __init__(self, evt: capnp._DynamicStructReader, _enum: str | None = None):
+    """All capnp attribute accesses are expensive, and which() is often called multiple times"""
+    self._evt = evt
+    self._enum: str | None = _enum
+
+  # fast pickle support
+  def __reduce__(self):
+    return CachedEventReader._reducer, (self._evt.as_builder().to_bytes(), self._enum)
+
+  @staticmethod
+  def _reducer(data: bytes, _enum: str | None = None):
+    with capnp_log.Event.from_bytes(data) as evt:
+      return CachedEventReader(evt, _enum)
+
+  def __repr__(self):
+    return self._evt.__repr__()
+
+  def __str__(self):
+    return self._evt.__str__()
+
+  def __dir__(self):
+    return dir(self._evt)
+
+  def which(self) -> str:
+    if self._enum is None:
+      self._enum = self._evt.which()
+    return self._enum
+
+  def __getattr__(self, name: str):
+    if name.startswith("__") and name.endswith("__"):
+      return getattr(self, name)
+    return getattr(self._evt, name)
+
+
 class _LogFileReader:
-  def __init__(self, fn, canonicalize=True, only_union_types=False, sort_by_time=False, dat=None):
+  def __init__(self, fn, only_union_types=False, sort_by_time=False, dat=None):
     self.data_version = None
     self._only_union_types = only_union_types
 
@@ -75,7 +113,7 @@ class _LogFileReader:
     self._ents = []
     try:
       for e in ents:
-        self._ents.append(e)
+        self._ents.append(CachedEventReader(e))
     except capnp.KjException:
       warnings.warn("Corrupted events detected", RuntimeWarning, stacklevel=1)
 
@@ -102,7 +140,8 @@ class ReadMode(enum.StrEnum):
 
 
 LogPath = str | None
-Source = Callable[[SegmentRange, tuple[str, ...]], list[LogPath]]
+LogFileName = tuple[str, ...]
+Source = Callable[[SegmentRange, LogFileName], list[LogPath]]
 
 InternalUnavailableException = Exception("Internal source not available")
 
@@ -111,7 +150,7 @@ class LogsUnavailable(Exception):
   pass
 
 
-def comma_api_source(sr: SegmentRange, fns: tuple[str, ...]) -> list[LogPath]:
+def comma_api_source(sr: SegmentRange, fns: LogFileName) -> list[LogPath]:
   route = Route(sr.route_name)
 
   # comma api will have already checked if the file exists
@@ -121,7 +160,7 @@ def comma_api_source(sr: SegmentRange, fns: tuple[str, ...]) -> list[LogPath]:
     return [route.qlog_paths()[seg] for seg in sr.seg_idxs]
 
 
-def internal_source(sr: SegmentRange, fns: tuple[str, ...], endpoint_url: str = DATA_ENDPOINT) -> list[LogPath]:
+def internal_source(sr: SegmentRange, fns: LogFileName, endpoint_url: str = DATA_ENDPOINT) -> list[LogPath]:
   if not internal_source_available(endpoint_url):
     raise InternalUnavailableException
 
@@ -131,11 +170,11 @@ def internal_source(sr: SegmentRange, fns: tuple[str, ...], endpoint_url: str = 
   return eval_source([[get_internal_url(sr, seg, fn) for fn in fns] for seg in sr.seg_idxs])
 
 
-def openpilotci_source(sr: SegmentRange, fns: tuple[str, ...]) -> list[LogPath]:
+def openpilotci_source(sr: SegmentRange, fns: LogFileName) -> list[LogPath]:
   return eval_source([[get_url(sr.route_name, seg, fn) for fn in fns] for seg in sr.seg_idxs])
 
 
-def comma_car_segments_source(sr: SegmentRange, fns: tuple[str, ...]) -> list[LogPath]:
+def comma_car_segments_source(sr: SegmentRange, fns: LogFileName) -> list[LogPath]:
   return eval_source([get_comma_segments_url(sr.route_name, seg) for seg in sr.seg_idxs])
 
 
