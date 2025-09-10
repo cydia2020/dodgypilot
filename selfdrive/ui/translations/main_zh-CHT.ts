@@ -473,10 +473,6 @@ Firehose Mode allows you to maximize your training data uploads to improve openp
         <translation>一個有關操作系統的更新正在後台下載中。當更新準備好安裝時，您將收到提示進行更新。</translation>
     </message>
     <message>
-        <source>NVMe drive not mounted.</source>
-        <translation>NVMe 固態硬碟未被掛載。</translation>
-    </message>
-    <message>
         <source>openpilot was unable to identify your car. Your car is either unsupported or its ECUs are not recognized. Please submit a pull request to add the firmware versions to the proper vehicle. Need help? Join discord.comma.ai.</source>
         <translation>openpilot 無法識別您的車輛。您的車輛可能未被支援，或是其電控單元 (ECU) 未被識別。請提交一個 Pull Request 為您的車輛添加正確的韌體版本。需要幫助嗎？請加入 discord.comma.ai 。</translation>
     </message>
@@ -494,15 +490,15 @@ Firehose Mode allows you to maximize your training data uploads to improve openp
     </message>
     <message>
         <source>Acknowledge Excessive Actuation</source>
-        <translation type="unfinished"></translation>
+        <translation>確認過度作動</translation>
     </message>
     <message>
         <source>Snooze Update</source>
-        <translation type="unfinished">暫停更新</translation>
+        <translation>延後更新</translation>
     </message>
     <message>
         <source>openpilot detected excessive %1 actuation on your last drive. Please contact support at https://comma.ai/support and share your device&apos;s Dongle ID for troubleshooting.</source>
-        <translation type="unfinished"></translation>
+        <translation>openpilot 在您上次的駕駛中，偵測到過度的 %1 作動。請至 https://comma.ai/support 聯絡客服，並提供您裝置的 Dongle ID 以進行故障排除。</translation>
     </message>
 </context>
 <context>
@@ -677,113 +673,6 @@ Firehose Mode allows you to maximize your training data uploads to improve openp
     <message>
         <source>Firehose</source>
         <translation>Firehose</translation>
-    </message>
-</context>
-<context>
-    <name>Setup</name>
-    <message>
-        <source>WARNING: Low Voltage</source>
-        <translation>警告：電壓過低</translation>
-    </message>
-    <message>
-        <source>Power your device in a car with a harness or proceed at your own risk.</source>
-        <translation>請使用車上 harness 提供的電源，若繼續的話您需要自擔風險。</translation>
-    </message>
-    <message>
-        <source>Power off</source>
-        <translation>關機</translation>
-    </message>
-    <message>
-        <source>Continue</source>
-        <translation>繼續</translation>
-    </message>
-    <message>
-        <source>Getting Started</source>
-        <translation>入門</translation>
-    </message>
-    <message>
-        <source>Before we get on the road, let’s finish installation and cover some details.</source>
-        <translation>在我們上路之前，讓我們完成安裝並介紹一些細節。</translation>
-    </message>
-    <message>
-        <source>Connect to Wi-Fi</source>
-        <translation>連接到無線網路</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation>回上頁</translation>
-    </message>
-    <message>
-        <source>Continue without Wi-Fi</source>
-        <translation>在沒有 Wi-Fi 的情況下繼續</translation>
-    </message>
-    <message>
-        <source>Waiting for internet</source>
-        <translation>連接至網路中</translation>
-    </message>
-    <message>
-        <source>Enter URL</source>
-        <translation>輸入網址</translation>
-    </message>
-    <message>
-        <source>for Custom Software</source>
-        <translation>訂製的軟體</translation>
-    </message>
-    <message>
-        <source>Downloading...</source>
-        <translation>下載中…</translation>
-    </message>
-    <message>
-        <source>Download Failed</source>
-        <translation>下載失敗</translation>
-    </message>
-    <message>
-        <source>Ensure the entered URL is valid, and the device’s internet connection is good.</source>
-        <translation>請確定您輸入的是有效的安裝網址，並且確定裝置的網路連線狀態良好。</translation>
-    </message>
-    <message>
-        <source>Reboot device</source>
-        <translation>重新啟動</translation>
-    </message>
-    <message>
-        <source>Start over</source>
-        <translation>重新開始</translation>
-    </message>
-    <message>
-        <source>No custom software found at this URL.</source>
-        <translation>在此網址找不到自訂軟體。</translation>
-    </message>
-    <message>
-        <source>Something went wrong. Reboot the device.</source>
-        <translation>發生了一些錯誤。請重新啟動您的裝置。</translation>
-    </message>
-    <message>
-        <source>Select a language</source>
-        <translation>選擇語言</translation>
-    </message>
-    <message>
-        <source>Choose Software to Install</source>
-        <translation>選擇要安裝的軟體</translation>
-    </message>
-    <message>
-        <source>openpilot</source>
-        <translation>openpilot</translation>
-    </message>
-    <message>
-        <source>Custom Software</source>
-        <translation>自訂軟體</translation>
-    </message>
-    <message>
-        <source>WARNING: Custom Software</source>
-        <translation>警告：自訂軟體</translation>
-    </message>
-    <message>
-        <source>Use caution when installing third-party software. Third-party software has not been tested by comma, and may cause damage to your device and/or vehicle.
-
-If you&apos;d like to proceed, use https://flash.comma.ai to restore your device to a factory state later.</source>
-        <translation>請謹慎安裝第三方軟體。第三方軟體未經 comma 測試，可能會損壞您的裝置及車輛。
-
-若您仍要繼續，日後可使用 https://flash.comma.ai 將您的裝置恢復至出廠狀態。</translation>
     </message>
 </context>
 <context>
@@ -1137,16 +1026,6 @@ If you&apos;d like to proceed, use https://flash.comma.ai to restore your device
     <message>
         <source>Record and store microphone audio while driving. The audio will be included in the dashcam video in comma connect.</source>
         <translation>在駕駛時錄製並儲存麥克風音訊。此音訊將會收錄在 comma connect 的行車記錄器影片中。</translation>
-    </message>
-    <message>
-        <source>Record Audio Feedback with LKAS button</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Press the LKAS button to record and share driving feedback with the openpilot team. When this toggle is disabled, the button acts as a bookmark button. The event will be highlighted in comma connect and the segment will be preserved on your device&apos;s storage.
-
-Note that this feature is only compatible with select cars.</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
