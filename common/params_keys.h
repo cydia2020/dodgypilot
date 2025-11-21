@@ -131,6 +131,6 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
 
     // Irene's stuff
     {"DisplayRadarInfo", {PERSISTENT, BOOL}}, // display radar state on onroad UI
-    {"CarBrightnessControl", {PERSISTENT, BOOL}}, // link display brightness with combination meter
+    {"ClusterLinkedBrightness", {PERSISTENT, BOOL}}, // link display brightness with combination meter
     {"MuteAlerts", {PERSISTENT, BOOL}}, // mute the device that openpilot is running on, pass alert sounds to vehicle
 };

@@ -81,6 +81,9 @@ class UIState:
     self.light_sensor: float = -1.0
     self._param_update_time: float = 0.0
 
+    # dodgypilot state variables
+    self.is_linked_brightness: bool = self.params.get_bool("ClusterLinkedBrightness")
+
     # Callbacks
     self._offroad_transition_callbacks: list[Callable[[], None]] = []
     self._engaged_transition_callbacks: list[Callable[[], None]] = []
@@ -141,6 +144,10 @@ class UIState:
 
     self.is_metric = self.params.get_bool("IsMetric")
     self.always_on_dm = self.params.get_bool("AlwaysOnDM")
+
+    # Update dodgypilot states
+    self.is_linked_brightness = self.params.get_bool("ClusterLinkedBrightness")
+    self.vehicle_cluster_brightness = self.sm["carState"].meterBrightness
 
   def _update_status(self) -> None:
     if self.started and self.sm.updated["selfdriveState"]:
@@ -214,7 +221,10 @@ class Device:
     if self._interaction_time <= 0:
       self.reset_interactive_timeout()
 
-    self._update_brightness()
+    if self.is_linked_brightness and self.vehicle_cluster_brightness is not None:
+      self._update_linked_brightness()
+    else:
+      self._update_brightness()
     self._update_wakefulness()
 
   def set_offroad_brightness(self, brightness: int | None):
@@ -240,6 +250,23 @@ class Device:
     if not self._awake:
       brightness = 0
 
+    if brightness != self._last_brightness:
+      if self._brightness_thread is None or not self._brightness_thread.is_alive():
+        self._brightness_thread = threading.Thread(target=HARDWARE.set_screen_brightness, args=(brightness,))
+        self._brightness_thread.start()
+        self._last_brightness = brightness
+
+  # dodgypilot - Linked brightness
+  def _update_linked_brightness(self):
+
+    # display brightness is just cluster brightness
+    brightness = self.vehicle_cluster_brightness
+
+    # if not awake, set to 0
+    if not self._awake:
+      brightness = 0
+
+    # update brightness, same as upstream
     if brightness != self._last_brightness:
       if self._brightness_thread is None or not self._brightness_thread.is_alive():
         self._brightness_thread = threading.Thread(target=HARDWARE.set_screen_brightness, args=(brightness,))
