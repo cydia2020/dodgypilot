@@ -42,6 +42,7 @@ class Colors:
   BORDER_TRANSLUCENT = rl.Color(255, 255, 255, 75)
   HEADER_GRADIENT_START = rl.Color(0, 0, 0, 114)
   HEADER_GRADIENT_END = rl.BLANK
+  BRAKE_GRADIENT_START = rl.Color(255, 64, 77, 114)
 
 
 UI_CONFIG = UIConfig()
@@ -89,13 +90,16 @@ class HudRenderer(Widget):
 
   def _render(self, rect: rl.Rectangle) -> None:
     """Render HUD elements to the screen."""
+    cs = ui_state.sm["carState"]
+    brake_lights = (ui_state.has_fresh_data("carState") and cs.canValid
+                    and getattr(cs, "brakeLightsValid", False) and getattr(cs, "brakeLights", False))
     # Draw the header background
     rl.draw_rectangle_gradient_v(
       int(rect.x),
       int(rect.y),
       int(rect.width),
       UI_CONFIG.header_height,
-      COLORS.HEADER_GRADIENT_START,
+      COLORS.BRAKE_GRADIENT_START if brake_lights else COLORS.HEADER_GRADIENT_START,
       COLORS.HEADER_GRADIENT_END,
     )
 

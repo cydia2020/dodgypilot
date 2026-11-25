@@ -6,7 +6,9 @@ from opendbc.car.structs import car
 from dataclasses import dataclass, field
 from openpilot.common.params import Params
 from openpilot.selfdrive.locationd.calibrationd import HEIGHT_INIT
-from openpilot.selfdrive.ui.ui_state import ui_state
+from openpilot.selfdrive.ui.ui_state import ui_state, DISPLAY_RADAR_INFO
+from openpilot.system.ui.lib.application import gui_app, FontWeight
+from openpilot.system.ui.lib.text_measure import measure_text_cached
 from openpilot.system.ui.lib.polygon import draw_polygon, Gradient
 from openpilot.system.ui.widgets import Widget
 
@@ -42,6 +44,7 @@ class ModelRenderer(Widget):
   def __init__(self):
     super().__init__()
     self._longitudinal_control = False
+    self._lead_info_font = gui_app.font(FontWeight.SEMI_BOLD)
     self._lane_line_probs = np.zeros(4, dtype=np.float32)
     self._road_edge_stds = np.zeros(2, dtype=np.float32)
     self._lead_vehicles = [LeadVehicle(), LeadVehicle()]
@@ -100,6 +103,10 @@ class ModelRenderer(Widget):
     radar_state = sm['radarState'] if sm.valid['radarState'] else None
     lead_one = radar_state.leadOne if radar_state else None
     render_lead_indicator = self._longitudinal_control and radar_state is not None
+    render_lead_info = (DISPLAY_RADAR_INFO and lead_one is not None and lead_one.present
+                        and all(ui_state.has_fresh_data(s) for s in
+                                ("radarState", "carState", "modelV2", "extrinsicsCalibration"))
+                        and sm["carState"].canValid)
 
     # Update model data when needed
     model_updated = sm.updated['modelV2']
@@ -112,8 +119,10 @@ class ModelRenderer(Widget):
         return
 
       self._update_model(lead_one, path_x_array)
-      if render_lead_indicator:
+      if render_lead_indicator or render_lead_info:
         self._update_leads(radar_state, path_x_array)
+      else:
+        self._lead_vehicles = [LeadVehicle(), LeadVehicle()]
       self._transform_dirty = False
 
     # Draw elements
@@ -122,6 +131,8 @@ class ModelRenderer(Widget):
 
     if render_lead_indicator and radar_state:
       self._draw_lead_indicator()
+    if render_lead_info:
+      self._draw_lead_info(rect, lead_one, sm["carState"].vEgo)
 
   def _update_raw_points(self, model):
     """Update raw 3D points from model data"""
@@ -286,6 +297,45 @@ class ModelRenderer(Widget):
 
       rl.draw_triangle_fan(lead.glow, len(lead.glow), rl.Color(218, 202, 37, 255))
       rl.draw_triangle_fan(lead.chevron, len(lead.chevron), rl.Color(201, 34, 49, lead.fill_alpha))
+
+  def _draw_lead_info(self, rect: rl.Rectangle, lead, v_ego: float):
+    geometry = self._lead_vehicles[0]
+    if len(geometry.chevron) != 3:
+      return
+    x, y = geometry.chevron[1]
+    if not np.isfinite([x, y, lead.dRel, lead.vRel, v_ego]).all() or lead.dRel <= 0:
+      return
+    if not (rect.x <= x <= rect.x + rect.width and rect.y <= y <= rect.y + rect.height):
+      return
+
+    speed = max(0.0, v_ego + lead.vRel)
+    if ui_state.is_metric:
+      lines = (f"{speed * 3.6:.0f} km/h", f"{lead.dRel:.0f} m")
+    else:
+      lines = (f"{speed * 2.236936292:.0f} mph", f"{lead.dRel * 3.28084:.0f} ft")
+    if not self._longitudinal_control:
+      # Informational only; do not draw the openpilot-long chevron in stock ACC mode.
+      lines = ("Lead: " + lines[0], lines[1])
+
+    font_size = 60
+    sizes = [measure_text_cached(self._lead_info_font, line, font_size) for line in lines]
+    width = max(size.x for size in sizes) + 60
+    height = sum(size.y for size in sizes) + 20
+    top = max(p[1] for p in geometry.chevron) + 16
+    left = x - width / 2
+    # Keep out of the speed header and inside the camera area.
+    if (top < rect.y + 320 or left < rect.x + 8 or left + width > rect.x + rect.width - 8
+        or top + height > rect.y + rect.height - 8):
+      return
+
+    box = rl.Rectangle(float(left), float(top), float(width), float(height))
+    rl.draw_rectangle_rounded(box, 0.35, 10, rl.Color(0, 0, 0, 166))
+    rl.draw_rectangle_rounded_lines_ex(box, 0.35, 10, 6, rl.Color(255, 255, 255, 75))
+    text_y = top + 10
+    for line, size in zip(lines, sizes, strict=True):
+      rl.draw_text_ex(self._lead_info_font, line, rl.Vector2(float(x - size.x / 2), float(text_y)),
+                      font_size, 0, rl.WHITE)
+      text_y += size.y
 
   @staticmethod
   def _get_path_length_idx(pos_x_array: np.ndarray, path_distance: float) -> int:

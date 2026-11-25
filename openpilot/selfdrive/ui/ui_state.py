@@ -23,6 +23,10 @@ BACKLIGHT_MIN = 30  # the lowest backlight the display shows properly
 BRIGHTNESS_MIN = BACKLIGHT_MIN * 0.6 if HARDWARE.get_device_type() == "mici" else BACKLIGHT_MIN
 PARAM_UPDATE_TIME = 1 / 5.0
 
+# Private fork defaults until the settings panel is ported.
+DISPLAY_RADAR_INFO = True
+CAR_BRIGHTNESS_CONTROL = True
+
 
 class UIStatus(Enum):
   DISENGAGED = "disengaged"
@@ -145,6 +149,10 @@ class UIState:
 
   def received_since_started(self, service: str) -> bool:
     return self.sm.recv_frame[service] > self._started_frame
+
+  def has_fresh_data(self, service: str) -> bool:
+    return (self.started and self.received_since_started(service)
+            and self.sm.alive[service] and self.sm.valid[service])
 
   def update(self) -> None:
     self.prime_state.start()  # start thread after manager forks ui
@@ -366,6 +374,14 @@ class Device:
         clipped_brightness = ((clipped_brightness + 16.0) / 116.0) ** 3.0
 
       clipped_brightness = float(np.interp(clipped_brightness, [0, 1], [BRIGHTNESS_MIN, 100]))
+
+    # Preserve upstream minimum brightness, filtering and wakefulness.
+    if CAR_BRIGHTNESS_CONTROL and ui_state.has_fresh_data("carState"):
+      cs = ui_state.sm["carState"]
+      if cs.canValid and getattr(cs, "meterBrightnessValid", False):
+        target = getattr(cs, "meterBrightness", -1.0)
+        if np.isfinite(target) and 0 <= target <= 100:
+          clipped_brightness = float(np.clip(target, BRIGHTNESS_MIN, 100.0))
 
     brightness = self._brightness_filter.update(clipped_brightness)
     gui_app.set_dim(1 - brightness / BACKLIGHT_MIN)
