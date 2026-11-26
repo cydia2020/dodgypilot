@@ -12,6 +12,7 @@ from openpilot.common.swaglog import cloudlog
 
 from opendbc.car.car_helpers import interfaces
 from opendbc.car.vehicle_model import VehicleModel
+from opendbc.car.toyota.values import CAR as ToyotaCAR
 from openpilot.selfdrive.controls.lib.drive_helpers import clip_curvature
 from openpilot.selfdrive.controls.lib.latcontrol import LatControl
 from openpilot.selfdrive.controls.lib.latcontrol_pid import LatControlPID
@@ -44,6 +45,9 @@ class Controls:
     self.pm = messaging.PubMaster(['carControl', 'controlsState'])
 
     self.steer_limited_by_safety = False
+    # Dash-only lane confidence debounce, not part of lane departure logic.
+    self._dash_lanes = [False, False]
+    self._dash_lane_counts = [0, 0]
     self.curvature = 0.0
     self.desired_curvature = 0.0
 
@@ -172,6 +176,41 @@ class Controls:
 
     hudControl.rightLaneVisible = True
     hudControl.leftLaneVisible = True
+    if self.CP.carFingerprint == ToyotaCAR.TOYOTA_PRIUS:
+      # SelfdriveState and HUDControl use different audible-alert enums.
+      # Only supplementary vehicle beeps consume this field; soundd is unchanged.
+      alert = self.sm['selfdriveState'].alertSound
+      source = log.SelfdriveState.AudibleAlert
+      target = car.CarControl.HUDControl.AudibleAlert
+      if self.sm.all_checks(['selfdriveState']):
+        if alert == source.prompt:
+          hudControl.audibleAlert = target.prompt
+        elif alert == source.promptDistracted:
+          hudControl.audibleAlert = target.promptDistracted
+        elif alert == source.promptRepeat:
+          hudControl.audibleAlert = target.promptRepeat
+        elif alert == source.warningSoft:
+          hudControl.audibleAlert = target.warningSoft
+        elif alert in (source.warningImmediateSystem, source.warningImmediateUser):
+          hudControl.audibleAlert = target.warningImmediate
+
+      # Preserve the old 50 km/h threshold and 0.5 lane confidence.
+      model = self.sm['modelV2']
+      probs = model.laneLineProbs
+      if not self.sm.all_checks(['modelV2']) or len(probs) < 3 or CS.vEgo <= 125 / 9 or not CC.enabled:
+        self._dash_lanes = [False, False]
+        self._dash_lane_counts = [0, 0]
+      else:
+        for i, prob in enumerate((probs[1], probs[2])):
+          visible = prob > 0.5
+          if visible == self._dash_lanes[i]:
+            self._dash_lane_counts[i] = 0
+          else:
+            self._dash_lane_counts[i] += 1
+            if self._dash_lane_counts[i] >= round(1.0 / DT_CTRL):
+              self._dash_lanes[i] = visible
+              self._dash_lane_counts[i] = 0
+      hudControl.leftLaneVisible, hudControl.rightLaneVisible = self._dash_lanes
     if self.sm.valid['driverAssistance']:
       hudControl.leftLaneDepart = self.sm['driverAssistance'].leftLaneDeparture
       hudControl.rightLaneDepart = self.sm['driverAssistance'].rightLaneDeparture
