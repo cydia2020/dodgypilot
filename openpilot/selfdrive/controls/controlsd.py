@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import math
+import time
 from numbers import Number
 
 from openpilot.cereal import log
@@ -12,6 +13,7 @@ from openpilot.common.swaglog import cloudlog
 
 from opendbc.car.car_helpers import interfaces
 from opendbc.car.vehicle_model import VehicleModel
+from opendbc.car.toyota.values import ToyotaFlags
 from openpilot.selfdrive.controls.lib.drive_helpers import clip_curvature
 from openpilot.selfdrive.controls.lib.latcontrol import LatControl
 from openpilot.selfdrive.controls.lib.latcontrol_pid import LatControlPID
@@ -47,6 +49,7 @@ class Controls:
     self.pm = messaging.PubMaster(['carControl', 'controlsState'])
 
     self.steer_limited_by_safety = False
+    self._dsu_resume_until: float | None = 0.0
     # Dash-only lane confidence debounce, not part of lane departure logic.
     self._dash_lanes = [False, False]
     self._dash_lane_counts = [0, 0]
@@ -154,6 +157,31 @@ class Controls:
 
     return CC, lac_log
 
+  def _dsu_resume_requested(self, CC, CS):
+    # The relay needs an explicit release request, not positive PID output.
+    # Delay reasserting hold for 3 s after the last resume request ends,
+    # matching stock DSU indication timing when a lead creeps forward.
+    plan = self.sm['longitudinalPlan']
+    allowed = (CC.enabled and CC.longActive and not CC.cruiseControl.cancel and
+               CS.cruiseState.enabled and CS.canValid and not CS.canTimeout and
+               not CS.brakePressed and not CS.gasPressed and not CS.stockAeb and not CS.stockFcw and
+               self.sm.all_checks(['longitudinalPlan', 'carState', 'selfdriveState']) and
+               not plan.fcw)
+    if not allowed:
+      self._dsu_resume_until = 0.0
+      return False
+
+    # Only a genuine resume request can start (or retrigger) the release.
+    if not plan.shouldStop and (CS.standstill or CS.cruiseState.standstill):
+      self._dsu_resume_until = None
+      return True
+
+    # Start the falling-edge delay on the first cycle without a request.
+    now = time.monotonic()
+    if self._dsu_resume_until is None:
+      self._dsu_resume_until = now + 3.0
+    return now < self._dsu_resume_until
+
   def publish(self, CC, lac_log):
     CS = self.sm['carState']
 
@@ -167,6 +195,8 @@ class Controls:
     CC.cruiseControl.override = CC.enabled and not CC.longActive and self.CP.openpilotLongitudinalControl
     CC.cruiseControl.cancel = CS.cruiseState.enabled and (not CC.enabled or not self.CP.pcmCruise)
     CC.cruiseControl.resume = CC.enabled and CS.cruiseState.standstill and not self.sm['longitudinalPlan'].shouldStop
+    if self.CP.brand == "toyota" and self.CP.flags & ToyotaFlags.DSU_REROUTED:
+      CC.cruiseControl.resume = self._dsu_resume_requested(CC, CS)
 
     hudControl = CC.hudControl
     hudControl.setSpeed = float(CS.vCruiseCluster * CV.KPH_TO_MS)
