@@ -191,6 +191,10 @@ class TogglesLayout(Widget):
     ui_state.update_params()
     self._initial_cruise_speed.action_item.refresh()
 
+    if ui_state.is_offroad():
+      self._long_personality_setting.action_item.set_selected_button(
+        self._params.get("LongitudinalPersonality", return_default=True))
+
     if ui_state.CP is not None:
       self._long_personality_setting.action_item.set_enabled(ui_state.has_longitudinal_control)
 
