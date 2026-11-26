@@ -7,6 +7,9 @@ import wave
 from openpilot.cereal import log, messaging
 from openpilot.common.basedir import BASEDIR
 from openpilot.common.filter_simple import FirstOrderFilter
+from openpilot.common.params import Params
+from opendbc.car.toyota.values import CAR as ToyotaCAR
+from openpilot.selfdrive.ui.vehicle_audio import prius_vehicle_alert, may_use_vehicle_audio
 from openpilot.common.realtime import Ratekeeper
 from openpilot.common.utils import retry
 from openpilot.common.swaglog import cloudlog
@@ -87,6 +90,8 @@ class Soundd:
 
     self.selfdrive_timeout_alert = False
     self.pending_stop = False
+    self.prefer_vehicle_alerts = False
+    self.vehicle_alert_muted = False
 
     self.spl_filter_weighted = FirstOrderFilter(0, 2.5, FILTER_DT, initialized=False)
 
@@ -135,7 +140,8 @@ class Soundd:
   def callback(self, data_out: np.ndarray, frames: int, time, status) -> None:
     if status:
       cloudlog.warning(f"soundd stream over/underflow: {status}")
-    data_out[:frames, 0] = self.get_sound_data(frames)
+    samples = self.get_sound_data(frames)
+    data_out[:frames, 0] = 0.0 if self.vehicle_alert_muted else samples
 
   def update_alert(self, new_alert):
     current_alert_played_once = self.current_alert == AudibleAlert.none or self.current_sound_frame >= len(self.loaded_sounds[self.current_sound])
@@ -156,16 +162,37 @@ class Soundd:
       self.current_sound = new_alert
       self.current_sound_frame = 0
 
+  def use_vehicle_audio(self, sm):
+    # This checks the live request, not physical playback acknowledgement.
+    return (self.prefer_vehicle_alerts and
+            sm.recv_frame['carParams'] > 0 and sm.valid['carParams'] and
+            sm['carParams'].carFingerprint == ToyotaCAR.TOYOTA_PRIUS and
+            sm.all_checks(['selfdriveState', 'carState', 'carControl']) and
+            sm['carState'].canValid and not sm['carState'].canTimeout and
+            may_use_vehicle_audio(sm['selfdriveState']) and
+            sm['carControl'].hudControl.enableVehicleBuzzer and
+            sm['carControl'].hudControl.audibleAlert == prius_vehicle_alert(sm['selfdriveState']))
+
   def get_audible_alert(self, sm):
-    if sm.updated['selfdriveState']:
-      new_alert = sm['selfdriveState'].alertSound.raw
-      self.update_alert(new_alert)
-    elif check_selfdrive_timeout_alert(sm):
+    # The independent watchdog must be audible even if controlsd cannot
+    # publish a request to the vehicle. Preserve upstream timeout duration.
+    if not sm.updated['selfdriveState'] and check_selfdrive_timeout_alert(sm):
+      self.vehicle_alert_muted = False
       self.update_alert(AudibleAlert.warningImmediateSystem)
       self.selfdrive_timeout_alert = True
-    elif self.selfdrive_timeout_alert:
+      return
+    if self.selfdrive_timeout_alert and not sm.updated['selfdriveState']:
       self.update_alert(AudibleAlert.none)
       self.selfdrive_timeout_alert = False
+      return
+    muted = self.use_vehicle_audio(sm)
+    changed = muted != self.vehicle_alert_muted
+    self.vehicle_alert_muted = muted
+    if sm.updated['selfdriveState'] or (changed and sm.all_checks(['selfdriveState'])):
+      self.selfdrive_timeout_alert = False
+      # Keep upstream alert state and ramping running even when output is muted.
+      # The audio callback gates samples rather than changing its shared sound state.
+      self.update_alert(sm['selfdriveState'].alertSound.raw)
 
   def calculate_volume(self, weighted_db):
     volume = ((weighted_db - AMBIENT_DB) / DB_SCALE) * (MAX_VOLUME - MIN_VOLUME) + MIN_VOLUME
@@ -183,7 +210,10 @@ class Soundd:
     import sounddevice as sd
     micd.patch_sounddevice(sd)
 
-    sm = messaging.SubMaster(['selfdriveState', 'soundPressure'])
+    sm = messaging.SubMaster(['selfdriveState', 'soundPressure', 'carParams', 'carState', 'carControl'])
+    params = Params()
+    self.prefer_vehicle_alerts = (params.get_bool("MuteAlerts") and
+                                  params.get_bool("SupplementaryVehicleAlerts"))
 
     with self.get_stream(sd) as stream:
       rk = Ratekeeper(20)

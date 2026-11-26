@@ -22,6 +22,7 @@ from openpilot.selfdrive.controls.lib.latcontrol_torque import LatControlTorque
 from openpilot.selfdrive.controls.lib.longcontrol import LongControl
 from openpilot.selfdrive.modeld.modeld import LAT_SMOOTH_SECONDS
 from openpilot.selfdrive.locationd.helpers import PoseCalibrator, Pose
+from openpilot.selfdrive.ui.vehicle_audio import prius_vehicle_alert
 
 State = log.SelfdriveState.OpenpilotState
 LaneChangeState = log.LaneChangeState
@@ -34,6 +35,7 @@ class Controls:
   def __init__(self) -> None:
     self.params = Params()
     self._supplementary_vehicle_alerts = self.params.get_bool("SupplementaryVehicleAlerts")
+    self._prefer_vehicle_alerts = self.params.get_bool("MuteAlerts")
     cloudlog.info("controlsd is waiting for CarParams")
     self.CP = messaging.log_from_bytes(self.params.get("CarParams", block=True), car.CarParams)
     cloudlog.info("controlsd got CarParams")
@@ -184,7 +186,10 @@ class Controls:
       source = log.SelfdriveState.AudibleAlert
       target = car.CarControl.HUDControl.AudibleAlert
       if self._supplementary_vehicle_alerts and self.sm.all_checks(['selfdriveState']):
-        if alert == source.prompt:
+        if self._prefer_vehicle_alerts and CS.canValid and not CS.canTimeout:
+          hudControl.enableVehicleBuzzer = True
+          hudControl.audibleAlert = prius_vehicle_alert(self.sm['selfdriveState'])
+        elif alert == source.prompt:
           hudControl.audibleAlert = target.prompt
         elif alert == source.promptDistracted:
           hudControl.audibleAlert = target.promptDistracted

@@ -8,7 +8,7 @@ from openpilot.selfdrive.ui.ui_state import ui_state
 from openpilot.selfdrive.ui.layouts.settings.initial_cruise_speed import InitialCruiseSpeedControl
 
 PERSONALITY_TO_INT = log.LongitudinalPersonality.schema.enumerants
-OFFROAD_ONLY_TOGGLES = {"DisableLogging", "SupplementaryVehicleAlerts"}
+OFFROAD_ONLY_TOGGLES = {"DisableLogging", "SupplementaryVehicleAlerts", "MuteAlerts"}
 
 # Description constants
 DESCRIPTIONS = {
@@ -34,6 +34,11 @@ DESCRIPTIONS = {
   "SupplementaryVehicleAlerts": tr_noop(
     "Use the Prius combination meter buzzer for additional alerts. Device and factory warnings remain enabled. "
     "Changes apply on the next drive."
+  ),
+  "MuteAlerts": tr_noop(
+    "Prefer the Prius combination meter for alerts. Routine engagement and driver cancellation are silent; "
+    "minor alerts are text-only. Requires Supplementary Vehicle Alerts. Device collision and timeout warnings remain audible, "
+    "and device audio is used if the vehicle alert path is unavailable. Changes apply on the next drive."
   ),
   "DisableLogging": tr_noop(
     "Disable local route and video recording and the route uploader. Existing recordings are not deleted. "
@@ -107,6 +112,12 @@ class TogglesLayout(Widget):
       "SupplementaryVehicleAlerts": (
         lambda: tr("Supplementary Vehicle Alerts"),
         DESCRIPTIONS["SupplementaryVehicleAlerts"],
+        "warning.png",
+        False,
+      ),
+      "MuteAlerts": (
+        lambda: tr("Prefer Vehicle Alerts"),
+        DESCRIPTIONS["MuteAlerts"],
         "warning.png",
         False,
       ),

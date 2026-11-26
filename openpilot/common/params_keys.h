@@ -89,6 +89,7 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
     {"LateralManeuverMode", {CLEAR_ON_MANAGER_START | CLEAR_ON_OFFROAD_TRANSITION, BOOL}},
     {"LongitudinalManeuverMode", {CLEAR_ON_MANAGER_START | CLEAR_ON_OFFROAD_TRANSITION, BOOL}},
     {"LongitudinalPersonality", {CLEAR_ON_MANAGER_START | CLEAR_ON_OFFROAD_TRANSITION, INT, std::to_string(static_cast<int>(cereal::LongitudinalPersonality::RELAXED))}},
+    {"MuteAlerts", {PERSISTENT, BOOL, "0"}},
     {"NavigationEnabled", {PERSISTENT, BOOL, "0"}},
     {"NavDestination", {CLEAR_ON_MANAGER_START | CLEAR_ON_OFFROAD_TRANSITION, JSON}},
     {"NetworkMetered", {PERSISTENT, BOOL}},
