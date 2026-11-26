@@ -41,8 +41,3 @@ def prius_vehicle_alert(state):
       return Target.prompt
     return Target.none
   return Target.none
-
-
-def may_use_vehicle_audio(state):
-  # Keep the collision-specific device tone, not a generic steering warning.
-  return state.alertHudVisual != Visual.fcw and state.alertType != "pcmDisable/userDisable"
