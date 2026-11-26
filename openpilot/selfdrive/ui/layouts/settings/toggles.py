@@ -8,6 +8,7 @@ from openpilot.selfdrive.ui.ui_state import ui_state
 from openpilot.selfdrive.ui.layouts.settings.initial_cruise_speed import InitialCruiseSpeedControl
 
 PERSONALITY_TO_INT = log.LongitudinalPersonality.schema.enumerants
+OFFROAD_ONLY_TOGGLES = {"DisableLogging", "SupplementaryVehicleAlerts"}
 
 # Description constants
 DESCRIPTIONS = {
@@ -28,6 +29,16 @@ DESCRIPTIONS = {
   "AlwaysOnDM": tr_noop("Enable driver monitoring even when openpilot is not engaged."),
   'RecordFront': tr_noop("Upload data from the cabin camera and help improve the driver monitoring algorithm."),
   "IsMetric": tr_noop("Display speed in km/h instead of mph."),
+  "DisplayRadarInfo": tr_noop("Display the detected lead vehicle's speed and distance on the driving screen."),
+  "CarBrightnessControl": tr_noop("Synchronise display brightness with the vehicle's combination meter when supported."),
+  "SupplementaryVehicleAlerts": tr_noop(
+    "Use the Prius combination meter buzzer for additional alerts. Device and factory warnings remain enabled. "
+    "Changes apply on the next drive."
+  ),
+  "DisableLogging": tr_noop(
+    "Disable local route and video recording and the route uploader. Existing recordings are not deleted. "
+    "This does not disable independent livestreaming or other network services."
+  ),
   "RecordAudio": tr_noop("Record and store microphone audio while driving. The audio will be included in the dashcam video in comma connect."),
 }
 
@@ -81,6 +92,30 @@ class TogglesLayout(Widget):
         "metric.png",
         False,
       ),
+      "DisplayRadarInfo": (
+        lambda: tr("Display Lead Info"),
+        DESCRIPTIONS["DisplayRadarInfo"],
+        "speed_limit.png",
+        False,
+      ),
+      "CarBrightnessControl": (
+        lambda: tr("Use Vehicle Settings for Backlight Control"),
+        DESCRIPTIONS["CarBrightnessControl"],
+        "metric.png",
+        False,
+      ),
+      "SupplementaryVehicleAlerts": (
+        lambda: tr("Supplementary Vehicle Alerts"),
+        DESCRIPTIONS["SupplementaryVehicleAlerts"],
+        "warning.png",
+        False,
+      ),
+      "DisableLogging": (
+        lambda: tr("Disable Data Recording and Uploading"),
+        DESCRIPTIONS["DisableLogging"],
+        "monitoring.png",
+        False,
+      ),
     }
 
     self._long_personality_setting = multiple_button_item(
@@ -116,7 +151,7 @@ class TogglesLayout(Widget):
         locked = self._params.get_bool(param + "Lock")
       except UnknownKeyName:
         locked = False
-      toggle.action_item.set_enabled(not locked)
+      toggle.action_item.set_enabled(not locked and (param not in OFFROAD_ONLY_TOGGLES or ui_state.is_offroad()))
 
       # Make description callable for live translation
       additional_desc = ""
@@ -138,6 +173,7 @@ class TogglesLayout(Widget):
     self._scroller = Scroller(list(self._toggles.values()), line_separator=True, spacing=0)
 
     ui_state.add_engaged_transition_callback(self._update_toggles)
+    ui_state.add_offroad_transition_callback(self._update_toggles)
 
   def _update_state(self):
     if ui_state.sm.updated["selfdriveState"]:
@@ -165,15 +201,22 @@ class TogglesLayout(Widget):
 
     # these toggles need restart, block while engaged
     for toggle_def in self._toggle_defs:
-      if self._toggle_defs[toggle_def][3] and toggle_def not in self._locked_toggles:
+      if toggle_def in self._locked_toggles:
+        continue
+      if toggle_def in OFFROAD_ONLY_TOGGLES:
+        self._toggles[toggle_def].action_item.set_enabled(ui_state.is_offroad())
+      elif self._toggle_defs[toggle_def][3]:
         self._toggles[toggle_def].action_item.set_enabled(not ui_state.engaged)
 
   def _render(self, rect):
     self._scroller.render(rect)
 
   def _toggle_callback(self, state: bool, param: str):
+    if param in self._locked_toggles or (param in OFFROAD_ONLY_TOGGLES and not ui_state.is_offroad()):
+      self._update_toggles()
+      return
     self._params.put_bool(param, state, block=True)
-    if param == "IsMetric":
+    if param in ("IsMetric", "DisplayRadarInfo", "CarBrightnessControl"):
       self._update_toggles()
 
     if self._toggle_defs[param][3]:

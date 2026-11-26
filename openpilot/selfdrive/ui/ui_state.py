@@ -23,9 +23,6 @@ BACKLIGHT_MIN = 30  # the lowest backlight the display shows properly
 BRIGHTNESS_MIN = BACKLIGHT_MIN * 0.6 if HARDWARE.get_device_type() == "mici" else BACKLIGHT_MIN
 PARAM_UPDATE_TIME = 1 / 5.0
 
-# Private fork defaults until the settings panel is ported.
-DISPLAY_RADAR_INFO = True
-CAR_BRIGHTNESS_CONTROL = True
 
 
 class UIStatus(Enum):
@@ -95,6 +92,8 @@ class UIState:
 
     # Core state variables
     self.is_metric: bool = self.params.get_bool("IsMetric")
+    self.display_radar_info: bool = self.params.get_bool("DisplayRadarInfo")
+    self.car_brightness_control: bool = self.params.get_bool("CarBrightnessControl")
     self.initial_cruise_speed: int = self.params.get("InitialCruiseSpeedKph", return_default=True)
     self.is_release = self.params.get_bool("IsReleaseBranch")
     self.always_on_dm: bool = self.params.get_bool("AlwaysOnDM")
@@ -268,6 +267,8 @@ class UIState:
 
     self.recording_audio = self.params.get_bool("RecordAudio") and self.started
     self.is_metric = self.params.get_bool("IsMetric")
+    self.display_radar_info = self.params.get_bool("DisplayRadarInfo")
+    self.car_brightness_control = self.params.get_bool("CarBrightnessControl")
     self.initial_cruise_speed = self.params.get("InitialCruiseSpeedKph", return_default=True)
     self.always_on_dm = self.params.get_bool("AlwaysOnDM")
     self.personality_param = self.params.get("LongitudinalPersonality", return_default=True)
@@ -376,7 +377,7 @@ class Device:
       clipped_brightness = float(np.interp(clipped_brightness, [0, 1], [BRIGHTNESS_MIN, 100]))
 
     # Preserve upstream minimum brightness, filtering and wakefulness.
-    if CAR_BRIGHTNESS_CONTROL and ui_state.has_fresh_data("carState"):
+    if ui_state.car_brightness_control and ui_state.has_fresh_data("carState"):
       cs = ui_state.sm["carState"]
       if cs.canValid and getattr(cs, "meterBrightnessValid", False):
         target = getattr(cs, "meterBrightness", -1.0)

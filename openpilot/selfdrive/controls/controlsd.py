@@ -33,6 +33,7 @@ ACTUATOR_FIELDS = tuple(car.CarControl.Actuators.schema.fields.keys())
 class Controls:
   def __init__(self) -> None:
     self.params = Params()
+    self._supplementary_vehicle_alerts = self.params.get_bool("SupplementaryVehicleAlerts")
     cloudlog.info("controlsd is waiting for CarParams")
     self.CP = messaging.log_from_bytes(self.params.get("CarParams", block=True), car.CarParams)
     cloudlog.info("controlsd got CarParams")
@@ -182,7 +183,7 @@ class Controls:
       alert = self.sm['selfdriveState'].alertSound
       source = log.SelfdriveState.AudibleAlert
       target = car.CarControl.HUDControl.AudibleAlert
-      if self.sm.all_checks(['selfdriveState']):
+      if self._supplementary_vehicle_alerts and self.sm.all_checks(['selfdriveState']):
         if alert == source.prompt:
           hudControl.audibleAlert = target.prompt
         elif alert == source.promptDistracted:

@@ -6,7 +6,7 @@ from opendbc.car.structs import car
 from dataclasses import dataclass, field
 from openpilot.common.params import Params
 from openpilot.selfdrive.locationd.calibrationd import HEIGHT_INIT
-from openpilot.selfdrive.ui.ui_state import ui_state, DISPLAY_RADAR_INFO
+from openpilot.selfdrive.ui.ui_state import ui_state
 from openpilot.system.ui.lib.application import gui_app, FontWeight
 from openpilot.system.ui.lib.text_measure import measure_text_cached
 from openpilot.system.ui.lib.polygon import draw_polygon, Gradient
@@ -103,7 +103,7 @@ class ModelRenderer(Widget):
     radar_state = sm['radarState'] if sm.valid['radarState'] else None
     lead_one = radar_state.leadOne if radar_state else None
     render_lead_indicator = self._longitudinal_control and radar_state is not None
-    render_lead_info = (DISPLAY_RADAR_INFO and lead_one is not None and lead_one.present
+    render_lead_info = (ui_state.display_radar_info and lead_one is not None and lead_one.present
                         and all(ui_state.has_fresh_data(s) for s in
                                 ("radarState", "carState", "modelV2", "extrinsicsCalibration"))
                         and sm["carState"].canValid)
