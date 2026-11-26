@@ -443,10 +443,11 @@ class SelfdriveD:
         self.events.add(EventName.steerSaturated)
 
     # Check for FCW
+    enable_fcw = False
     stock_long_is_braking = self.enabled and not self.CP.openpilotLongitudinalControl and CS.aEgo < -1.25
     model_fcw = self.sm['modelV2'].meta.hardBrakePredicted and not CS.brakePressed and not stock_long_is_braking
     planner_fcw = self.sm['longitudinalPlan'].fcw and self.enabled
-    if (planner_fcw or model_fcw) and not self.CP.notCar:
+    if (planner_fcw or model_fcw) and not self.CP.notCar and enable_fcw:
       self.events.add(EventName.fcw)
 
     # GPS checks
