@@ -32,11 +32,11 @@ DESCRIPTIONS = {
   "DisplayRadarInfo": tr_noop("Display the detected lead vehicle's speed and distance on the driving screen."),
   "CarBrightnessControl": tr_noop("Synchronise display brightness with the vehicle's combination meter when supported."),
   "SupplementaryVehicleAlerts": tr_noop(
-    "Use the Prius combination meter buzzer for additional alerts. Device and factory warnings remain enabled. "
+    "Use the supported Toyota combination meter buzzer for additional alerts. Device and factory warnings remain enabled. "
     "Changes apply on the next drive."
   ),
   "MuteAlerts": tr_noop(
-    "Prefer the Prius combination meter for alerts. Routine engagement and driver cancellation are silent; "
+    "Prefer the supported Toyota combination meter for alerts. Routine engagement and driver cancellation are silent; "
     "minor alerts are text-only. Requires Supplementary Vehicle Alerts. Device collision and timeout warnings remain audible, "
     "and device audio is used if the vehicle alert path is unavailable. Changes apply on the next drive."
   ),

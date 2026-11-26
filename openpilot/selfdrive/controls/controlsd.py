@@ -12,7 +12,6 @@ from openpilot.common.swaglog import cloudlog
 
 from opendbc.car.car_helpers import interfaces
 from opendbc.car.vehicle_model import VehicleModel
-from opendbc.car.toyota.values import CAR as ToyotaCAR
 from openpilot.selfdrive.controls.lib.drive_helpers import clip_curvature
 from openpilot.selfdrive.controls.lib.latcontrol import LatControl
 from openpilot.selfdrive.controls.lib.latcontrol_pid import LatControlPID
@@ -22,7 +21,7 @@ from openpilot.selfdrive.controls.lib.latcontrol_torque import LatControlTorque
 from openpilot.selfdrive.controls.lib.longcontrol import LongControl
 from openpilot.selfdrive.modeld.modeld import LAT_SMOOTH_SECONDS
 from openpilot.selfdrive.locationd.helpers import PoseCalibrator, Pose
-from openpilot.selfdrive.ui.vehicle_audio import prius_vehicle_alert
+from openpilot.selfdrive.ui.vehicle_audio import prius_vehicle_alert, supports_toyota_vehicle_audio
 
 State = log.SelfdriveState.OpenpilotState
 LaneChangeState = log.LaneChangeState
@@ -179,7 +178,7 @@ class Controls:
 
     hudControl.rightLaneVisible = True
     hudControl.leftLaneVisible = True
-    if self.CP.carFingerprint == ToyotaCAR.TOYOTA_PRIUS:
+    if supports_toyota_vehicle_audio(self.CP):
       # SelfdriveState and HUDControl use different audible-alert enums.
       # Only supplementary vehicle beeps consume this field; soundd is unchanged.
       alert = self.sm['selfdriveState'].alertSound

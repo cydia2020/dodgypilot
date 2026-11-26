@@ -1,5 +1,6 @@
 from openpilot.cereal import log
 from opendbc.car.structs import car
+from opendbc.car.toyota.values import CAR as ToyotaCAR
 
 Source = log.SelfdriveState.AudibleAlert
 Target = car.CarControl.HUDControl.AudibleAlert
@@ -12,8 +13,12 @@ ROUTINE_CANCEL = ("buttonCancel/userDisable", "pedalPressed/userDisable",
                   "steerDisengage/userDisable", "parkBrake/userDisable")
 
 
+def supports_toyota_vehicle_audio(CP):
+  return CP.brand == "toyota" and CP.carFingerprint != ToyotaCAR.TOYOTA_PRIUS_V
+
+
 def prius_vehicle_alert(state):
-  """Return the Prius dash request for the private vehicle-audio policy."""
+  """Return the Toyota dash request for the private vehicle-audio policy."""
   alert = state.alertSound
   if state.alertHudVisual == Visual.fcw:
     return Target.warningSoft

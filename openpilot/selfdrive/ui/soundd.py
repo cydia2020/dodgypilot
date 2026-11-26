@@ -8,8 +8,7 @@ from openpilot.cereal import log, messaging
 from openpilot.common.basedir import BASEDIR
 from openpilot.common.filter_simple import FirstOrderFilter
 from openpilot.common.params import Params
-from opendbc.car.toyota.values import CAR as ToyotaCAR
-from openpilot.selfdrive.ui.vehicle_audio import prius_vehicle_alert, may_use_vehicle_audio
+from openpilot.selfdrive.ui.vehicle_audio import prius_vehicle_alert, may_use_vehicle_audio, supports_toyota_vehicle_audio
 from openpilot.common.realtime import Ratekeeper
 from openpilot.common.utils import retry
 from openpilot.common.swaglog import cloudlog
@@ -166,7 +165,7 @@ class Soundd:
     # This checks the live request, not physical playback acknowledgement.
     return (self.prefer_vehicle_alerts and
             sm.recv_frame['carParams'] > 0 and sm.valid['carParams'] and
-            sm['carParams'].carFingerprint == ToyotaCAR.TOYOTA_PRIUS and
+            supports_toyota_vehicle_audio(sm['carParams']) and
             sm.all_checks(['selfdriveState', 'carState', 'carControl']) and
             sm['carState'].canValid and not sm['carState'].canTimeout and
             may_use_vehicle_audio(sm['selfdriveState']) and
