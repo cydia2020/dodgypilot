@@ -19,8 +19,12 @@ def iscar(started: bool, params: Params, CP: car.CarParams) -> bool:
   return started and not CP.notCar
 
 def logging(started: bool, params: Params, CP: car.CarParams) -> bool:
-  run = (not CP.notCar) or not params.get_bool("DisableLogging")
-  return started and run
+  # Private fork: honour the existing privacy parameter for actual cars too.
+  return started and not params.get_bool("DisableLogging")
+
+
+def uploading(started: bool, params: Params, CP: car.CarParams) -> bool:
+  return not params.get_bool("DisableLogging")
 
 def ublox_available() -> bool:
   return os.path.exists('/dev/ttyHS0') and not os.path.exists('/persist/comma/use-quectel-gps')
@@ -74,7 +78,7 @@ procs = [
   DaemonProcess("manage_athenad", "openpilot.system.athena.manage_athenad", "AthenadPid"),
 
   NativeProcess("loggerd", "openpilot/system/loggerd", ["./loggerd"], logging),
-  NativeProcess("encoderd", "openpilot/system/loggerd", ["./encoderd"], only_onroad),
+  NativeProcess("encoderd", "openpilot/system/loggerd", ["./encoderd"], logging),
   NativeProcess("stream_encoderd", "openpilot/system/loggerd", ["./encoderd", "--stream"], or_(livestream, notcar)),
   PythonProcess("logmessaged", "openpilot.system.logmessaged", always_run),
 
@@ -116,7 +120,7 @@ procs = [
   PythonProcess("hardwared", "openpilot.system.hardware.hardwared", always_run),
   PythonProcess("tombstoned", "openpilot.system.tombstoned", always_run, enabled=not PC),
   PythonProcess("updated", "openpilot.system.updated.updated", only_offroad, enabled=not PC),
-  PythonProcess("uploader", "openpilot.system.loggerd.uploader", always_run),
+  PythonProcess("uploader", "openpilot.system.loggerd.uploader", uploading),
 
   # debug procs
   PythonProcess("webrtcd", "openpilot.system.webrtc.webrtcd", or_(livestream, notcar)),
