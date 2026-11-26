@@ -23,6 +23,10 @@ def prius_vehicle_alert(state):
   if state.alertHudVisual == Visual.fcw:
     return Target.warningSoft
   if alert == Source.disengage:
+    # Upstream pcmDisable/userDisable is an EngagementAlert, not a takeover.
+    # Preserve its local disengagement tone until driver intent can be confirmed.
+    if state.alertType == "pcmDisable/userDisable":
+      return Target.none
     return Target.none if state.alertType in ROUTINE_CANCEL else Target.warningImmediate
   if alert in (Source.warningImmediateSystem, Source.warningImmediateUser):
     return Target.warningImmediate
@@ -41,4 +45,4 @@ def prius_vehicle_alert(state):
 
 def may_use_vehicle_audio(state):
   # Keep the collision-specific device tone, not a generic steering warning.
-  return state.alertHudVisual != Visual.fcw
+  return state.alertHudVisual != Visual.fcw and state.alertType != "pcmDisable/userDisable"

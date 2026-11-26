@@ -8,7 +8,8 @@ from openpilot.cereal import log, messaging
 from openpilot.common.basedir import BASEDIR
 from openpilot.common.filter_simple import FirstOrderFilter
 from openpilot.common.params import Params
-from openpilot.selfdrive.ui.vehicle_audio import prius_vehicle_alert, may_use_vehicle_audio, supports_toyota_vehicle_audio
+from openpilot.selfdrive.ui.vehicle_audio import Target, prius_vehicle_alert, may_use_vehicle_audio, supports_toyota_vehicle_audio
+from opendbc.car.structs import car
 from openpilot.common.realtime import Ratekeeper
 from openpilot.common.utils import retry
 from openpilot.common.swaglog import cloudlog
@@ -91,6 +92,9 @@ class Soundd:
     self.pending_stop = False
     self.prefer_vehicle_alerts = False
     self.vehicle_alert_muted = False
+    self.vehicle_audio_supported = False
+    self._audio_params_checked_at = -float("inf")
+    self._audio_log_at = -float("inf")
 
     self.spl_filter_weighted = FirstOrderFilter(0, 2.5, FILTER_DT, initialized=False)
 
@@ -161,16 +165,49 @@ class Soundd:
       self.current_sound = new_alert
       self.current_sound_frame = 0
 
+  def refresh_vehicle_audio_params(self, params):
+    now = time.monotonic()
+    if now - self._audio_params_checked_at < 1.0:
+      return
+    self._audio_params_checked_at = now
+    self.prefer_vehicle_alerts = (params.get_bool("MuteAlerts") and
+                                  params.get_bool("SupplementaryVehicleAlerts"))
+    # Use the current drive's CarParams, like controlsd. Do not rely on
+    # receiving a carParams publication after soundd has subscribed.
+    self.vehicle_audio_supported = False
+    cp_bytes = params.get("CarParams")
+    if cp_bytes:
+      try:
+        self.vehicle_audio_supported = supports_toyota_vehicle_audio(
+          messaging.log_from_bytes(cp_bytes, car.CarParams))
+      except Exception:
+        cloudlog.exception("vehicle audio: invalid CarParams; retaining device audio")
+
   def use_vehicle_audio(self, sm):
-    # This checks the live request, not physical playback acknowledgement.
-    return (self.prefer_vehicle_alerts and
-            sm.recv_frame['carParams'] > 0 and sm.valid['carParams'] and
-            supports_toyota_vehicle_audio(sm['carParams']) and
-            sm.all_checks(['selfdriveState', 'carState', 'carControl']) and
-            sm['carState'].canValid and not sm['carState'].canTimeout and
-            may_use_vehicle_audio(sm['selfdriveState']) and
-            sm['carControl'].hudControl.enableVehicleBuzzer and
-            sm['carControl'].hudControl.audibleAlert == prius_vehicle_alert(sm['selfdriveState']))
+    state = sm['selfdriveState']
+    target = prius_vehicle_alert(state)
+    ready = (self.prefer_vehicle_alerts and self.vehicle_audio_supported and
+             sm.all_checks(['selfdriveState']) and may_use_vehicle_audio(state))
+    # Silent routine events have no buzzer request to acknowledge. Do not
+    # make their silence depend on the asynchronous HUD message matching.
+    silent_routine = (target == Target.none and state.alertSound in
+                      (AudibleAlert.none, AudibleAlert.engage, AudibleAlert.disengage,
+                       AudibleAlert.refuse, AudibleAlert.preAlert, AudibleAlert.prompt))
+    hud = sm['carControl'].hudControl
+    can_ok = sm.all_checks(['carState', 'carControl']) and sm['carState'].canValid and not sm['carState'].canTimeout
+    matched = hud.enableVehicleBuzzer and hud.audibleAlert == target
+    muted = ready and (silent_routine or (can_ok and matched))
+    if state.alertSound == AudibleAlert.none and self.current_alert in critical_max_sounds:
+      # A silent successor must not newly mute a locally playing critical tone.
+      muted = muted and self.vehicle_alert_muted and can_ok
+    # A compact diagnostic, rate-limited to avoid logging every alert frame.
+    now = time.monotonic()
+    if state.alertSound != AudibleAlert.none and now - self._audio_log_at >= 2.0:
+      self._audio_log_at = now
+      cloudlog.info(f"vehicle audio: prefer={self.prefer_vehicle_alerts} supported={self.vehicle_audio_supported} "
+                    f"ready={ready} can_ok={can_ok} hud_enabled={hud.enableVehicleBuzzer} "
+                    f"requested={hud.audibleAlert} target={target} alert={state.alertType} muted={muted}")
+    return muted
 
   def get_audible_alert(self, sm):
     # The independent watchdog must be audible even if controlsd cannot
@@ -209,10 +246,9 @@ class Soundd:
     import sounddevice as sd
     micd.patch_sounddevice(sd)
 
-    sm = messaging.SubMaster(['selfdriveState', 'soundPressure', 'carParams', 'carState', 'carControl'])
+    sm = messaging.SubMaster(['selfdriveState', 'soundPressure', 'carState', 'carControl'])
     params = Params()
-    self.prefer_vehicle_alerts = (params.get_bool("MuteAlerts") and
-                                  params.get_bool("SupplementaryVehicleAlerts"))
+    self.refresh_vehicle_audio_params(params)
 
     with self.get_stream(sd) as stream:
       rk = Ratekeeper(20)
@@ -220,6 +256,7 @@ class Soundd:
       cloudlog.info(f"soundd stream started: {stream.samplerate=} {stream.channels=} {stream.dtype=} {stream.device=}, {stream.blocksize=}")
       while True:
         sm.update(0)
+        self.refresh_vehicle_audio_params(params)
 
         # freeze volume during alerts to avoid mic feedback increasing volume
         if sm.updated['soundPressure']:

@@ -1,3 +1,4 @@
+import time
 import raylib_nb as rl
 from dataclasses import dataclass
 from openpilot.common.constants import CV
@@ -59,6 +60,8 @@ class HudRenderer(Widget):
     self.set_speed: float = SET_SPEED_NA
     self.speed: float = 0.0
     self.v_ego_cluster_seen: bool = False
+    self._brake_lights = False
+    self._brake_lights_at = -float("inf")
 
     self._font_semi_bold: rl.Font = gui_app.font(FontWeight.SEMI_BOLD)
     self._font_bold: rl.Font = gui_app.font(FontWeight.BOLD)
@@ -91,15 +94,23 @@ class HudRenderer(Widget):
   def _render(self, rect: rl.Rectangle) -> None:
     """Render HUD elements to the screen."""
     cs = ui_state.sm["carState"]
-    brake_lights = (ui_state.has_fresh_data("carState") and cs.canValid
-                    and getattr(cs, "brakeLightsValid", False) and getattr(cs, "brakeLights", False))
+    now = time.monotonic()
+    if not ui_state.started or not ui_state.has_fresh_data("carState") or not cs.canValid:
+      self._brake_lights = False
+      self._brake_lights_at = -float("inf")
+    elif getattr(cs, "brakeLightsValid", False):
+      self._brake_lights = bool(cs.brakeLights)
+      self._brake_lights_at = now
+    elif now - self._brake_lights_at > 0.5:
+      # A brief missing sample is not an observed brake release.
+      self._brake_lights = False
     # Draw the header background
     rl.draw_rectangle_gradient_v(
       int(rect.x),
       int(rect.y),
       int(rect.width),
       UI_CONFIG.header_height,
-      COLORS.BRAKE_GRADIENT_START if brake_lights else COLORS.HEADER_GRADIENT_START,
+      COLORS.BRAKE_GRADIENT_START if self._brake_lights else COLORS.HEADER_GRADIENT_START,
       COLORS.HEADER_GRADIENT_END,
     )
 

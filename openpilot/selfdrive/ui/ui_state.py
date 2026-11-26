@@ -376,15 +376,23 @@ class Device:
 
       clipped_brightness = float(np.interp(clipped_brightness, [0, 1], [BRIGHTNESS_MIN, 100]))
 
-    # Preserve upstream minimum brightness, filtering and wakefulness.
+    # The factory dimmer already reflects the driver's brightness preference.
+    # Bypass the 10-second ambient-light filter for valid vehicle telemetry.
+    vehicle_brightness = None
     if ui_state.car_brightness_control and ui_state.has_fresh_data("carState"):
       cs = ui_state.sm["carState"]
       if cs.canValid and getattr(cs, "meterBrightnessValid", False):
         target = getattr(cs, "meterBrightness", -1.0)
         if np.isfinite(target) and 0 <= target <= 100:
-          clipped_brightness = float(np.clip(target, BRIGHTNESS_MIN, 100.0))
+          # Toyota night-time settings span 0..50. Rescale rather than clip
+          # that interval, preserving the display's supported brightness floor.
+          vehicle_brightness = float(np.interp(target, [0, 50, 100], [BRIGHTNESS_MIN, 50, 100]))
 
-    brightness = self._brightness_filter.update(clipped_brightness)
+    if vehicle_brightness is not None:
+      brightness = vehicle_brightness
+      self._brightness_filter.x = brightness
+    else:
+      brightness = self._brightness_filter.update(clipped_brightness)
     gui_app.set_dim(1 - brightness / BACKLIGHT_MIN)
     brightness = round(max(brightness, BACKLIGHT_MIN))
     if not self._awake:
